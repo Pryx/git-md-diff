@@ -61,7 +61,12 @@ unified()
       return console.log(err);
     }
 
-    fs.writeFile(output, String(file), function (err,data) {
+    let html = String(file)
+
+    html = html.replace(/<del>/g, `<del style="color:#a33;background:#ffeaea;text-decoration:line-through;">`); 
+    html = html.replace(/<ins>/g, `<ins style="color:darkgreen;background:#eaffea;">`); 
+
+    fs.writeFile(output, html, function (err,data) {
       if (err) {
         return console.log(err);
       }
