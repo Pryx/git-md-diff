@@ -50,7 +50,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 
-if git --git-dir="${repository_dir}/.git" diff --quiet
+if git --git-dir="${repository_dir}/.git" diff --quiet "${start}".."${end}"
 then
     printf "No changes detected"
     exit 1
