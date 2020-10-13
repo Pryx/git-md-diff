@@ -62,13 +62,19 @@ function compile(argv){
   console.log(`Compiling ${argv.original} ${argv.modified}`);
   var original = fs.readFileSync(argv.original, 'utf8');
   var modified = fs.readFileSync(argv.modified, 'utf8');
+  original = removeDocusaurusInfo(original)
+  modified = removeDocusaurusInfo(modified)
+  original = imagePlaceholders(original)
+  modified = imagePlaceholders(modified)
 
-  var unified = require('unified')
+  var remark = require('remark')
   var markdown = require('remark-parse')
   var html = require('remark-html')
 
-  unified()
-    .use(markdown)
+  var removeBlocks = require('./removeBlocks.js');
+
+  remark()
+    .use(removeBlocks)
     .use(html)
     .process(original, function(err, file) {
       if (err) {
@@ -84,8 +90,8 @@ function compile(argv){
       });
     });
     
-    unified()
-    .use(markdown)
+    remark()
+    .use(removeBlocks)
     .use(html).process(modified, function(err, file) {
       if (err) {
         return console.log(err);
@@ -136,4 +142,16 @@ function diff(argv){
         }
       });
     })
+}
+
+function imagePlaceholders(markdown){
+  markdown = markdown.replace(/src={useBaseUrl.*}/g, `src="http://via.placeholder.com/200?text=IMAGE"`);
+  return markdown;
+}
+
+function removeDocusaurusInfo(markdown){
+  markdown = markdown.replace(/---.*title: ([^\n]*).*---/s, `# Title: $1`);
+  markdown = markdown.replace(/\s*import.*docusaurus.*;/, ``);
+
+  return markdown;
 }
