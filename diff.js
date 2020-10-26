@@ -116,15 +116,22 @@ function diff(argv){
 
   var original = fs.readFileSync(argv.original, 'utf8');
   var modified = fs.readFileSync(argv.modified, 'utf8');
+  original = removeDocusaurusInfo(original)
+  modified = removeDocusaurusInfo(modified)
+  original = imagePlaceholders(original)
+  modified = imagePlaceholders(modified)
+
+  let diffText = require("@ads-vdh/md-diff")
 
   const res = markdownDiff(original, modified);
-
-  var unified = require('unified')
+  
+  var remark = require('remark')
   var markdown = require('remark-parse')
   var html = require('remark-html')
+  var removeBlocks = require('./removeBlocks.js');
 
-  unified()
-    .use(markdown)
+  remark()
+    .use(removeBlocks)
     .use(html)
     .process(res, function(err, file) {
       if (err) {

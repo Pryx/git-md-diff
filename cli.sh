@@ -33,8 +33,8 @@ while [ "$#" -gt 0 ]; do
     --end=|-E=*)
         end="${1#*=}"
         ;;
-    --verbose=|-v=*)
-        verbose="${1#*=}"
+    --verbose|-v*)
+        verbose=true
         ;;
     --upload|-u*)
         upload=true
@@ -88,11 +88,16 @@ git --git-dir="${repository_dir}/.git" diff-tree -r --no-renames "${start}".."${
     	case "$filename" in
 			*.md | *.mdx ) 
 		    	echo "${dstsha} => ${filename}" >> ./out/file_list.txt
+                if [ "$verbose" = true ] ; then
+                    echo "FILE: ${filename}"
+                fi
 		        if [[ $srcsha =~ ^[0]+$ ]]; then
 		        	#This means the file was just created...
 			        git --git-dir="${repository_dir}/.git" show "$dstsha" > "./out/${dstsha}.html"
 			    elif [[ $dstsha =~ ^[0]+$ ]]; then
-			    	echo "File $filename has been deleted. Skipping."
+                    if [ "$verbose" = true ] ; then
+			    	    echo "File $filename has been deleted. Skipping."
+                    fi
 		        else
 		        	git --git-dir="${repository_dir}/.git" show "$srcsha" > "./tmp/${srcsha}"
 			        git --git-dir="${repository_dir}/.git" show "$dstsha" > "./tmp/${dstsha}"
