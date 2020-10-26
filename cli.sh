@@ -49,6 +49,10 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
+start=$(git --git-dir="${repository_dir}/.git" rev-parse $start)
+end=$(git --git-dir="${repository_dir}/.git" rev-parse $end)
+
+echo "RUNNING DIFF FROM ${start} TO ${end}";
 
 if git --git-dir="${repository_dir}/.git" diff --quiet "${start}".."${end}"
 then
@@ -68,7 +72,8 @@ if [ "$verbose" = true ] ; then
 fi
 
 if [ "$upload" = true ] ; then
-    node -r esm upload.js cleanup
+    node -r esm upload.js cleanup -c="${start}"
+    node -r esm upload.js cleanup -c="${end}"
 fi
 
 git --git-dir="${repository_dir}/.git" diff-tree -r --no-renames "${start}".."${end}" | \
@@ -95,9 +100,9 @@ git --git-dir="${repository_dir}/.git" diff-tree -r --no-renames "${start}".."${
                     if [ "$upload" = true ] ; then
                         node -r esm diff.js compile -f="./tmp/${srcsha}" -m="./tmp/${dstsha}"
 
-                        node -r esm upload.js upload -f="./tmp/${srcsha}.html" -n="${filename}" -o
+                        node -r esm upload.js upload -f="./tmp/${srcsha}.html" -n="${filename}" -c="${start}"
 
-                        node -r esm upload.js upload -f="./tmp/${dstsha}.html" -n="${filename}"
+                        node -r esm upload.js upload -f="./tmp/${dstsha}.html" -n="${filename}" -c="${end}"
                     else
 		    	        node -r esm diff.js run -f="./tmp/${srcsha}" -m="./tmp/${dstsha}" -o="./out/${dstsha}.html"
                     fi

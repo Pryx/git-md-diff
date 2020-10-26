@@ -36,11 +36,12 @@ var argv = yargs
   .alias('f', 'file')
   .nargs('f', 1)
   .describe('f', 'File to upload')
+  .alias('c', 'commit')
+  .nargs('c', 1)
+  .describe('c', 'Commit the file belongs to')
   .alias('n', 'name')
   .nargs('n', 1)
   .describe('n', 'Name of the document on google drive')
-  .alias('o', 'original')
-  .describe('o', 'True if file is the original file')
   .describe('markdown', 'Convert markdown to HTML')
   .argv
 
@@ -49,8 +50,7 @@ var argv = yargs
 // If modifying these scopes, delete token.json.
 const SCOPES = [
     'https://www.googleapis.com/auth/drive.metadata.readonly',
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/documents'
+    'https://www.googleapis.com/auth/drive.file'
 ];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
@@ -128,33 +128,25 @@ function getAccessToken(oAuth2Client, callback) {
 
 async function runCleanup(auth) {
     global.drive = google.drive({ version: 'v3', auth });
-    global.docs = google.docs({ version: 'v1', auth });
 
-    let folder = null;
-    folder = await getFolderId("git-md-diff-original");
+    let diff_root = await getFolderId("git-md-diff", 'root');
+
+    let folder = await getFolderId(argv.commit, diff_root);    
+    
     if (folder){
         await deleteFile(folder, drive);
-        folder = null;
     }
-
-    folder = await getFolderId("git-md-diff-changed");
-    if (folder){
-        await deleteFile(folder, drive);
-        folder = null;
-    }
-
 }
 
 
 async function runUpload(auth) {
     global.drive = google.drive({ version: 'v3', auth });
-    global.docs = google.docs({ version: 'v1', auth });
+
+    let diff_root = await getFolderId("git-md-diff", 'root');
+
     let folder = null;
-    if (argv.original){
-        folder = await getFolderId("git-md-diff-original");
-    }else{
-        folder = await getFolderId("git-md-diff-changed");
-    }
+
+    folder = await getFolderId(argv.commit, diff_root);
 
     var content = fs.readFileSync(argv.file, 'utf8');
 
@@ -167,11 +159,11 @@ async function runUpload(auth) {
 }
 
 
-async function getFolderId(folder) {
+async function getFolderId(folder, parent) {
     // Check File exists
     let response = await drive.files.list({
         pageSize: 10,
-        q: `mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false and name='${folder}'`,
+        q: `mimeType='application/vnd.google-apps.folder' and '${parent}' in parents and trashed=false and name='${folder}'`,
         fields: 'files(id, name)',
     });
 
@@ -180,7 +172,8 @@ async function getFolderId(folder) {
     if (!files || files.length == 0) {
         var fileMetadata = {
             'name': folder,
-            'mimeType': 'application/vnd.google-apps.folder'
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents': [parent]
         };
         let file = await drive.files.create({
             resource: fileMetadata,
