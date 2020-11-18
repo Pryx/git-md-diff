@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "webpack --watch --mode development",
+    "build": "webpack --mode production",
+    "lint": "eslint --cache --format codeframe --ext mjs,js src test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "module": "src/index.js",
+  "devDependencies": {
+    "@neutrinojs/airbnb-base": "^9.4.0",
+    "@neutrinojs/jest": "^9.4.0",
+    "@neutrinojs/node": "^9.4.0",
+    "eslint": "^7.13.0",
+    "jest": "^26.6.3",
+    "neutrino": "^9.4.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "simple-git": "^2.22.0"
+  }
+}
