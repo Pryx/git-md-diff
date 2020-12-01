@@ -1,12 +1,9 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
 import './App.css';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
-import CommitSelect from './CommitSelect';
-import DiffOutput from './DiffOutput';
+import { Switch, Route } from 'wouter';
+import DiffPage from './DiffPage';
+import EditPage from './EditPage';
 
 class App extends React.Component {
   constructor(props) {
@@ -14,7 +11,15 @@ class App extends React.Component {
     this.state = {
       commitFrom: { branch: '', commit: '' },
       commitTo: { branch: '', commit: '' },
+      selectedRepo: null,
+      repos: [],
+      error: null,
+      cloneUrl: '',
     };
+
+    this.handleClone = this.handleClone.bind(this);
+    this.handleCloneUrl = this.handleCloneUrl.bind(this);
+    this.handleRepoChange = this.handleRepoChange.bind(this);
   }
 
   updateFrom = (from) => {
@@ -29,32 +34,72 @@ class App extends React.Component {
     });
   };
 
+  handleClone(e) {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: this.state.cloneUrl }),
+    };
+    fetch('http://localhost:3000/clone', requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          const { repos } = this.state;
+          repos.push(data.name);
+          this.setState({ repos, cloneUrl: '' });
+        } else {
+          this.setState({ error: "Couldn't clone repository!" });
+        }
+      });
+  }
+
+  componentDidMount() {
+    fetch('http://localhost:3000/list-repos')
+      .then((r) => r.json())
+      .then(
+        (repository) => {
+          this.setState({
+            repos: repository,
+            selectedRepo: repository[0],
+          });
+        },
+        // Note: it's important to handle errors here
+        // instead of a catch() block so that we don't swallow
+        // exceptions from actual bugs in components.
+        (error) => {
+          this.setState({
+            error,
+          });
+        },
+      );
+  }
+
+  handleCloneUrl(e) {
+    this.setState(
+      {
+        cloneUrl: e.currentTarget.value,
+      },
+    );
+  }
+
+  handleRepoChange(e) {
+    this.setState(
+      {
+        selectedRepo: e.currentTarget.value,
+      },
+    );
+  }
+
   render() {
-    const { commitTo, commitFrom } = this.state;
-
-    const to = commitTo.commit || commitTo.branch;
-    const from = commitFrom.commit || commitFrom.branch;
-
-    console.log('TO', to, 'FROM', from);
-
     return (
-      <Container className="mt-5">
-        <Row className="select-diff">
-          <Col lg={6} xs={12}>
-            Select from
-            <CommitSelect id="from" dependsOn="to" comparison="<" update={this.updateFrom} />
-          </Col>
-          <Col lg={6} xs={12}>
-            Select to
-            <CommitSelect id="to" dependsOn="from" comparison=">" update={this.updateTo} />
-          </Col>
-        </Row>
-        <Row className="results">
-          <Col>
-            <DiffOutput from={from} to={to} />
-          </Col>
-        </Row>
-      </Container>
+      <Switch>
+        <Route path="/edit/:repo/:from/:to/:file" >
+          {(params) =><EditPage repo={params.repo} from={params.from} to={params.to} file={params.file} /> }
+        </Route>
+        <Route>
+          <DiffPage />
+        </Route>
+      </Switch>
     );
   }
 }

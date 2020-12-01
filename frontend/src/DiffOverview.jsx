@@ -2,12 +2,11 @@ import { hot } from 'react-hot-loader';
 import React from 'react';
 import './App.css';
 import Col from 'react-bootstrap/Col';
-import Form from 'react-bootstrap/Form';
-import Card from 'react-bootstrap/Card';
+import Row from 'react-bootstrap/Row';
 import PropTypes from 'prop-types';
-import Diff from './diff/diff';
+import DiffView from './DiffView';
 
-class CommitSelect extends React.Component {
+class DiffOverview extends React.Component {
   state = {
     changes: [],
     before: [],
@@ -18,13 +17,14 @@ class CommitSelect extends React.Component {
 
   to = null;
 
+  repo = null;
+
   constructor(props) {
     super(props);
     this.from = props.from;
     this.to = props.to;
+    this.repo = props.repo;
     this.state = {
-      before: [],
-      after: [],
       changes: [],
       isLoaded: false,
       ready: false,
@@ -43,41 +43,13 @@ class CommitSelect extends React.Component {
         ready: true,
         isLoaded: false,
       });
-      fetch(`http://localhost:3000/list-changes/${this.from}/${this.to}`)
+      fetch(`http://localhost:3000/${this.repo}/list-changes/${this.from}/${this.to}`)
         .then((r) => r.json())
         .then(
           (changes) => {
             this.setState({
+              isLoaded: true,
               changes,
-            });
-
-            const before = [];
-            const after = [];
-            const fetches = [];
-            changes.forEach((change) => {
-              const b = fetch(`http://localhost:3000/file/${encodeURIComponent(change.file)}/${this.from}`)
-                .then((r) => r.json())
-                .then((file) => {
-                  before[change.file] = file.content;
-                });
-
-              fetches.push(b);
-
-              const a = fetch(`http://localhost:3000/file/${encodeURIComponent(change.file)}/${this.to}`)
-                .then((r) => r.json())
-                .then((file) => {
-                  after[change.file] = file.content;
-                });
-
-              fetches.push(a);
-            });
-
-            Promise.all(fetches).then(() => {
-              this.setState({
-                before,
-                after,
-                isLoaded: true,
-              });
             });
           },
           // Note: it's important to handle errors here
@@ -99,7 +71,7 @@ class CommitSelect extends React.Component {
 
   render() {
     const {
-      error, isLoaded, before, after, changes, ready,
+      error, isLoaded, changes, ready,
     } = this.state;
 
     if (error) {
@@ -128,39 +100,39 @@ class CommitSelect extends React.Component {
       );
     }
 
+    if (changes.length == 0){
+      return (
+          <Row className="mt-4">
+            <Col>
+              No changes in Markdown files for the selected revision range
+            </Col>
+          </Row>
+      );
+    }
+
     return (
       changes.map(
         (change) => (
-          <Form.Row key="{change.file}" className="mt-2">
+          <Row key={change.file} className="mt-4">
             <Col>
-              <Card>
-                <Card.Header>
-                  {change.file}
-                </Card.Header>
-                <Card.Body
-                  dangerouslySetInnerHTML={
-                    {
-                      __html: Diff(before[change.file], after[change.file]),
-                    }
-                }
-                />
-              </Card>
+              <DiffView file={change.file} insertions={change.insertions} deletions={change.deletions} from={this.from} to={this.to} repo={this.repo} />
             </Col>
-          </Form.Row>
+          </Row>
         ),
       )
     );
   }
 }
 
-CommitSelect.defaultProps = {
+DiffOverview.defaultProps = {
   from: null,
   to: null,
 };
 
-CommitSelect.propTypes = {
+DiffOverview.propTypes = {
   from: PropTypes.string,
   to: PropTypes.string,
+  repo: PropTypes.string.isRequired,
 };
 
-export default hot(module)(CommitSelect);
+export default hot(module)(DiffOverview);

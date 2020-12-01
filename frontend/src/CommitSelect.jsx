@@ -19,6 +19,8 @@ class CommitSelect extends React.Component {
 
   update = null;
 
+  repo = null;
+
   constructor(props) {
     super(props);
     this.dependsOn = props.dependsOn;
@@ -26,6 +28,7 @@ class CommitSelect extends React.Component {
     this.handleBranch = this.handleBranch.bind(this);
     this.handleCommit = this.handleCommit.bind(this);
     this.update = props.update;
+    this.repo = props.repo;
 
     this.state = {
       isLoaded: false,
@@ -37,24 +40,31 @@ class CommitSelect extends React.Component {
   }
 
   componentDidMount() {
-    fetch('http://localhost:3000/get-branches')
+    fetch(`http://localhost:3000/${this.repo}/get-branches`)
       .then((r) => r.json())
       .then(
         (branches) => {
+          const cb = branches.all.includes('master') ? 'master' : branches.all[0];
           this.setState({
             branches: branches.all,
-            currentBranch: branches.all[0],
+            currentBranch: cb,
             commits: [],
             currentCommit: '',
           });
 
-          fetch(`http://localhost:3000/get-commits/${branches.all[0]}`)
+          fetch(`http://localhost:3000/${this.repo}/get-commits/${cb}`)
             .then((r) => r.json())
             .then((commits) => {
+              this.update({
+                branch: cb,
+                commit: commits.all[0].hash,
+              });
+
               this.setState(
                 {
                   isLoaded: true,
                   commits: commits.all,
+                  currentCommit: commits.all[0].hash,
                 },
               );
             });
@@ -84,7 +94,7 @@ class CommitSelect extends React.Component {
       },
     );
 
-    fetch(`http://localhost:3000/get-commits/${e.currentTarget.value}`)
+    fetch(`http://localhost:3000/${this.repo}/get-commits/${encodeURIComponent(e.currentTarget.value)}`)
       .then((r) => r.json())
       .then((commits) => {
         this.setState(
@@ -175,6 +185,7 @@ CommitSelect.propTypes = {
   dependsOn: PropTypes.string,
   comparison: PropTypes.string,
   update: PropTypes.func.isRequired,
+  repo: PropTypes.string.isRequired,
 };
 
 export default hot(module)(CommitSelect);

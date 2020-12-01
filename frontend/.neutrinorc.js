@@ -6,13 +6,17 @@ module.exports = {
   options: {
     root: __dirname,
   },
+  node: {
+    fs: 'empty'
+  },
   use: [
     airbnb(),
     react({
       html: {
-        title: 'frontend'
+        title: 'Git md diff'
       }
     }),
     jest(),
   ],
 };
+

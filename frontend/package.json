@@ -13,18 +13,19 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@github-docs/frontmatter": "^1.3.1",
+    "@toast-ui/react-editor": "^2.5.1",
     "bootstrap": "^4.5.3",
-    "express": "^4.17.1",
-    "markdown-diff": "^1.0.3",
-    "mdast-squeeze-paragraphs": "^4.0.0",
+    "front-matter": "^4.0.2",
+    "markdown-diff": "git+https://github.com/Pryx/markdown-diff.git",
+    "markdown-it": "^12.0.2",
+    "marked": "^1.2.5",
     "prop-types": "^15.7.2",
     "react": "^16.14.0",
     "react-bootstrap": "^1.4.0",
     "react-dom": "^16.14.0",
     "react-hot-loader": "^4.13.0",
-    "remark": "^13.0.0",
-    "remark-html": "^13.0.1",
-    "unist-util-visit": "^2.0.3"
+    "wouter": "^2.6.0"
   },
   "devDependencies": {
     "@neutrinojs/airbnb": "^9.4.0",

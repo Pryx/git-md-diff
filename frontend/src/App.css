@@ -1,0 +1,18 @@
+.additions{
+  color: green;
+}
+
+.deletions{
+  color: red
+}
+
+pre{
+  background: #f7f7f9;
+  padding: 16px;
+  border-radius: 4px
+}
+
+.new-file *{
+  color:darkgreen;
+  background:#eaffea;
+}

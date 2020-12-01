@@ -1,41 +1,80 @@
 import { markdownDiff } from 'markdown-diff';
 
-const remark = require('remark');
+const marked = require('marked');
+const matter = require('front-matter');
 
-const html = require('remark-html');
+function imagePlaceholders(repository, commit, markdown) {
+  const found = markdown.matchAll(/src={useBaseUrl\('(.*)'\)}/g);
+  let clean = markdown;
 
-const removeBlocks = require('./removeBlocks.js');
-
-function imagePlaceholders(markdown) {
-  const clean = markdown.replace(/src={useBaseUrl.*}/g, 'src="http://via.placeholder.com/200?text=IMAGE"');
-  return clean;
-}
-
-function removeDocusaurusInfo(markdown) {
-  let clean = markdown.replace(/---.*title: ([^\n]*).*---/s, '# Title: $1');
-  clean = clean.replace(/\s*import.*docusaurus.*;/, '');
+  if (found) {
+    [...found].map((m) => m[1]).forEach((elem) => {
+      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="http://localhost:3000/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${commit}/raw"`);
+    });
+  }
 
   return clean;
 }
 
-export default function diff(original, modified) {
-  let originalClean = removeDocusaurusInfo(original);
-  let modifiedClean = removeDocusaurusInfo(modified);
-  originalClean = imagePlaceholders(originalClean);
-  modifiedClean = imagePlaceholders(modifiedClean);
+function removeDocusaurusInfo(original, modified) {
+  const original_matter = matter(original);
+  const modified_matter = matter(modified);
+  let ori = original.replace(/---.*---/s, '');
+  let mod = modified.replace(/---.*---/s, '');
 
-  const res = markdownDiff(originalClean, modifiedClean);
+  ori = ori.replace(/\s*import.*docusaurus.*;/, '');
 
-  // var markdown = require('remark-parse')
+  mod = mod.replace(/\s*import.*docusaurus.*;/, '');
+  if (original_matter.attributes.title) {
+    ori = `# Title: ${original_matter.attributes.title}\n${ori}`;
+  }
 
-  const parser = remark()
-    .use(removeBlocks)
-    .use(html);
+  if (modified_matter.attributes.title) {
+    mod = `# Title: ${modified_matter.attributes.title}\n${mod}`;
+  }
 
-  let result = parser().processSync(res).contents;
+  return { original: ori, modified: mod, changed: original_matter != modified_matter };
+}
 
-  result = result.replace(/<del>/g, '<del style="color:#a33;background:#ffeaea;text-decoration:line-through;">');
-  result = result.replace(/<ins>/g, '<ins style="color:darkgreen;background:#eaffea;">');
+export default function diff(revisionInfo, original, modified, opts) {
+  const options = {
+    hideCode: true, debug: false, skipImages: true, ...opts,
+  };
 
-  return result;
+  const invisible_changes = [];
+  const cleanDocs = removeDocusaurusInfo(original, modified);
+  if (cleanDocs.changed) {
+    invisible_changes.push('Front matter changed');
+  }
+  /* originalClean = imagePlaceholders(originalClean);
+  modifiedClean = imagePlaceholders(modifiedClean); */
+  let orig = cleanDocs.original;
+  let mod = cleanDocs.modified;
+  if (!options.skipImages) {
+    orig = imagePlaceholders(revisionInfo.repo, revisionInfo.from, cleanDocs.original);
+    mod = imagePlaceholders(revisionInfo.repo, revisionInfo.to, cleanDocs.modified);
+  }
+  let res;
+
+  if (orig.length > 0) {
+    res = markdownDiff(orig, mod, true);
+  } else {
+    res = `<div class="new-file">\n${mod}</div>`;
+  }
+
+  const renderer = {};
+  if (options.hideCode) {
+    renderer.code = (code, infostring, escaped) => {
+      if (code.indexOf('<ins') || code.indexOf('<del')) {
+        return '<pre class="changed"><code>Code block changed</code></pre>';
+      }
+      return '<pre><code>Code block</code></pre>';
+    };
+  }
+
+  marked.use({ renderer });
+  if (options.debug) {
+    return { content: `${marked(res)}<pre>${orig}</pre><pre>${mod}</pre>`, invisible: invisible_changes };
+  }
+  return { content: marked(res), invisible: invisible_changes };
 }

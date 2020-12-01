@@ -3,6 +3,7 @@ import React from 'react';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Container from 'react-bootstrap/Container';
+import {Link} from 'wouter';
 
 const Navigation = () => (
   <Navbar bg="primary" variant="dark" expand="lg">
@@ -11,7 +12,9 @@ const Navigation = () => (
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
         <Nav className="ml-auto">
-          <Nav.Link href="/">Home</Nav.Link>
+          <Link href="/">
+            <Nav.Link>Home</Nav.Link>
+          </Link>
         </Nav>
       </Navbar.Collapse>
     </Container>
