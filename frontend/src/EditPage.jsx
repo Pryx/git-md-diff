@@ -39,7 +39,7 @@ class DiffPage extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`http://localhost:3000/${this.repo}/file/${encodeURIComponent(this.file)}/${this.from}`)
+    fetch(`http://localhost:3000/${this.repo}/file/${encodeURIComponent(this.file)}/${this.to}`)
       .then((r) => r.json())
       .then(
         (data) => {
