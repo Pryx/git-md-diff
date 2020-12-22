@@ -3,13 +3,29 @@ import { markdownDiff } from 'markdown-diff';
 const marked = require('marked');
 const matter = require('front-matter');
 
-function imagePlaceholders(repository, commit, markdown) {
-  const found = markdown.matchAll(/src={useBaseUrl\('(.*)'\)}/g);
+function imagePlaceholders(repository, from, to, markdown) {
+  const inserts = markdown.matchAll(/<ins.*?src={useBaseUrl\('(.*)'\)}.*\/ins>/g);
   let clean = markdown;
 
-  if (found) {
-    [...found].map((m) => m[1]).forEach((elem) => {
-      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="http://localhost:3000/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${commit}/raw"`);
+  if (inserts) {
+    [...inserts].map((m) => m[1]).forEach((elem) => {
+      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="http://localhost:3000/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${to}/raw"`);
+    });
+  }
+
+  const deletes = markdown.matchAll(/<del.*?src={useBaseUrl\('(.*)'\)}.*\/del>/g);
+
+  if (deletes) {
+    [...deletes].map((m) => m[1]).forEach((elem) => {
+      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="http://localhost:3000/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${from}/raw"`);
+    });
+  }
+
+  const rest = markdown.matchAll(/src={useBaseUrl\('(.*)'\)}/g);
+
+  if (rest) {
+    [...rest].map((m) => m[1]).forEach((elem) => {
+      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="http://localhost:3000/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${to}/raw"`);
     });
   }
 
@@ -67,10 +83,6 @@ export default function diff(revisionInfo, original, modified, opts) {
   modifiedClean = imagePlaceholders(modifiedClean); */
   let orig = cleanDocs.original;
   let mod = cleanDocs.modified;
-  if (!options.skipImages) {
-    orig = imagePlaceholders(revisionInfo.repo, revisionInfo.from, cleanDocs.original);
-    mod = imagePlaceholders(revisionInfo.repo, revisionInfo.to, cleanDocs.modified);
-  }
   let res;
 
   if (orig.length > 0) {
@@ -78,6 +90,11 @@ export default function diff(revisionInfo, original, modified, opts) {
   } else {
     res = `<div class="new-file">\n${mod}</div>`;
   }
+
+  if (!options.skipImages){
+    res = imagePlaceholders(revisionInfo.repo, revisionInfo.from, revisionInfo.to, res);
+  }
+  
 
   const renderer = {};
   if (options.hideCode) {
