@@ -15,3 +15,6 @@ Starting the backend and frontend parts is as easy as running `npm start`. You s
 ## Additional commands
 To lint the project manually run:  npm run lint
 You can also fix linting problems with:  npm run lint -- --fix
+
+## Additional info
+This repository uses forked markdown-diff version [Pryx/markdown-diff](https://github.com/Pryx/markdown-diff) which tries to solve some issues with the original version. 
