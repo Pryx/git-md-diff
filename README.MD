@@ -9,7 +9,7 @@ Make sure your system has folowing packages installed:
 
 If you have them installed then you just need to run `npm install` in both frontend and backend folders you should be good to go.
 
-Starting the backend and frontend parts is as easy as running `npm start`.
+Starting the backend and frontend parts is as easy as running `npm start`. You should be able to clone a repository from the frontend, otherwise you can put folder with the cloned repository into the `backend/repositories` folder.
 
 
 ## Additional commands
