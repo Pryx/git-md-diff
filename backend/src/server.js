@@ -21,21 +21,29 @@ app.get('/', (req, res) => {
   res.send('Please use endpoints documented in the OpenAPI file');
 });
 
+// Clones the repository to local storage
 app.post('/clone', (req, res) => {
   const { url } = req.body;
   const git = simpleGit();
   const name = url.split('/').pop().replace('.git', '');
   fs.mkdirSync(`./repositories/${name}`, { recursive: true });
+
+  // Clone the files
   git.clone(url, `./repositories/${name}`).then(() => {
     const ngit = simpleGit(`./repositories/${name}`, { maxConcurrentProcesses: 1 });
 
     const promises = [];
+
+    //Checkout files
     ngit.branch().then((branches) => {
+
+      // Checkout all branches
       branches.all.forEach((elem) => {
         const last = elem.split('/').pop();
         promises.push(ngit.checkout(last));
       });
 
+      // Only success if all branches checked out
       Promise.all(promises).then(() => {
         res.send({ name, success: true });
       });
@@ -43,24 +51,32 @@ app.post('/clone', (req, res) => {
   }).catch((e) => res.send({ success: false, error: e }));
 });
 
+// Save file and commit to git
 app.post('/save', (req, res) => {
   const {
     repo, file, commit, content,
   } = req.body;
   const git = simpleGit(`./repositories/${repo}`);
 
+  // For hasging the branch name
   const hash = require('crypto')
     .createHash('sha256')
     .update(file + content)
     .digest('hex');
+
   const branch = `git_md_diff_${hash}`;
+
+  // Create branch
   git.branch([branch, commit]).then(() => {
     git.checkout(branch).then(() => {
+      // Update file
       fs.writeFile(`./repositories/${repo}/${file}`, content,(err) => {
         if (err){
           res.send({ success: false, error: err, phase: 'write'});
           return;
         }
+
+        // Add file and commit the changes
         git.add(`${file}`).then(() => {
           git.commit(`Edited file ${file} via git-md-diff`).then(() => {
             res.send({ success: true });
@@ -71,6 +87,7 @@ app.post('/save', (req, res) => {
   }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'branch'}));
 });
 
+// Get repos
 app.get('/list-repos', (req, res) => {
   let list = [];
   if (fs.existsSync('./repositories/')) {
@@ -79,27 +96,32 @@ app.get('/list-repos', (req, res) => {
   res.send(list);
 });
 
+// Get branches from repo
 app.get('/:repo/get-branches', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.repo}`);
   git.branchLocal().then((branches) => res.send(branches));
 });
 
-app.get('/:repo/get-commits/:commit', (req, res) => {
+// Get commits from branches
+app.get('/:repo/get-commits/:branch', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.repo}`);
 
   // Not sure why this wouldn't work with the default implementation...
-  git.log([`${req.params.commit}`]).then((history) => res.send(history));
+  git.log([`${req.params.branch}`]).then((history) => res.send(history));
 });
 
+// File change list
 app.get('/:repo/list-changes/:from/:to', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.repo}`);
   git.diffSummary([`${req.params.from}...${req.params.to}`, '--diff-filter=d']).then((changes) => {
+    //Todo: More robust file filtering
     const fileChanges = changes.files.filter((change) => change.file.includes('.md'));
 
     res.send(fileChanges);
   });
 });
 
+// Text file
 app.get('/:repo/file/:file/:commit', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.repo}`);
 
@@ -108,9 +130,12 @@ app.get('/:repo/file/:file/:commit', (req, res) => {
   }).catch(() => res.send({ content: '' }));
 });
 
+// Blob file
 app.get('/:repo/file/:file/:commit/raw', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.repo}`);
 
+  // This does not work - the problem is that if there is a 0, it is parsed as null
+  // terminator and the file is then incomplete...
   git.show([`${req.params.commit}:${req.params.file}`]).then((file) => {
     const bytes = file.length;
     let buf = new Uint8Array(bytes);

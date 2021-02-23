@@ -6,6 +6,11 @@ import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
 import Diff from './diff/diff.js';
 
+/**
+ * Diff view shows the diff file contents. Currently this
+ * even handles the file diffing itself, this should
+ * probably be offloaded to the server.
+ */
 class DiffView extends React.Component {
   from = null;
 

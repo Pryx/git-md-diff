@@ -5,6 +5,11 @@ import { Switch, Route } from 'wouter';
 import DiffPage from './DiffPage';
 import EditPage from './EditPage';
 
+/**
+ * The root app element. Takes care of routing and right now
+ * it stores the app state. This should be changed when Redux
+ * is implemented. 
+ */
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -53,6 +58,7 @@ class App extends React.Component {
       });
   }
 
+  //TODO: We should fail gracefully, so that the user isn't left with a broken page
   componentDidMount() {
     fetch('http://localhost:3000/list-repos')
       .then((r) => r.json())
@@ -63,9 +69,7 @@ class App extends React.Component {
             selectedRepo: repository[0],
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
+
         (error) => {
           this.setState({
             error,

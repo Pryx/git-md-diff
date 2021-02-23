@@ -5,6 +5,10 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import PropTypes from 'prop-types';
 
+/**
+ * This is the commit selector component. This allows us to
+ * pick two commits even between branches.
+ */
 class CommitSelect extends React.Component {
   state = {
     error: null,
@@ -39,6 +43,7 @@ class CommitSelect extends React.Component {
     };
   }
 
+  //TODO: Fail gracefully (allow component reload)
   componentDidMount() {
     fetch(`http://localhost:3000/${this.repo}/get-branches`)
       .then((r) => r.json())
@@ -69,9 +74,7 @@ class CommitSelect extends React.Component {
               );
             });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
+
         (error) => {
           this.setState({
             isLoaded: true,
@@ -108,10 +111,12 @@ class CommitSelect extends React.Component {
 
   handleCommit(e) {
     const { currentBranch } = this.state;
+
     this.update({
       branch: currentBranch,
       commit: e.currentTarget.value,
     });
+
     this.setState(() => (
       {
         currentCommit: e.currentTarget.value,

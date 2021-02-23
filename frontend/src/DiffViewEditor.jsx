@@ -6,6 +6,10 @@ import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
 import Diff from './diff/diff.js';
 
+/**
+ * A slightly modified DiffView for display in the editor file.
+ */
+// TODO: This should probably be rewritten so that it can use same components as the DiffView.
 class DiffViewEditor extends React.Component {
   from = null;
 

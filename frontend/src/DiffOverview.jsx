@@ -6,6 +6,11 @@ import Row from 'react-bootstrap/Row';
 import PropTypes from 'prop-types';
 import DiffView from './DiffView';
 
+/**
+ * The diff overview component acts as a wrapper to 
+ * diff view components. It's basically a list of files
+ * and their changes.
+ */
 class DiffOverview extends React.Component {
   state = {
     changes: [],
@@ -43,6 +48,7 @@ class DiffOverview extends React.Component {
         ready: true,
         isLoaded: false,
       });
+      
       fetch(`http://localhost:3000/${this.repo}/list-changes/${this.from}/${this.to}`)
         .then((r) => r.json())
         .then(

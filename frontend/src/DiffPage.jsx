@@ -11,6 +11,11 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import CommitSelect from './CommitSelect';
 import DiffOverview from './DiffOverview';
 
+/**
+ * Diff page component is a wrapper to diff overview and commit selectors.
+ * Currently it stores the info about current repository and selected commits
+ * and passess it to wrapped components.
+ */
 class DiffPage extends React.Component {
   constructor(props) {
     super(props);
@@ -69,9 +74,7 @@ class DiffPage extends React.Component {
             selectedRepo: repository[0],
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
+
         (error) => {
           this.setState({
             error,

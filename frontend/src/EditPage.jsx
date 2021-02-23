@@ -13,6 +13,10 @@ import '@toast-ui/editor/dist/toastui-editor.css';
 import { Editor } from '@toast-ui/react-editor';
 import DiffViewEditor from './DiffViewEditor';
 
+/**
+ * Edit page encompasses the Editor and DiffViewEditor components.
+ * It shows the edit page to the user and allows to save the changes.
+ */
 class DiffPage extends React.Component {
   repo = null;
   from = null;
@@ -48,9 +52,7 @@ class DiffPage extends React.Component {
             isLoaded: true,
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
+
         (error) => {
           this.setState({
             error,
