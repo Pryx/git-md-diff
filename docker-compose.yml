@@ -1,0 +1,73 @@
+version: "3"
+
+services:
+  db:
+    image: "postgres:latest"
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      #PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - databases
+
+  apidoc:
+    image: "redocly/redoc:latest"
+    ports:
+      - "7888:80"
+    volumes:
+      - ./api.yaml:/usr/share/nginx/html/api.yaml
+    environment:
+      - SPEC_URL=api.yaml
+
+  backend:
+    build: ./backend/
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/:/usr/src/app
+    links:
+      - db
+    networks: 
+      - databases
+    environment:
+      - DOCUROBOT_DATABASE_URL=postgres://postgres@db:5432/postgres
+      - DOCUROBOT_PORT=8888
+    command: bash -c "npm install && bash ./wait-for-it.sh db:5432 -q && npm start"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS http://0.0.0.0:3000 || exit 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ./frontend/
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./frontend/:/usr/src/app
+    links:
+      - db
+      - backend
+    networks: 
+      - databases
+    environment:
+      - DOCUROBOT_PORT=8888
+    command: bash -c "npm install && bash ./wait-for-it.sh backend:3000 -q && npm start"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS http://0.0.0.0:5000 || exit 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
+# cargo will try to redownload packages @ docker-compose up so store them here.
+volumes:
+  pgdata: {}
+
+networks: 
+  databases:

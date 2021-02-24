@@ -109,3 +109,5 @@ dist
 
 out
 backend/repositories
+
+*credentials.json

@@ -10,7 +10,7 @@ server.listen(port, () => {
   process.stdout.write(`Running on :${port}\n`);
 });
 
-//Allow hotswapping the server when code changes
+// Allow hotswapping the server when code changes
 if (module.hot) {
   module.hot.accept('./server', () => {
     server.removeListener('request', currentApp);

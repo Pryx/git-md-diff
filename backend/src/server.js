@@ -1,4 +1,6 @@
 import express from 'express';
+import passport from 'passport';
+import GitLabStrategy from 'passport-gitlab2';
 
 const FileType = require('file-type');
 
@@ -10,8 +12,23 @@ const cors = require('cors');
 
 app.use(cors());
 app.use(express.json());
-
 const fs = require('fs');
+
+let rawdata = fs.readFileSync('./gitlab_credentials.json');
+let gitlab = JSON.parse(rawdata);
+
+passport.use(new GitLabStrategy({
+  clientID: gitlab.appid,
+  clientSecret: gitlab.secret,
+  callbackURL: "http://localhost:3000/auth/gitlab/callback"
+},
+function(accessToken, refreshToken, profile, cb) {
+  User.findOrCreate({gitlabId: profile.id}, function (err, user) {
+    return cb(err, user);
+  });
+}
+));
+
 
 const getDirectories = (source) => fs.readdirSync(source, { withFileTypes: true })
   .filter((dirent) => dirent.isDirectory())
@@ -70,9 +87,9 @@ app.post('/save', (req, res) => {
   git.branch([branch, commit]).then(() => {
     git.checkout(branch).then(() => {
       // Update file
-      fs.writeFile(`./repositories/${repo}/${file}`, content,(err) => {
-        if (err){
-          res.send({ success: false, error: err, phase: 'write'});
+      fs.writeFile(`./repositories/${repo}/${file}`, content, (err) => {
+        if (err) {
+          res.send({ success: false, error: err, phase: 'write' });
           return;
         }
 
@@ -80,11 +97,11 @@ app.post('/save', (req, res) => {
         git.add(`${file}`).then(() => {
           git.commit(`Edited file ${file} via git-md-diff`).then(() => {
             res.send({ success: true });
-          }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'commit'}));
-        }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'add'}));
+          }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'commit' }));
+        }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'add' }));
       });
-    }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'checkout'}));
-  }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'branch'}));
+    }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'checkout' }));
+  }).catch((e) => res.send({ success: false, error: JSON.stringify(e), phase: 'branch' }));
 });
 
 // Get repos
@@ -154,4 +171,17 @@ app.get('/:repo/file/:file/:commit/raw', (req, res) => {
     res.send(file);
   }).catch(() => res.send({ content: '' }));
 });
+
+
+app.get('/auth/gitlab', passport.authenticate('gitlab'));
+
+app.get('/auth/gitlab/callback',
+  passport.authenticate('gitlab', {
+    failureRedirect: '/login'
+  }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+  });
+
 export default app;
