@@ -1,9 +1,11 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
 import './App.css';
-import { Switch, Route } from 'wouter';
+import { Switch, Route, Redirect } from 'wouter';
 import DiffPage from './DiffPage';
 import EditPage from './EditPage';
+import Login from './Login'
+import { connect } from "react-redux";
 
 /**
  * The root app element. Takes care of routing and right now
@@ -11,8 +13,10 @@ import EditPage from './EditPage';
  * is implemented. 
  */
 class App extends React.Component {
+  
   constructor(props) {
     super(props);
+
     this.state = {
       commitFrom: { branch: '', commit: '' },
       commitTo: { branch: '', commit: '' },
@@ -95,17 +99,45 @@ class App extends React.Component {
   }
 
   render() {
-    return (
-      <Switch>
-        <Route path="/edit/:repo/:from/:to/:file" >
-          {(params) =><EditPage repo={params.repo} from={params.from} to={params.to} file={params.file} /> }
-        </Route>
-        <Route>
-          <DiffPage />
-        </Route>
-      </Switch>
-    );
+    if (this.props.loggedIn) {
+      return (
+        <Switch>
+          <Route path="/edit/:repo/:from/:to/:file" >
+            {(params) => <EditPage repo={params.repo} from={params.from} to={params.to} file={params.file} />}
+          </Route>
+
+          <Route path="/">
+            <DiffPage />
+          </Route>
+
+          <Redirect to="/"></Redirect>
+
+        </Switch>
+      );
+    } else {
+      return (
+        <Switch>
+          <Route path="/login/error" >
+            <Login error={true} />
+          </Route>
+
+          <Route path="/login/success" >
+            <Login success={true} />
+          </Route>
+
+          <Route path="/login">
+            <Login />
+          </Route>
+
+          <Redirect to="/login" />
+        </Switch>
+      );
+    }
   }
 }
 
-export default hot(module)(App);
+const mapStateToProps = state => {
+  return { loggedIn: state.loggedIn };
+};
+
+export default hot(module)(connect(mapStateToProps)(App));

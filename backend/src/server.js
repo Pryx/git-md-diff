@@ -24,33 +24,37 @@ let rawdata = fs.readFileSync('./gitlab_credentials.json');
 let gitlab = JSON.parse(rawdata);
 
 passport.serializeUser(function (user, done) {
-  done(null, user);
+  done(null, user.email);
 });
 
-passport.deserializeUser(function (user, done) {
-  done(null, user);
+passport.deserializeUser(function (u, done) {
+  User.getByEmail(u).then((user) => {
+    let [first] = user;
+    done(null, first)
+  });
 });
 
 passport.use(new GitLabStrategy({
   clientID: gitlab.appid,
   clientSecret: gitlab.secret,
-  callbackURL: "http://localhost:3000/auth/gitlab/callback"
+  callbackURL: "http://localhost:5000/auth/gitlab/callback"
 },
   function (accessToken, refreshToken, profile, cb) {
     console.log(profile)
 
     let user = User.getByProviderId(profile.id, 'gitlab');
     user.then(u => {
-      console.log(profile.emails);
 
       if (u.count == 0) {
         //Create user
         user = new User({ email: profile.emails[0].value, name: profile.displayName, linked: { gitlab: profile.id }, tokens: { gitlab: { access: accessToken, refresh: refreshToken } } })
         user.save()
+        cb(null, user);
+      }else{
+        let [usr] = u;
+        cb(null, usr);
       }
     })
-
-    cb(null, user);
   }
 ));
 
@@ -103,11 +107,6 @@ app.post('/save', (req, res) => {
   // For hasging the branch name
   const hash = crypto
     .createHash('sha256')
-    .update(file + content)
-    .digest('hex');
-
-  const branch = `git_md_diff_${hash}`;
-
   // Create branch
   git.branch([branch, commit]).then(() => {
     git.checkout(branch).then(() => {
@@ -204,22 +203,34 @@ app.get('/auth/gitlab/callback',
   (req, res, next) => passport.authenticate('gitlab', function (err, user, info) {
     if (err) return next(err)
     if (!user) {
-      return res.json({ success: false, message: info.message })
+      res.redirect("/login/error");//return res.json({ success: false, message: info.message })
     }
 
-    req.logIn(user, loginErr => {
+    req.login(user, loginErr => {
       if (loginErr) {
-        return res.json({ success: false, message: loginErr })
+        console.error(loginErr)
+        return res.redirect("/login/error")
       }
-      return res.json({ success: true, message: "Authentication successfull" })
+      console.log(user)
+      return res.redirect("/login/success")
     })
   })(req, res, next)
 );
 
 
 app.get('/auth/logout', (req, res, next) => {
+  console.log("LOGOUT!");
   req.logout()
-	return res.json({ success: true })
+	return res.redirect("/login")
 });
+
+app.get('/auth/user', (req, res, next) => {
+  if (req.user){
+	  return res.json({success: true, user: req.user})
+  }
+
+  return res.json({success: false})
+});
+
 
 export default app;
