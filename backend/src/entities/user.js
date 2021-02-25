@@ -1,0 +1,43 @@
+import sql from '../db'
+
+const defaults = {
+  id: null,
+  email: "",
+  name: "",
+  linked: {},
+  tokens: {}
+}
+
+export default class User{
+  
+  constructor(params) {
+    this.id = params.id || defaults.id;
+    this.email = params.email || defaults.email;
+    this.name = params.name || defaults.name;
+    this.tokens = params.tokens || defaults.tokens;
+    this.linked = params.linked || defaults.linked;
+  }
+
+  static async getByEmail(email){
+    console.log(email)
+    return await sql`SELECT * FROM users WHERE email=${email}`;
+  }
+
+  static async getByProviderId(id, provider){
+    let column = [`${provider}`];
+    console.log(id)
+    return await sql`SELECT * FROM users WHERE linked->>'${sql(column)}'=${id}`;
+  }
+
+  
+
+  async save(){
+    let result = false;
+
+    result = await sql`INSERT INTO users (email, name, linked, tokens) VALUES (${this.email}, ${this.name},${sql.json(this.linked)}, ${sql.json(this.tokens)}) ON CONFLICT (email) DO
+    UPDATE SET name=${this.name}, linked=${sql.json(this.linked)}, tokens=${sql.json(this.tokens)}`;
+
+    return result;
+  }
+}
+

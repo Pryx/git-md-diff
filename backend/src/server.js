@@ -1,32 +1,57 @@
-import express from 'express';
-import passport from 'passport';
-import GitLabStrategy from 'passport-gitlab2';
-
-const FileType = require('file-type');
-
-const simpleGit = require('simple-git');
+import express from 'express'
+import session from 'express-session'
+import passport from 'passport'
+import GitLabStrategy from 'passport-gitlab2'
+import User from './entities/user'
+import sql from './db'
+import fs from 'fs'
+import FileType from 'file-type'
+import simpleGit from 'simple-git'
+import cors from 'cors';
+import crypto from 'crypto'
 
 const app = express();
 
-const cors = require('cors');
-
 app.use(cors());
 app.use(express.json());
-const fs = require('fs');
+app.use(session({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+// Initialize Passport!  Also use passport.session() middleware, to support
+// persistent login sessions (recommended).
+app.use(passport.initialize());
+app.use(passport.session());
 
 let rawdata = fs.readFileSync('./gitlab_credentials.json');
 let gitlab = JSON.parse(rawdata);
+
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function (user, done) {
+  done(null, user);
+});
 
 passport.use(new GitLabStrategy({
   clientID: gitlab.appid,
   clientSecret: gitlab.secret,
   callbackURL: "http://localhost:3000/auth/gitlab/callback"
 },
-function(accessToken, refreshToken, profile, cb) {
-  User.findOrCreate({gitlabId: profile.id}, function (err, user) {
-    return cb(err, user);
-  });
-}
+  function (accessToken, refreshToken, profile, cb) {
+    console.log(profile)
+
+    let user = User.getByProviderId(profile.id, 'gitlab');
+    user.then(u => {
+      console.log(profile.emails);
+
+      if (u.count == 0) {
+        //Create user
+        user = new User({ email: profile.emails[0].value, name: profile.displayName, linked: { gitlab: profile.id }, tokens: { gitlab: { access: accessToken, refresh: refreshToken } } })
+        user.save()
+      }
+    })
+
+    cb(null, user);
+  }
 ));
 
 
@@ -76,7 +101,7 @@ app.post('/save', (req, res) => {
   const git = simpleGit(`./repositories/${repo}`);
 
   // For hasging the branch name
-  const hash = require('crypto')
+  const hash = crypto
     .createHash('sha256')
     .update(file + content)
     .digest('hex');
@@ -176,12 +201,25 @@ app.get('/:repo/file/:file/:commit/raw', (req, res) => {
 app.get('/auth/gitlab', passport.authenticate('gitlab'));
 
 app.get('/auth/gitlab/callback',
-  passport.authenticate('gitlab', {
-    failureRedirect: '/login'
-  }),
-  function (req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  });
+  (req, res, next) => passport.authenticate('gitlab', function (err, user, info) {
+    if (err) return next(err)
+    if (!user) {
+      return res.json({ success: false, message: info.message })
+    }
+
+    req.logIn(user, loginErr => {
+      if (loginErr) {
+        return res.json({ success: false, message: loginErr })
+      }
+      return res.json({ success: true, message: "Authentication successfull" })
+    })
+  })(req, res, next)
+);
+
+
+app.get('/auth/logout', (req, res, next) => {
+  req.logout()
+	return res.json({ success: true })
+});
 
 export default app;
