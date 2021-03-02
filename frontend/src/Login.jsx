@@ -6,23 +6,22 @@ import PropTypes from 'prop-types';
 import { Button, Card } from 'react-bootstrap';
 import { Redirect } from 'wouter';
 import { store } from './store/index';
-import { logIn } from './actions';
+import { logIn, logOut } from './actions';
 
 
 class Login extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      error: props.error,
-      success: props.success,
-      userLoaded: false
-    };
   }
 
   render() {
     const {
-      error, success, userLoaded
-    } = this.state;
+      error, success, userLoaded, logout
+    } = this.props;
+
+    if (logout){
+      store.dispatch( logOut() );
+    }
 
     let alert = null;
     if (error){
@@ -69,11 +68,13 @@ class Login extends React.Component {
 Login.defaultProps = {
   error: false,
   success: false,
+  logout: false
 };
 
 Login.propTypes = {
   error: PropTypes.boolean,
   success: PropTypes.boolean,
+  logout: PropTypes.boolean,
 };
 
 export default hot(module)(Login);

@@ -110,6 +110,10 @@ class App extends React.Component {
             <DiffPage />
           </Route>
 
+          <Route path="/logout">
+            <Login logout={true} />
+          </Route>
+
           <Redirect to="/"></Redirect>
 
         </Switch>
