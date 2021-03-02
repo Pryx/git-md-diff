@@ -1,2 +1,4 @@
 export const LOGIN = "LOGIN";
 export const LOGOUT = "LOGOUT";
+export const REVISION_SELECTED = "REVISION_SELECTED";
+export const DOCUMENTATION_SELECTED = "DOCUMENTATION_SELECTED";

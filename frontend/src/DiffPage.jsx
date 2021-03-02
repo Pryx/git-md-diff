@@ -1,15 +1,18 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
-import './App.css';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import InputGroup from 'react-bootstrap/InputGroup';
 import CommitSelect from './CommitSelect';
 import DiffOverview from './DiffOverview';
+import { connect } from "react-redux";
+import SelectSearch from 'react-select';
+import { store } from './store/index';
+import { documentationSelected } from './actions';
+
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -20,10 +23,7 @@ class DiffPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      commitFrom: { branch: '', commit: '' },
-      commitTo: { branch: '', commit: '' },
-      selectedRepo: null,
-      repos: [],
+      docus: [],
       error: null,
       cloneUrl: '',
     };
@@ -32,18 +32,6 @@ class DiffPage extends React.Component {
     this.handleCloneUrl = this.handleCloneUrl.bind(this);
     this.handleRepoChange = this.handleRepoChange.bind(this);
   }
-
-  updateFrom = (from) => {
-    this.setState({
-      commitFrom: from,
-    });
-  };
-
-  updateTo = (to) => {
-    this.setState({
-      commitTo: to,
-    });
-  };
 
   handleClone(e) {
     const requestOptions = {
@@ -55,9 +43,9 @@ class DiffPage extends React.Component {
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          const { repos } = this.state;
-          repos.push(data.name);
-          this.setState({ repos, cloneUrl: '' });
+          const { docus } = this.state;
+          docus.push(data.name);
+          this.setState({ docus, cloneUrl: '' });
         } else {
           this.setState({ error: "Couldn't clone repository!" });
         }
@@ -68,10 +56,9 @@ class DiffPage extends React.Component {
     fetch('http://localhost:3000/list-repos')
       .then((r) => r.json())
       .then(
-        (repository) => {
+        (docus) => {
           this.setState({
-            repos: repository,
-            selectedRepo: repository[0],
+            docus: docus.map((b) => {return {label: b, value: b}}),
           });
         },
 
@@ -91,21 +78,14 @@ class DiffPage extends React.Component {
     );
   }
 
-  handleRepoChange(e) {
-    this.setState(
-      {
-        selectedRepo: e.currentTarget.value,
-      },
-    );
+  handleRepoChange(selectedValue) {
+    store.dispatch(documentationSelected(selectedValue.value))
   }
 
   render() {
     const {
-      commitTo, commitFrom, selectedRepo, repos, error, cloneUrl,
+      docus, error, cloneUrl,
     } = this.state;
-
-    const to = commitTo.commit || commitTo.branch;
-    const from = commitFrom.commit || commitFrom.branch;
 
     if (error) {
       return (
@@ -115,27 +95,18 @@ class DiffPage extends React.Component {
       );
     } 
     
-    if (!selectedRepo) {
+    if (!this.props.docuId) {
       return (
         <Container className="mt-5">
           <Row className="select-diff">
             <Col lg={6} xs={12}>
               Select repository:
-              <Form.Control as="select" onChange={this.handleRepoChange} value={selectedRepo}>
-                <option key="" value="">
-                  Select a repo
-                </option>
-                {
-                  repos.map(
-                    (repo) => (
-                      <option key={repo} value={repo}>
-                        {repo}
-                      </option>
-                    ),
-                  )
-                }
-                ;
-              </Form.Control>
+              <SelectSearch
+                onChange={this.handleRepoChange}
+                options={docus}
+                value={docus.find(o => o.value === this.props.docuId)}
+                search
+                />
             </Col>
             <Col lg={6} xs={12}>
               Or clone a new one:
@@ -157,21 +128,12 @@ class DiffPage extends React.Component {
         <Row className="select-diff">
           <Col lg={6} xs={12}>
             Select repository:
-            <Form.Control as="select" onChange={this.handleRepoChange} value={selectedRepo}>
-              <option key="" value="">
-                Select a repo
-                </option>
-              {
-                  repos.map(
-                    (repo) => (
-                      <option key={repo} value={repo}>
-                        {repo}
-                      </option>
-                    ),
-                  )
-                }
-              ;
-            </Form.Control>
+            <SelectSearch
+                onChange={this.handleRepoChange}
+                options={docus}
+                value={docus.find(o => o.value === this.props.docuId)}
+                search
+                />
           </Col>
           <Col lg={6} xs={12}>
             Or clone a new one:
@@ -188,16 +150,16 @@ class DiffPage extends React.Component {
         <Row className="select-diff">
           <Col lg={6} xs={12}>
             Select from
-            <CommitSelect id="from" dependsOn="to" comparison="<" update={this.updateFrom} repo={selectedRepo} />
+            <CommitSelect id="from" from={true} />
           </Col>
           <Col lg={6} xs={12}>
             Select to
-            <CommitSelect id="to" dependsOn="from" comparison=">" update={this.updateTo} repo={selectedRepo} />
+            <CommitSelect id="to" from={false} />
           </Col>
         </Row>
         <Row className="results">
           <Col>
-            <DiffOverview from={from} to={to} repo={selectedRepo} />
+            <DiffOverview repo={this.props.docuId} />
           </Col>
         </Row>
       </Container>
@@ -205,4 +167,8 @@ class DiffPage extends React.Component {
   }
 }
 
-export default hot(module)(DiffPage);
+const mapStateToProps = state => {
+  return { docuId: state.docuId };
+};
+
+export default hot(module)(connect(mapStateToProps)(DiffPage));

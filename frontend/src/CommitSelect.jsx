@@ -1,9 +1,11 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
-import './App.css';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
-import PropTypes from 'prop-types';
+import SelectSearch from 'react-select';
+import { connect } from "react-redux";
+import { store } from './store';
+import { revisionSelected } from './actions';
 
 /**
  * This is the commit selector component. This allows us to
@@ -17,59 +19,66 @@ class CommitSelect extends React.Component {
     commits: [],
   };
 
-  dependsOn = null;
-
-  comparison = null;
-
-  update = null;
-
-  repo = null;
 
   constructor(props) {
     super(props);
-    this.dependsOn = props.dependsOn;
-    this.comparison = props.comparison;
     this.handleBranch = this.handleBranch.bind(this);
     this.handleCommit = this.handleCommit.bind(this);
-    this.update = props.update;
-    this.repo = props.repo;
 
     this.state = {
       isLoaded: false,
       branches: [],
       commits: [],
-      currentBranch: '',
-      currentCommit: '',
     };
+  }
+
+  getCurrentBranch(){
+    if (this.props.from){
+      return this.props.startRevision.branch;
+    }
+
+    return this.props.endRevision.branch;
+  }
+
+  getCurrentCommit(){
+    if (this.props.from){
+      return this.props.startRevision.commit;
+    }
+    
+    return this.props.endRevision.commit;
   }
 
   //TODO: Fail gracefully (allow component reload)
   componentDidMount() {
-    fetch(`http://localhost:3000/${this.repo}/get-branches`)
+    fetch(`http://localhost:3000/${this.props.docuId}/get-branches`)
       .then((r) => r.json())
       .then(
         (branches) => {
-          const cb = branches.all.includes('master') ? 'master' : branches.all[0];
+          // Let's be inclusive after the master branch debacle :)
+          const cb = this.getCurrentBranch() || branches.all.includes('master') ? 'master' : (branches.all.includes('main') ? 'main' : branches.all[0]);
           this.setState({
-            branches: branches.all,
-            currentBranch: cb,
+            branches: branches.all.map((b) => { return { label: b, value: b } }),
             commits: [],
             currentCommit: '',
           });
 
-          fetch(`http://localhost:3000/${this.repo}/get-commits/${cb}`)
+          fetch(`http://localhost:3000/${this.props.docuId}/get-commits/${cb}`)
             .then((r) => r.json())
             .then((commits) => {
-              this.update({
-                branch: cb,
-                commit: commits.all[0].hash,
-              });
+              store.dispatch(
+                revisionSelected({
+                  from: this.props.from,
+                  revisionData: {
+                    branch: cb,
+                    commit: this.getCurrentCommit() || (this.props.from ? commits.all[1].hash : commits.all[0].hash),
+                  }
+                })
+              );
 
               this.setState(
                 {
                   isLoaded: true,
-                  commits: commits.all,
-                  currentCommit: commits.all[0].hash,
+                  commits: commits.all.map((c) => { return { label: c.message, value: c.hash } }),
                 },
               );
             });
@@ -84,42 +93,52 @@ class CommitSelect extends React.Component {
       );
   }
 
-  handleBranch(e) {
-    this.update({
-      branch: e.currentTarget.value,
-      commit: '',
-    });
+  handleBranch(selectedOption) {
+    store.dispatch(
+      revisionSelected({
+        from: this.props.from,
+        revisionData: {
+          branch: selectedOption.value,
+          commit: null,
+        }
+      })
+    );
 
     this.setState(
       {
         isLoaded: false,
-        currentBranch: e.currentTarget.value,
+        currentBranch: selectedOption.value,
       },
     );
 
-    fetch(`http://localhost:3000/${this.repo}/get-commits/${encodeURIComponent(e.currentTarget.value)}`)
+    fetch(`http://localhost:3000/${this.props.docuId}/get-commits/${encodeURIComponent(selectedOption.value)}`)
       .then((r) => r.json())
       .then((commits) => {
         this.setState(
           {
             isLoaded: true,
-            commits: commits.all,
+            commits: commits.all.map((c) => { return { label: c.message, value: c.hash } }),
           },
         );
       });
   }
 
-  handleCommit(e) {
+  handleCommit(selectedOption) {
     const { currentBranch } = this.state;
 
-    this.update({
-      branch: currentBranch,
-      commit: e.currentTarget.value,
-    });
+    store.dispatch(
+      revisionSelected({
+        from: this.props.from,
+        revisionData: {
+          branch: currentBranch,
+          commit: selectedOption.value,
+        }
+      })
+    );
 
     this.setState(() => (
       {
-        currentCommit: e.currentTarget.value,
+        currentCommit: selectedOption.value,
       }));
   }
 
@@ -145,36 +164,31 @@ class CommitSelect extends React.Component {
         </div>
       );
     }
-
+    const customStyles = {
+      option: (provided, state) => ({
+        ...provided,
+        wordWrap: 'break-word'
+      })
+    }
+    
     return (
       <Form.Row>
         <Col>
-          <Form.Control as="select" value={currentBranch} onChange={this.handleBranch}>
-            {
-              branches.map(
-                (branch) => (
-                  <option key={branch} value={branch}>
-                    {branch}
-                  </option>
-                ),
-              )
-            }
-            ;
-          </Form.Control>
+          <SelectSearch
+            onChange={this.handleBranch}
+            options={branches}
+            value={branches.find(o => o.value === this.getCurrentBranch())}
+            search
+          />
         </Col>
         <Col>
-          <Form.Control as="select" value={currentCommit} onChange={this.handleCommit}>
-            {
-              commits.map(
-                (commit) => (
-                  <option key={commit.hash} value={commit.hash}>
-                    {commit.hash}
-                  </option>
-                ),
-              )
-            }
-            ;
-          </Form.Control>
+          <SelectSearch
+            onChange={this.handleCommit}
+            options={commits}
+            value={commits.find(o => o.value === this.getCurrentCommit())}
+            styles={customStyles}
+            search
+          />
         </Col>
       </Form.Row>
     );
@@ -182,15 +196,13 @@ class CommitSelect extends React.Component {
 }
 
 CommitSelect.defaultProps = {
-  dependsOn: null,
-  comparison: null,
 };
 
 CommitSelect.propTypes = {
-  dependsOn: PropTypes.string,
-  comparison: PropTypes.string,
-  update: PropTypes.func.isRequired,
-  repo: PropTypes.string.isRequired,
 };
 
-export default hot(module)(CommitSelect);
+const mapStateToProps = state => {
+  return { docuId: state.docuId, startRevision: state.startRevision, endRevision: state.endRevision};
+};
+
+export default hot(module)(connect(mapStateToProps)(CommitSelect));

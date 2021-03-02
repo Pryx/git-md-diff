@@ -1,10 +1,9 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
-import './App.css';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
-import PropTypes from 'prop-types';
 import DiffView from './DiffView';
+import { connect } from "react-redux";
 
 /**
  * The diff overview component acts as a wrapper to 
@@ -18,38 +17,32 @@ class DiffOverview extends React.Component {
     after: [],
   };
 
-  from = null;
-
-  to = null;
-
-  repo = null;
-
   constructor(props) {
     super(props);
-    this.from = props.from;
-    this.to = props.to;
-    this.repo = props.repo;
     this.state = {
       changes: [],
       isLoaded: false,
       ready: false,
     };
   }
+  
+  componentDidMount(){
+    this.componentWillReceiveProps(this.props)
+  }
 
   componentWillReceiveProps(props) {
-    this.from = props.from;
-    this.to = props.to;
     // You don't have to do this check first, but it can help prevent an unneeded render
     this.setState({
       ready: false,
+      error: null
     });
-    if (this.from && this.to) {
+    if (props.from && props.to) {
       this.setState({
         ready: true,
         isLoaded: false,
       });
-      
-      fetch(`http://localhost:3000/${this.repo}/list-changes/${this.from}/${this.to}`)
+
+      fetch(`http://localhost:3000/${this.props.docuId}/list-changes/${props.from}/${props.to}`)
         .then((r) => r.json())
         .then(
           (changes) => {
@@ -69,10 +62,6 @@ class DiffOverview extends React.Component {
           },
         );
     }
-  }
-
-  componentDidMount() {
-
   }
 
   render() {
@@ -106,13 +95,13 @@ class DiffOverview extends React.Component {
       );
     }
 
-    if (changes.length == 0){
+    if (changes.length == 0) {
       return (
-          <Row className="mt-4">
-            <Col>
-              No changes in Markdown files for the selected revision range
+        <Row className="mt-4">
+          <Col>
+            No changes in Markdown files for the selected revision range
             </Col>
-          </Row>
+        </Row>
       );
     }
 
@@ -121,7 +110,7 @@ class DiffOverview extends React.Component {
         (change) => (
           <Row key={change.file} className="mt-4">
             <Col>
-              <DiffView file={change.file} insertions={change.insertions} deletions={change.deletions} from={this.from} to={this.to} repo={this.repo} />
+              <DiffView file={change.file} insertions={change.insertions} deletions={change.deletions} from={this.props.from} to={this.props.to} repo={this.props.docuId} />
             </Col>
           </Row>
         ),
@@ -131,14 +120,17 @@ class DiffOverview extends React.Component {
 }
 
 DiffOverview.defaultProps = {
-  from: null,
-  to: null,
 };
 
 DiffOverview.propTypes = {
-  from: PropTypes.string,
-  to: PropTypes.string,
-  repo: PropTypes.string.isRequired,
 };
 
-export default hot(module)(DiffOverview);
+const mapStateToProps = state => {
+  return {
+    docuId: state.docuId,
+    from: state.startRevision.commit || state.startRevision.branch,
+    to: state.endRevision.commit || state.endRevision.branch
+  };
+};
+
+export default hot(module)(connect(mapStateToProps)(DiffOverview));

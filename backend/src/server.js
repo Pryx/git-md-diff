@@ -140,7 +140,7 @@ app.get('/list-repos', (req, res) => {
 // Get branches from repo
 app.get('/:repo/get-branches', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.repo}`);
-  git.branchLocal().then((branches) => res.send(branches));
+  git.branchLocal().then((branches) => res.send(branches)).catch((e) => res.send([]));
 });
 
 // Get commits from branches
@@ -148,7 +148,7 @@ app.get('/:repo/get-commits/:branch', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.repo}`);
 
   // Not sure why this wouldn't work with the default implementation...
-  git.log([`${req.params.branch}`]).then((history) => res.send(history));
+  git.log([`${req.params.branch}`]).then((history) => res.send(history)).catch((e) => res.send([]));
 });
 
 // File change list
@@ -159,7 +159,7 @@ app.get('/:repo/list-changes/:from/:to', (req, res) => {
     const fileChanges = changes.files.filter((change) => change.file.includes('.md'));
 
     res.send(fileChanges);
-  });
+  }).catch((e) => res.send([]));
 });
 
 // Text file

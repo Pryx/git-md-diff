@@ -1,10 +1,8 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
-import './App.css';
 import Container from 'react-bootstrap/Container';
 import PropTypes from 'prop-types';
 import { Button, Card } from 'react-bootstrap';
-import { Redirect } from 'wouter';
 import { store } from './store/index';
 import { logIn, logOut } from './actions';
 

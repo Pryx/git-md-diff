@@ -1,6 +1,6 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
-import './App.css';
+ './App.css';
 import {Link} from 'wouter';
 import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
