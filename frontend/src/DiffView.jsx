@@ -35,7 +35,7 @@ class DiffView extends React.Component {
     this.deletions = props.deletions;
     this.options = {hideCode: props.hideCode};
 
-    this.link = `/edit/${this.repo}/${this.from}/${this.to}/${encodeURIComponent(this.file).replace('.', '%2E')}`
+    this.link = `/edit/${this.repo}/${encodeURIComponent(this.file).replace('.', '%2E')}`
     
     this.state = {
       isLoaded: false,
@@ -44,11 +44,11 @@ class DiffView extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`/api/${this.repo}/file/${encodeURIComponent(this.file)}/${this.from}`)
+    fetch(`/api/documentations/${this.repo}/${this.from}/pages/${encodeURIComponent(this.file)}`)
       .then((r) => r.json())
       .then(
         (original) => {
-          fetch(`/api/${this.repo}/file/${encodeURIComponent(this.file)}/${this.to}`)
+          fetch(`/api/documentations/${this.repo}/${this.to}/pages/${encodeURIComponent(this.file)}`)
             .then((r) => r.json())
             .then(
               (modified) => {

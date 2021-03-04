@@ -9,6 +9,7 @@ import 'codemirror/lib/codemirror.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
 import { Editor } from '@toast-ui/react-editor';
 import DiffViewEditor from './DiffViewEditor';
+import { connect } from "react-redux";
 
 /**
  * Edit page encompasses the Editor and DiffViewEditor components.
@@ -24,9 +25,6 @@ class DiffPage extends React.Component {
 
   constructor(props) {
     super(props);
-    this.repo = props.repo;
-    this.from = props.from;
-    this.to = props.to;
     this.file = decodeURIComponent(props.file);
     this.state = {
       content: null,
@@ -40,7 +38,7 @@ class DiffPage extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`/api/${this.repo}/file/${encodeURIComponent(this.file)}/${this.to}`)
+    fetch(`/api/documentations/${this.props.docuId}/${this.props.endRevision}/pages/${encodeURIComponent(this.file)}`)
       .then((r) => r.json())
       .then(
         (data) => {
@@ -59,10 +57,11 @@ class DiffPage extends React.Component {
   }
 
   handleSave(e) {
+    alert('Still needs updated implementation...');
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file: this.file, repo: this.repo, commit: this.to, content: this.editorRef.current.getInstance().getMarkdown() }),
+      body: JSON.stringify({ file: this.file, repo: this.repo, commit: this.endRevision, content: this.editorRef.current.getInstance().getMarkdown() }),
     };
 
     fetch('/api/save', requestOptions)
@@ -125,7 +124,7 @@ class DiffPage extends React.Component {
             />
           </Col>
           <Col xl={6} md={12}>
-            <DiffViewEditor from={this.from} repo={this.repo} to={this.to} file={this.file} />
+            <DiffViewEditor from={this.startRevision} repo={this.docuId} to={this.endRevision} file={this.file} />
           </Col>
         </Row>
         <Row className="mt-3 mr-3 ml-3">
@@ -144,5 +143,8 @@ class DiffPage extends React.Component {
     );
   }
 }
+const mapStateToProps = state => {
+  return { docuId: state.docuId, startRevision: state.startRevision, endRevision: state.endRevision};
+};
 
-export default hot(module)(DiffPage);
+export default hot(module)(connect(mapStateToProps)(DiffPage));

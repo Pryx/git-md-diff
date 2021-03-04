@@ -49,7 +49,7 @@ class CommitSelect extends React.Component {
   }
 
   reloadData(){
-    fetch(`/api/${this.props.docuId}/get-branches`)
+    fetch(`/api/documentations/${this.props.docuId}/versions`)
         .then((r) => r.json())
         .then(
           (branches) => {
@@ -61,7 +61,7 @@ class CommitSelect extends React.Component {
               currentCommit: '',
             });
 
-            fetch(`/api/${this.props.docuId}/get-commits/${cb}`)
+            fetch(`/api/documentations/${this.props.docuId}/${cb}/revisions`)
               .then((r) => r.json())
               .then((commits) => {
                 store.dispatch(
@@ -124,7 +124,7 @@ class CommitSelect extends React.Component {
       },
     );
 
-    fetch(`/api/${this.props.docuId}/get-commits/${encodeURIComponent(selectedOption.value)}`)
+    fetch(`/api/documentations/${this.props.docuId}/${encodeURIComponent(selectedOption.value)}/revisions`)
       .then((r) => r.json())
       .then((commits) => {
         this.setState(

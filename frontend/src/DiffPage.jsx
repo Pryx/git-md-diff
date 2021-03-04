@@ -53,7 +53,7 @@ class DiffPage extends React.Component {
   }
 
   componentDidMount() {
-    fetch('/api/list-repos')
+    fetch('/api/documentations')
       .then((r) => r.json())
       .then(
         (docus) => {

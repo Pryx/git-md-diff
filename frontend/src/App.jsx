@@ -20,15 +20,11 @@ class App extends React.Component {
     this.state = {
       commitFrom: { branch: '', commit: '' },
       commitTo: { branch: '', commit: '' },
-      selectedRepo: null,
+      selectedDocumentation: null,
       repos: [],
       error: null,
       cloneUrl: '',
     };
-
-    this.handleClone = this.handleClone.bind(this);
-    this.handleCloneUrl = this.handleCloneUrl.bind(this);
-    this.handleRepoChange = this.handleRepoChange.bind(this);
   }
 
   updateFrom = (from) => {
@@ -43,34 +39,14 @@ class App extends React.Component {
     });
   };
 
-  handleClone(e) {
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: this.state.cloneUrl }),
-    };
-    fetch('/api/clone', requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          const { repos } = this.state;
-          repos.push(data.name);
-          this.setState({ repos, cloneUrl: '' });
-        } else {
-          this.setState({ error: "Couldn't clone repository!" });
-        }
-      });
-  }
-
   //TODO: We should fail gracefully, so that the user isn't left with a broken page
   componentDidMount() {
-    fetch('/api/list-repos')
+    fetch('/api/documentations')
       .then((r) => r.json())
       .then(
-        (repository) => {
+        (documentations) => {
           this.setState({
-            repos: repository,
-            selectedRepo: repository[0],
+            repos: documentations,
           });
         },
 
@@ -82,28 +58,13 @@ class App extends React.Component {
       );
   }
 
-  handleCloneUrl(e) {
-    this.setState(
-      {
-        cloneUrl: e.currentTarget.value,
-      },
-    );
-  }
-
-  handleRepoChange(e) {
-    this.setState(
-      {
-        selectedRepo: e.currentTarget.value,
-      },
-    );
-  }
 
   render() {
     if (this.props.loggedIn) {
       return (
         <Switch>
-          <Route path="/edit/:repo/:from/:to/:file" >
-            {(params) => <EditPage repo={params.repo} from={params.from} to={params.to} file={params.file} />}
+          <Route path="/edit/:repo/:file" >
+            {(params) => <EditPage repo={params.repo} file={params.file} />}
           </Route>
 
           <Route path="/logout">

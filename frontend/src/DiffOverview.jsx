@@ -42,7 +42,7 @@ class DiffOverview extends React.Component {
         isLoaded: false,
       });
 
-      fetch(`/api/${this.props.docuId}/list-changes/${props.from}/${props.to}`)
+      fetch(`/api/documentations/${this.props.docuId}/changes/${props.from}/${props.to}`)
         .then((r) => r.json())
         .then(
           (changes) => {

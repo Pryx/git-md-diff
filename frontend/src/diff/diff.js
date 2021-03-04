@@ -9,7 +9,7 @@ function imagePlaceholders(repository, from, to, markdown) {
 
   if (inserts) {
     [...inserts].map((m) => m[1]).forEach((elem) => {
-      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${to}/raw"`);
+      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/documentations/${repository}/${to}/blob/${encodeURIComponent(`static/${elem}`)}"`);
     });
   }
 
@@ -17,7 +17,7 @@ function imagePlaceholders(repository, from, to, markdown) {
 
   if (deletes) {
     [...deletes].map((m) => m[1]).forEach((elem) => {
-      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${from}/raw"`);
+      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/documentations/${repository}/${from}/blob/${encodeURIComponent(`static/${elem}`)}"`);
     });
   }
 
@@ -25,7 +25,7 @@ function imagePlaceholders(repository, from, to, markdown) {
 
   if (rest) {
     [...rest].map((m) => m[1]).forEach((elem) => {
-      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/${repository}/file/${encodeURIComponent(`static/${elem}`)}/${to}/raw"`);
+      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/documentations/${repository}/${to}/blob/${encodeURIComponent(`static/${elem}`)}`);
     });
   }
 

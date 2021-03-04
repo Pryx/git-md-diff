@@ -44,8 +44,6 @@ passport.use(new GitLabStrategy({
   callbackURL: "http://localhost:5000/api/auth/gitlab/callback"
 },
   function (accessToken, refreshToken, profile, cb) {
-    console.log(profile)
-
     let user = User.getByProviderId(profile.id, 'gitlab');
     user.then(u => {
       if (u.count == 0) {
@@ -92,6 +90,18 @@ app.get('/auth/logout', verifyAuth, (req, res, next) => {
 
 //#region User info
 app.get('/users/:id', verifyAuth, (req, res, next) => {
+  if (req.params.id == "current"){
+    return res.json({
+      success: true, 
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        name: req.user.name,
+        }
+      }
+    )  
+  }
+
   let id = parseInt(req.params.id);
   if (!isNaN(parseInt(req.params.id))){
     let user = User.getById(id);
@@ -112,18 +122,6 @@ app.get('/users/:id', verifyAuth, (req, res, next) => {
   } else {
     return res.status(404).json({success: false})
   }
-});
-
-app.get('/users/current', verifyAuth, (req, res, next) => {
-  return res.json({
-    success: true, 
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      name: req.user.name,
-      }
-    }
-  )
 });
 
 app.post('/users/current/update', verifyAuth, (req, res, next) => {
@@ -184,7 +182,7 @@ app.post('/pages/save', (req, res) => {
 });
 
 // Get repos
-app.get('/documentations/list', (req, res) => {
+app.get('/documentations', (req, res) => {
   let list = [];
   if (fs.existsSync('./repositories/')) {
     list = getDirectories('./repositories/');
@@ -199,7 +197,7 @@ app.get('/documentations/:docu/versions', (req, res) => {
 });
 
 // Get commits from branches
-app.get('/documentations/:docu/revisions/:version', (req, res) => {
+app.get('/documentations/:docu/:version/revisions', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.docu}`);
 
   // Not sure why this wouldn't work with the default implementation...
@@ -218,7 +216,7 @@ app.get('/documentations/:docu/changes/:from/:to', (req, res) => {
 });
 
 // Text file
-app.get('/documentations/:docu/page/:page/:commit', (req, res) => {
+app.get('/documentations/:docu/:commit/pages/:page', (req, res) => {
   const git = simpleGit(`./repositories/${req.params.docu}`);
 
   git.show([`${req.params.commit}:${req.params.page}`]).then((page) => {
@@ -254,7 +252,7 @@ app.get('/documentations/:docu/blob/:file/:commit', (req, res) => {
 
 // Catchall
 app.get('*', (req, res) => {
-  res.send('Please use endpoints documented in the OpenAPI file');
+  res.status(404).send('Please use endpoints documented in the OpenAPI file');
 });
 
 
