@@ -30,7 +30,7 @@ class DiffPage extends React.Component {
 
     this.handleClone = this.handleClone.bind(this);
     this.handleCloneUrl = this.handleCloneUrl.bind(this);
-    this.handleRepoChange = this.handleRepoChange.bind(this);
+    this.handleDocuChange = this.handleDocuChange.bind(this);
   }
 
   handleClone(e) {
@@ -39,7 +39,7 @@ class DiffPage extends React.Component {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: this.state.cloneUrl }),
     };
-    fetch('http://localhost:3000/clone', requestOptions)
+    fetch('/api/clone', requestOptions)
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
@@ -53,7 +53,7 @@ class DiffPage extends React.Component {
   }
 
   componentDidMount() {
-    fetch('http://localhost:3000/list-repos')
+    fetch('/api/list-repos')
       .then((r) => r.json())
       .then(
         (docus) => {
@@ -78,7 +78,7 @@ class DiffPage extends React.Component {
     );
   }
 
-  handleRepoChange(selectedValue) {
+  handleDocuChange(selectedValue) {
     store.dispatch(documentationSelected(selectedValue.value))
   }
 
@@ -100,9 +100,9 @@ class DiffPage extends React.Component {
         <Container className="mt-5">
           <Row className="select-diff">
             <Col lg={6} xs={12}>
-              Select repository:
+              Select documentation:
               <SelectSearch
-                onChange={this.handleRepoChange}
+                onChange={this.handleDocuChange}
                 options={docus}
                 value={docus.find(o => o.value === this.props.docuId)}
                 search
@@ -111,9 +111,9 @@ class DiffPage extends React.Component {
             <Col lg={6} xs={12}>
               Or clone a new one:
               <InputGroup className="mb-3">
-                <FormControl onChange={this.handleCloneUrl} value={cloneUrl} />
+                <FormControl onChange={this.handleCloneUrl} value={cloneUrl} disabled/>
                 <InputGroup.Append>
-                  <Button onClick={this.handleClone}>
+                  <Button onClick={this.handleClone} disabled>
                     Clone!
                   </Button>
                 </InputGroup.Append>
@@ -125,11 +125,14 @@ class DiffPage extends React.Component {
     }
     return (
       <Container className="mt-5">
+        <Row className="mt-3 mb-2">
+          <Col lg={12}><h1>Page revision comparison</h1></Col>
+        </Row>
         <Row className="select-diff">
           <Col lg={6} xs={12}>
-            Select repository:
+            Select documentation:
             <SelectSearch
-                onChange={this.handleRepoChange}
+                onChange={this.handleDocuChange}
                 options={docus}
                 value={docus.find(o => o.value === this.props.docuId)}
                 search
@@ -138,9 +141,9 @@ class DiffPage extends React.Component {
           <Col lg={6} xs={12}>
             Or clone a new one:
             <InputGroup className="mb-3">
-              <FormControl onChange={this.handleCloneUrl} value={cloneUrl} />
+              <FormControl onChange={this.handleCloneUrl} value={cloneUrl} disabled />
               <InputGroup.Append>
-                <Button onClick={this.handleClone}>
+                <Button onClick={this.handleClone} disabled>
                     Clone!
                   </Button>
               </InputGroup.Append>
@@ -149,11 +152,11 @@ class DiffPage extends React.Component {
         </Row>
         <Row className="select-diff">
           <Col lg={6} xs={12}>
-            Select from
+            <strong>Starting with revision:</strong>
             <CommitSelect id="from" from={true} />
           </Col>
           <Col lg={6} xs={12}>
-            Select to
+            <strong>Ending with revision:</strong>
             <CommitSelect id="to" from={false} />
           </Col>
         </Row>

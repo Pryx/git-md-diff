@@ -17,11 +17,10 @@ module.exports = {
       },
       devServer:{
         "proxy": {
-          "/auth/**/*": {
+          "/api": {
             "target": "http://backend:3000",
             "secure": false,
-            "logLevel": "debug",
-            "changeOrigin": false
+            pathRewrite: { '^/api': '' },
           }
         },
       }

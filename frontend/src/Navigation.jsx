@@ -13,7 +13,7 @@ const Navigation = (props) => {
     return (
     <Navbar bg="primary" variant="dark" expand="lg">
       <Container>
-        <Navbar.Brand href="/">Git md diff</Navbar.Brand>
+        <Link href="/"><Navbar.Brand>Git md diff</Navbar.Brand></Link>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
           <Nav className="ml-auto">

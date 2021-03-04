@@ -9,7 +9,6 @@ const defaults = {
 }
 
 export default class User{
-  
   constructor(params) {
     this.id = params.id || defaults.id;
     this.email = params.email || defaults.email;
@@ -19,17 +18,16 @@ export default class User{
   }
 
   static async getByEmail(email){
-    console.log(email)
     return await sql`SELECT * FROM users WHERE email=${email}`;
   }
 
-  static async getByProviderId(id, provider){
-    let column = [`${provider}`];
-    console.log(id)
-    return await sql`SELECT * FROM users WHERE linked->>'${sql(column)}'=${id}`;
+  static async getById(id){
+    return await sql`SELECT * FROM users WHERE id=${id}`;
   }
 
-  
+  static async getByProviderId(id, provider){
+    return await sql`SELECT * FROM users WHERE linked->>'${sql(provider)}'=${id}`;
+  }
 
   async save(){
     let result = false;

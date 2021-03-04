@@ -42,7 +42,7 @@ class DiffOverview extends React.Component {
         isLoaded: false,
       });
 
-      fetch(`http://localhost:3000/${this.props.docuId}/list-changes/${props.from}/${props.to}`)
+      fetch(`/api/${this.props.docuId}/list-changes/${props.from}/${props.to}`)
         .then((r) => r.json())
         .then(
           (changes) => {
@@ -128,8 +128,8 @@ DiffOverview.propTypes = {
 const mapStateToProps = state => {
   return {
     docuId: state.docuId,
-    from: state.startRevision.commit || state.startRevision.branch,
-    to: state.endRevision.commit || state.endRevision.branch
+    from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : null,
+    to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : null
   };
 };
 

@@ -34,63 +34,76 @@ class CommitSelect extends React.Component {
 
   getCurrentBranch(){
     if (this.props.from){
-      return this.props.startRevision.branch;
+      return this.props.startRevision ? this.props.startRevision.branch : null;
     }
 
-    return this.props.endRevision.branch;
+    return this.props.endRevision ? this.props.endRevision.branch : null;
   }
 
   getCurrentCommit(){
     if (this.props.from){
-      return this.props.startRevision.commit;
+      return this.props.startRevision ? this.props.startRevision.commit : null;
     }
     
-    return this.props.endRevision.commit;
+    return this.props.endRevision ? this.props.endRevision.commit : null;
   }
 
-  //TODO: Fail gracefully (allow component reload)
-  componentDidMount() {
-    fetch(`http://localhost:3000/${this.props.docuId}/get-branches`)
-      .then((r) => r.json())
-      .then(
-        (branches) => {
-          // Let's be inclusive after the master branch debacle :)
-          const cb = this.getCurrentBranch() || branches.all.includes('master') ? 'master' : (branches.all.includes('main') ? 'main' : branches.all[0]);
-          this.setState({
-            branches: branches.all.map((b) => { return { label: b, value: b } }),
-            commits: [],
-            currentCommit: '',
-          });
-
-          fetch(`http://localhost:3000/${this.props.docuId}/get-commits/${cb}`)
-            .then((r) => r.json())
-            .then((commits) => {
-              store.dispatch(
-                revisionSelected({
-                  from: this.props.from,
-                  revisionData: {
-                    branch: cb,
-                    commit: this.getCurrentCommit() || (this.props.from ? commits.all[1].hash : commits.all[0].hash),
-                  }
-                })
-              );
-
-              this.setState(
-                {
-                  isLoaded: true,
-                  commits: commits.all.map((c) => { return { label: c.message, value: c.hash } }),
-                },
-              );
+  reloadData(){
+    fetch(`/api/${this.props.docuId}/get-branches`)
+        .then((r) => r.json())
+        .then(
+          (branches) => {
+            // Let's be inclusive after the master branch debacle :)
+            const cb = this.getCurrentBranch() || branches.all.includes('master') ? 'master' : (branches.all.includes('main') ? 'main' : branches.all[0]);
+            this.setState({
+              branches: branches.all.map((b) => { return { label: b, value: b } }),
+              commits: [],
+              currentCommit: '',
             });
-        },
 
-        (error) => {
-          this.setState({
-            isLoaded: true,
-            error,
-          });
-        },
-      );
+            fetch(`/api/${this.props.docuId}/get-commits/${cb}`)
+              .then((r) => r.json())
+              .then((commits) => {
+                store.dispatch(
+                  revisionSelected({
+                    from: this.props.from,
+                    revisionData: {
+                      branch: cb,
+                      commit: this.getCurrentCommit() || (this.props.from ? commits.all[1].hash : commits.all[0].hash),
+                    }
+                  })
+                );
+
+                this.setState(
+                  {
+                    isLoaded: true,
+                    commits: commits.all.map((c) => { return { label: c.message, value: c.hash } }),
+                  },
+                );
+              });
+          },
+
+          (error) => {
+            this.setState({
+              isLoaded: true,
+              error,
+            });
+          },
+        );
+  }
+
+  componentDidMount() {
+    this.reloadData();  
+  }
+
+  componentDidUpdate(prev) {
+    if (this.props.docuId != prev.docuId){
+      this.reloadData();  
+    }
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    return {error: null}
   }
 
   handleBranch(selectedOption) {
@@ -111,7 +124,7 @@ class CommitSelect extends React.Component {
       },
     );
 
-    fetch(`http://localhost:3000/${this.props.docuId}/get-commits/${encodeURIComponent(selectedOption.value)}`)
+    fetch(`/api/${this.props.docuId}/get-commits/${encodeURIComponent(selectedOption.value)}`)
       .then((r) => r.json())
       .then((commits) => {
         this.setState(
@@ -144,7 +157,7 @@ class CommitSelect extends React.Component {
 
   render() {
     const {
-      error, isLoaded, branches, commits, currentBranch, currentCommit,
+      error, isLoaded, branches, commits
     } = this.state;
 
     if (error) {

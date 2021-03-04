@@ -49,7 +49,7 @@ class App extends React.Component {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: this.state.cloneUrl }),
     };
-    fetch('http://localhost:3000/clone', requestOptions)
+    fetch('/api/clone', requestOptions)
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
@@ -64,7 +64,7 @@ class App extends React.Component {
 
   //TODO: We should fail gracefully, so that the user isn't left with a broken page
   componentDidMount() {
-    fetch('http://localhost:3000/list-repos')
+    fetch('/api/list-repos')
       .then((r) => r.json())
       .then(
         (repository) => {
@@ -106,12 +106,12 @@ class App extends React.Component {
             {(params) => <EditPage repo={params.repo} from={params.from} to={params.to} file={params.file} />}
           </Route>
 
-          <Route path="/">
-            <DiffPage />
-          </Route>
-
           <Route path="/logout">
             <Login logout={true} />
+          </Route>
+
+          <Route path="/">
+            <DiffPage />
           </Route>
 
           <Redirect to="/"></Redirect>
@@ -127,6 +127,10 @@ class App extends React.Component {
 
           <Route path="/login/success" >
             <Login success={true} />
+          </Route>
+
+          <Route path="/logout">
+            <Login logout={true} />
           </Route>
 
           <Route path="/login">

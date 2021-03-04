@@ -9,22 +9,26 @@ import FileType from 'file-type'
 import simpleGit from 'simple-git'
 import cors from 'cors';
 import crypto from 'crypto'
+import { verifyAuth } from './middleware/auth-verification'
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(session({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+app.use(session({ secret: 'rG46ciMNbNKtcWw6Ap6D7NuESADuMuTi', resave: false, saveUninitialized: false }));
+
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+//#region User auth
 let rawdata = fs.readFileSync('./gitlab_credentials.json');
 let gitlab = JSON.parse(rawdata);
 
 passport.serializeUser(function (user, done) {
-  done(null, user.email);
+  done(null, user);
 });
 
 passport.deserializeUser(function (u, done) {
@@ -37,68 +41,119 @@ passport.deserializeUser(function (u, done) {
 passport.use(new GitLabStrategy({
   clientID: gitlab.appid,
   clientSecret: gitlab.secret,
-  callbackURL: "http://localhost:5000/auth/gitlab/callback"
+  callbackURL: "http://localhost:5000/api/auth/gitlab/callback"
 },
   function (accessToken, refreshToken, profile, cb) {
     console.log(profile)
 
     let user = User.getByProviderId(profile.id, 'gitlab');
     user.then(u => {
-
       if (u.count == 0) {
         //Create user
         user = new User({ email: profile.emails[0].value, name: profile.displayName, linked: { gitlab: profile.id }, tokens: { gitlab: { access: accessToken, refresh: refreshToken } } })
         user.save()
-        cb(null, user);
+        cb(null, user.email);
       }else{
+        //Get the first result
         let [usr] = u;
-        cb(null, usr);
+        cb(null, usr.email);
       }
     })
   }
 ));
 
 
+app.get('/auth/gitlab', passport.authenticate('gitlab'));
+
+app.get('/auth/gitlab/callback',
+  (req, res, next) => passport.authenticate('gitlab', function (err, user, info) {
+    if (err) return next(err)
+    if (!user) {
+      res.redirect("/login/error");//return res.json({ success: false, message: info.message })
+    }
+
+    req.login(user, loginErr => {
+      if (loginErr) {
+        return res.redirect("/login/error")
+      }
+
+      return res.redirect("/login/success")
+    })
+  })(req, res, next)
+);
+
+
+app.get('/auth/logout', verifyAuth, (req, res, next) => {
+  req.logout()
+	return res.send({success: true});
+});
+
+//#endregion
+
+//#region User info
+app.get('/users/:id', verifyAuth, (req, res, next) => {
+  let id = parseInt(req.params.id);
+  if (!isNaN(parseInt(req.params.id))){
+    let user = User.getById(id);
+    user.then(
+      (u) => {
+        let [usr] = u
+        return res.json({
+          success: true, 
+          user: {
+            id: usr.id,
+            email: usr.email,
+            name: usr.name,
+            }
+          }
+        )
+      }
+    );
+  } else {
+    return res.status(404).json({success: false})
+  }
+});
+
+app.get('/users/current', verifyAuth, (req, res, next) => {
+  return res.json({
+    success: true, 
+    user: {
+      id: req.user.id,
+      email: req.user.email,
+      name: req.user.name,
+      }
+    }
+  )
+});
+
+app.post('/users/current/update', verifyAuth, (req, res, next) => {
+  //TODO: Actually update user data
+
+  return res.json({
+    success: true, 
+    user: {
+      id: req.user.id,
+      email: req.user.email,
+      name: req.user.name,
+      }
+    }
+  )
+});
+//#endregion
+
+//#region GIT
 const getDirectories = (source) => fs.readdirSync(source, { withFileTypes: true })
   .filter((dirent) => dirent.isDirectory())
   .map((dirent) => dirent.name);
 
-app.get('/', (req, res) => {
-  res.send('Please use endpoints documented in the OpenAPI file');
-});
-
 // Clones the repository to local storage
-app.post('/clone', (req, res) => {
+app.post('/documentations/create', (req, res) => {
   const { url } = req.body;
-  const git = simpleGit();
-  const name = url.split('/').pop().replace('.git', '');
-  fs.mkdirSync(`./repositories/${name}`, { recursive: true });
-
-  // Clone the files
-  git.clone(url, `./repositories/${name}`).then(() => {
-    const ngit = simpleGit(`./repositories/${name}`, { maxConcurrentProcesses: 1 });
-
-    const promises = [];
-
-    //Checkout files
-    ngit.branch().then((branches) => {
-
-      // Checkout all branches
-      branches.all.forEach((elem) => {
-        const last = elem.split('/').pop();
-        promises.push(ngit.checkout(last));
-      });
-
-      // Only success if all branches checked out
-      Promise.all(promises).then(() => {
-        res.send({ name, success: true });
-      });
-    });
-  }).catch((e) => res.send({ success: false, error: e }));
+  //TODO
 });
 
 // Save file and commit to git
-app.post('/save', (req, res) => {
+app.post('/pages/save', (req, res) => {
   const {
     repo, file, commit, content,
   } = req.body;
@@ -129,7 +184,7 @@ app.post('/save', (req, res) => {
 });
 
 // Get repos
-app.get('/list-repos', (req, res) => {
+app.get('/documentations/list', (req, res) => {
   let list = [];
   if (fs.existsSync('./repositories/')) {
     list = getDirectories('./repositories/');
@@ -138,22 +193,22 @@ app.get('/list-repos', (req, res) => {
 });
 
 // Get branches from repo
-app.get('/:repo/get-branches', (req, res) => {
-  const git = simpleGit(`./repositories/${req.params.repo}`);
+app.get('/documentations/:docu/versions', (req, res) => {
+  const git = simpleGit(`./repositories/${req.params.docu}`);
   git.branchLocal().then((branches) => res.send(branches)).catch((e) => res.send([]));
 });
 
 // Get commits from branches
-app.get('/:repo/get-commits/:branch', (req, res) => {
-  const git = simpleGit(`./repositories/${req.params.repo}`);
+app.get('/documentations/:docu/revisions/:version', (req, res) => {
+  const git = simpleGit(`./repositories/${req.params.docu}`);
 
   // Not sure why this wouldn't work with the default implementation...
-  git.log([`${req.params.branch}`]).then((history) => res.send(history)).catch((e) => res.send([]));
+  git.log([`${req.params.version}`]).then((history) => res.send(history)).catch((e) => res.send([]));
 });
 
 // File change list
-app.get('/:repo/list-changes/:from/:to', (req, res) => {
-  const git = simpleGit(`./repositories/${req.params.repo}`);
+app.get('/documentations/:docu/changes/:from/:to', (req, res) => {
+  const git = simpleGit(`./repositories/${req.params.docu}`);
   git.diffSummary([`${req.params.from}...${req.params.to}`, '--diff-filter=d']).then((changes) => {
     //Todo: More robust file filtering
     const fileChanges = changes.files.filter((change) => change.file.includes('.md'));
@@ -163,17 +218,17 @@ app.get('/:repo/list-changes/:from/:to', (req, res) => {
 });
 
 // Text file
-app.get('/:repo/file/:file/:commit', (req, res) => {
-  const git = simpleGit(`./repositories/${req.params.repo}`);
+app.get('/documentations/:docu/page/:page/:commit', (req, res) => {
+  const git = simpleGit(`./repositories/${req.params.docu}`);
 
-  git.show([`${req.params.commit}:${req.params.file}`]).then((file) => {
-    res.send({ content: file });
+  git.show([`${req.params.commit}:${req.params.page}`]).then((page) => {
+    res.send({ content: page });
   }).catch(() => res.send({ content: '' }));
 });
 
 // Blob file
-app.get('/:repo/file/:file/:commit/raw', (req, res) => {
-  const git = simpleGit(`./repositories/${req.params.repo}`);
+app.get('/documentations/:docu/blob/:file/:commit', (req, res) => {
+  const git = simpleGit(`./repositories/${req.params.docu}`);
 
   // This does not work - the problem is that if there is a 0, it is parsed as null
   // terminator and the file is then incomplete...
@@ -195,41 +250,11 @@ app.get('/:repo/file/:file/:commit/raw', (req, res) => {
     res.send(file);
   }).catch(() => res.send({ content: '' }));
 });
+//#endregion
 
-
-app.get('/auth/gitlab', passport.authenticate('gitlab'));
-
-app.get('/auth/gitlab/callback',
-  (req, res, next) => passport.authenticate('gitlab', function (err, user, info) {
-    if (err) return next(err)
-    if (!user) {
-      res.redirect("/login/error");//return res.json({ success: false, message: info.message })
-    }
-
-    req.login(user, loginErr => {
-      if (loginErr) {
-        console.error(loginErr)
-        return res.redirect("/login/error")
-      }
-      console.log(user)
-      return res.redirect("/login/success")
-    })
-  })(req, res, next)
-);
-
-
-app.get('/auth/logout', (req, res, next) => {
-  console.log("LOGOUT!");
-  req.logout()
-	return res.redirect("/login")
-});
-
-app.get('/auth/user', (req, res, next) => {
-  if (req.user){
-	  return res.json({success: true, user: req.user})
-  }
-
-  return res.json({success: false})
+// Catchall
+app.get('*', (req, res) => {
+  res.send('Please use endpoints documented in the OpenAPI file');
 });
 
 

@@ -44,11 +44,11 @@ class DiffViewEditor extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`http://localhost:3000/${this.repo}/file/${encodeURIComponent(this.file)}/${this.from}`)
+    fetch(`/api/${this.repo}/file/${encodeURIComponent(this.file)}/${this.from}`)
       .then((r) => r.json())
       .then(
         (original) => {
-          fetch(`http://localhost:3000/${this.repo}/file/${encodeURIComponent(this.file)}/${this.to}`)
+          fetch(`/api/${this.repo}/file/${encodeURIComponent(this.file)}/${this.to}`)
             .then((r) => r.json())
             .then(
               (modified) => {

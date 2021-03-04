@@ -1,4 +1,5 @@
 import { LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED } from "../constants/action-types";
+import { persistor } from "../store";
 
 const initialState = {
   loggedIn: false,
@@ -14,10 +15,9 @@ function rootReducer(state = initialState, action) {
       userData: payload
     });
   } else if (action.type === LOGOUT) {
-    return Object.assign({}, state, {
+    return {
       loggedIn: false,
-      userData: null
-    });
+    };
   }else if (action.type === REVISION_SELECTED) {
     if (payload.from){
       return Object.assign({}, state, {

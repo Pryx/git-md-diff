@@ -40,7 +40,7 @@ class DiffPage extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`http://localhost:3000/${this.repo}/file/${encodeURIComponent(this.file)}/${this.to}`)
+    fetch(`/api/${this.repo}/file/${encodeURIComponent(this.file)}/${this.to}`)
       .then((r) => r.json())
       .then(
         (data) => {
@@ -65,7 +65,7 @@ class DiffPage extends React.Component {
       body: JSON.stringify({ file: this.file, repo: this.repo, commit: this.to, content: this.editorRef.current.getInstance().getMarkdown() }),
     };
 
-    fetch('http://localhost:3000/save', requestOptions)
+    fetch('/api/save', requestOptions)
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {

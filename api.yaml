@@ -1,0 +1,762 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Git md diff
+paths:
+  /UserInfos/{ID}:
+    get:
+      summary: Request info for a specific user
+      tags:
+        - User info
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the user to retrieve
+          schema:
+            type: integer
+            example: 521
+      responses:
+        "200":
+          description: Info about requested user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+              example:
+                success: false
+                data: ""
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /UserInfos/current:
+    get:
+      summary: Request info for the logged in user
+      tags:
+        - User info
+      responses:
+        "200":
+          description: Info about requested user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+              example:
+                success: false
+                data: ""
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /UserInfos/current/update:
+    get:
+      summary: Request info for the logged in user
+      tags:
+        - User info
+      responses:
+        "200":
+          description: Info about requested user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /auth/gitlab:
+    get:
+      summary: Login the user via GitLab Oauth
+      description: The user should be redirected to this page. It will then return him back to the frontend.
+      operationId: login
+      tags:
+        - Auth
+      responses:
+        "302":
+          description: Redirect to the GitLab Oauth page
+
+  /auth/logout/:
+    get:
+      summary: Logout the user identified by token
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: true
+
+        "403":
+          description: You are already logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations:
+    post:
+      summary: Returns a list of all documentations that the user has access to
+      tags:
+        - Documentation management
+
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<DocumentationInfo[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/create:
+    post:
+      summary: Creates a new documentation
+      tags:
+        - Documentation management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentationInfo"
+            example:
+              name: "Best Documentation Ever"
+              slug: "best-docu-ever"
+      responses:
+        "200":
+          description: Successfully updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<DocumentationInfo>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+        "409":
+          description: The slug you chose is already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/update:
+    post:
+      summary: Updates a documentation
+      tags:
+        - Documentation management
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to update
+          schema:
+            type: integer
+            example: 521
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentationInfo"
+      responses:
+        "200":
+          description: Successfully updated documentation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<DocumentationInfo>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "409":
+          description: The slug is already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/delete:
+    get:
+      summary: Deletes a documentation
+      tags:
+        - Documentation management
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to delete
+          schema:
+            type: integer
+            example: 521
+      responses:
+        "200":
+          description: Successfully deleted documentation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/versions:
+    get:
+      summary: Returns a list of all versions the documentation has
+      tags:
+        - Documentation querying
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Versions[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/{VERSION}/revisions:
+    get:
+      summary: Returns a list of all revisions in the queried documentation versiojn
+      tags:
+        - Documentation querying
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+        - name: VERSION
+          in: path
+          required: true
+          description: The version of documentation you want to retrieve the revisions for
+          schema:
+            type: string
+            example: "master"
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<RevisionInfo[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/changes/{FROM}/{TO}:
+    get:
+      summary: Returns a list of changed pages between two revisions
+      tags:
+        - Documentation querying
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+        - name: FROM
+          in: path
+          required: true
+          description: The hash of the first revision in the comparison range
+          schema:
+            type: string
+        - name: TO
+          in: path
+          required: true
+          description: The hash of the second revision in the comparison range
+          schema:
+            type: string
+            example: "master"
+
+      responses:
+        "200":
+          description: Successfully retreived data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<PageInfo[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/{REVISION}/pages/{PAGE}:
+    get:
+      summary: Returns the content of the requested page in the given documentation and revision
+      tags:
+        - Documentation querying
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+        - name: PAGE
+          in: path
+          required: true
+          description: The identifier of the page we want to retrieve
+          schema:
+            type: string
+            example: "index.mdx"
+        - name: REVISION
+          in: path
+          required: true
+          description: The hash of the revision of page we want to retrieve
+          schema:
+            type: integer
+            example: 521
+      responses:
+        "200":
+          description: The page was retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<String>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/{REVISION}/blob/{BLOB}:
+    get:
+      summary: Deletes a documentation
+      tags:
+        - Documentation querying
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+        - name: BLOB
+          in: path
+          required: true
+          description: The identifier of the blob we want to retrieve
+          schema:
+            type: string
+            example: "index.mdx"
+        - name: REVISION
+          in: path
+          required: true
+          description: The hash of the revision of page we want to retrieve
+          schema:
+            type: integer
+            example: 521
+      responses:
+        "200":
+          description: The blob was retrieved successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/{VERSION}/pages:
+    post:
+      summary: Returns a list of all pages in a given version of documentation
+      tags:
+        - Page management
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+      responses:
+        "200":
+          description: Successfully saved page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: true
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/{VERSION}/pages/{PAGE}/save:
+    post:
+      summary: Saves a page
+      tags:
+        - Page management
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+        - name: VERSION
+          in: path
+          required: true
+          description: The version of documentation you want to retrieve the revisions for
+          schema:
+            type: string
+            example: "master"
+        - name: PAGE
+          in: path
+          required: true
+          description: The identifier of the page we want to retrieve
+          schema:
+            type: string
+            example: "index.mdx"
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: Successfully saved page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: true
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+  /documentations/{ID}/{VERSION}/pages/{PAGE}/delete:
+    post:
+      summary: Deletes a page
+      tags:
+        - Page management
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          description: The id of the documentation to query
+          schema:
+            type: integer
+            example: 521
+        - name: VERSION
+          in: path
+          required: true
+          description: The version of documentation you want to retrieve the revisions for
+          schema:
+            type: string
+            example: "master"
+        - name: PAGE
+          in: path
+          required: true
+          description: The identifier of the page we want to retrieve
+          schema:
+            type: string
+            example: "index.mdx"
+      responses:
+        "200":
+          description: Successfully saved page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: true
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+components:
+  schemas:
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "User ID"
+          example: 521
+        name:
+          type: string
+          description: "Users display name"
+          example: "John Doe"
+        email:
+          description: "User email"
+          example: "john@doe.com"
+          type: string
+
+    RevisionInfo:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "The revision message"
+          example: "Fixed some typos"
+        hash:
+          description: "The hash of the revision"
+          example: "50902f8b771e4c62faaf9cd6239896b0b6158a97"
+          type: string
+
+    PageInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "The page name"
+          example: "Homepage"
+        id:
+          description: "The page identifier"
+          example: "homepage.mdx"
+          type: string
+
+    DocumentationInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Documentation ID"
+          example: 521
+        name:
+          type: string
+          description: "Documentation display name"
+          example: "Best Documentation Ever"
+        slug:
+          description: "Documentation URL slug"
+          example: "best-docu-ever"
+          type: string
+
+    Response<UserInfo>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          description: "Retreived user"
+          $ref: "#/components/schemas/UserInfo"
+
+    Response<String>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          description: "Retreived data"
+          example: "This is content of a text file..."
+          type: string
+
+    Response<DocumentationInfo>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          description: "Retreived user"
+          $ref: "#/components/schemas/DocumentationInfo"
+
+    Response<DocumentationInfo[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived documentation info"
+          items:
+            $ref: "#/components/schemas/DocumentationInfo"
+
+    Response<Versions[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived version info"
+          items:
+            type: string
+            example: "master"
+
+    Response<RevisionInfo[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived revision info"
+          items:
+            $ref: "#/components/schemas/RevisionInfo"
+
+    Response<PageInfo[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived page info"
+          items:
+            $ref: "#/components/schemas/PageInfo"
+
+
+    Response<Bool>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Whether request was successfull"
+          type: boolean
+          example: true
