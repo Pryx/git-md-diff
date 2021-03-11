@@ -1,57 +1,6 @@
 import { markdownDiff } from 'markdown-diff';
 
-const marked = require('marked');
 const matter = require('front-matter');
-
-function imagePlaceholders(repository, from, to, markdown) {
-  const inserts = markdown.matchAll(/<ins.*?src={useBaseUrl\('(.*)'\)}.*\/ins>/g);
-  let clean = markdown;
-
-  if (inserts) {
-    [...inserts].map((m) => m[1]).forEach((elem) => {
-      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/documentations/${repository}/${to}/blob/${encodeURIComponent(`static/${elem}`)}"`);
-    });
-  }
-
-  const deletes = markdown.matchAll(/<del.*?src={useBaseUrl\('(.*)'\)}.*\/del>/g);
-
-  if (deletes) {
-    [...deletes].map((m) => m[1]).forEach((elem) => {
-      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/documentations/${repository}/${from}/blob/${encodeURIComponent(`static/${elem}`)}"`);
-    });
-  }
-
-  const rest = markdown.matchAll(/src={useBaseUrl\('(.*)'\)}/g);
-
-  if (rest) {
-    [...rest].map((m) => m[1]).forEach((elem) => {
-      clean = clean.replace(`src={useBaseUrl('${elem}')}`, `src="/api/documentations/${repository}/${to}/blob/${encodeURIComponent(`static/${elem}`)}`);
-    });
-  }
-
-  return clean;
-}
-
-function removeDocusaurusInfo(original, modified) {
-  const original_matter = matter(original);
-  const modified_matter = matter(modified);
-  let ori = original.replace(/---.*---/s, '');
-  let mod = modified.replace(/---.*---/s, '');
-
-  ori = ori.replace(/\s*import.*docusaurus.*;/, '');
-
-  mod = mod.replace(/\s*import.*docusaurus.*;/, '');
-  if (original_matter.attributes.title) {
-    ori = `# Title: ${original_matter.attributes.title}\n${ori}`;
-  }
-
-  if (modified_matter.attributes.title) {
-    mod = `# Title: ${modified_matter.attributes.title}\n${mod}`;
-  }
-
-  return { original: ori, modified: mod, changed: !shallowEqual(original_matter.attributes, modified_matter.attributes) };
-}
-
 function shallowEqual(object1, object2) {
   const keys1 = Object.keys(object1);
   const keys2 = Object.keys(object2);
@@ -60,7 +9,7 @@ function shallowEqual(object1, object2) {
     return false;
   }
 
-  for (let key of keys1) {
+  for (const key of keys1) {
     if (object1[key] !== object2[key]) {
       return false;
     }
@@ -69,46 +18,77 @@ function shallowEqual(object1, object2) {
   return true;
 }
 
-export default function diff(revisionInfo, original, modified, opts) {
+function removeDocusaurusInfo(original, modified) {
+  const originalMatter = matter(original);
+  const modifiedMatter = matter(modified);
+  let ori = original.replace(/---.*---/s, '');
+  let mod = modified.replace(/---.*---/s, '');
+
+  ori = ori.replace(/\s*import.*docusaurus.*;/, '');
+
+  mod = mod.replace(/\s*import.*docusaurus.*;/, '');
+  if (originalMatter.attributes.title) {
+    ori = `# Title: ${originalMatter.attributes.title}\n${ori}`;
+  }
+
+  if (modifiedMatter.attributes.title) {
+    mod = `# Title: ${modifiedMatter.attributes.title}\n${mod}`;
+  }
+
+  return {
+    original: ori,
+    modified: mod,
+    changed: !shallowEqual(originalMatter.attributes, modifiedMatter.attributes),
+  };
+}
+
+export default async function diff(revisionInfo, original, modified, opts) {
   const options = {
-    hideCode: true, debug: false, skipImages: true, ...opts,
+    hideCode: true, skipImages: true, ...opts,
   };
 
-  const invisible_changes = [];
+  const invisibleChanges = [];
   const cleanDocs = removeDocusaurusInfo(original, modified);
   if (cleanDocs.changed) {
-    invisible_changes.push('Front matter changed');
+    invisibleChanges.push('Front matter changed');
   }
-  /* originalClean = imagePlaceholders(originalClean);
-  modifiedClean = imagePlaceholders(modifiedClean); */
-  let orig = cleanDocs.original;
-  let mod = cleanDocs.modified;
+
+  const orig = cleanDocs.original;
+  const mod = cleanDocs.modified;
   let res;
 
   if (orig.length > 0) {
-    res = markdownDiff(orig, mod, true);
+    res = markdownDiff(orig, mod, false);
   } else {
-    res = `<div class="new-file">\n${mod}</div>`;
+    res = `${mod}`;
   }
 
-  if (!options.skipImages){
-    res = imagePlaceholders(revisionInfo.repo, revisionInfo.from, revisionInfo.to, res);
-  }
-  
-
-  const renderer = {};
-  if (options.hideCode) {
-    renderer.code = (code, infostring, escaped) => {
-      if (code.indexOf('<ins') || code.indexOf('<del')) {
-        return '<pre class="changed"><code>Code block changed</code></pre>';
+  // (```[\sa-z]*\n[\s\S]*?\n```)
+  const codeblocks = [... res.matchAll(/(```[\sa-z]*?\n?[\s\S]*?\n?```)/gm)].map((m) => m[1]);
+  if (codeblocks) {
+    codeblocks.forEach((codeblock) => {
+      if (codeblock.includes('<del') || codeblock.includes('<ins')){
+        res = res.replace(codeblock, `<pre><code>Code block changed</code></pre>`);
+      }else{
+        res = res.replace(codeblock, `<pre><code>Code block</code></pre>`);
       }
-      return '<pre><code>Code block</code></pre>';
-    };
+    });
   }
 
-  marked.use({ renderer });
-  if (options.debug) {
-    return { content: `${marked(res)}<pre>${orig}</pre><pre>${mod}</pre>`, invisible: invisible_changes };
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      content: res,
+    }),
+  };
+
+  const response = await fetch('/api/render', requestOptions);
+
+  try {
+    const content = await response.json(); 
+    return { content: content.rendered, invisible: invisibleChanges, newFile: !orig.length };
+  } catch (error) {
+    return { content: error, invisible: invisibleChanges, newFile: !orig.length };
   }
-  return { content: marked(res), invisible: invisible_changes };
 }

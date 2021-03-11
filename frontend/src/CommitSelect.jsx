@@ -3,7 +3,8 @@ import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import SelectSearch from 'react-select';
-import { connect } from "react-redux";
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
 import { store } from './store';
 import { revisionSelected } from './actions';
 
@@ -19,145 +20,140 @@ class CommitSelect extends React.Component {
     commits: [],
   };
 
-
   constructor(props) {
     super(props);
     this.handleBranch = this.handleBranch.bind(this);
     this.handleCommit = this.handleCommit.bind(this);
-
-    this.state = {
-      isLoaded: false,
-      branches: [],
-      commits: [],
-    };
-  }
-
-  getCurrentBranch(){
-    if (this.props.from){
-      return this.props.startRevision ? this.props.startRevision.branch : null;
-    }
-
-    return this.props.endRevision ? this.props.endRevision.branch : null;
-  }
-
-  getCurrentCommit(){
-    if (this.props.from){
-      return this.props.startRevision ? this.props.startRevision.commit : null;
-    }
-    
-    return this.props.endRevision ? this.props.endRevision.commit : null;
-  }
-
-  reloadData(){
-    fetch(`/api/documentations/${this.props.docuId}/versions`)
-        .then((r) => r.json())
-        .then(
-          (branches) => {
-            // Let's be inclusive after the master branch debacle :)
-            const cb = this.getCurrentBranch() || branches.all.includes('master') ? 'master' : (branches.all.includes('main') ? 'main' : branches.all[0]);
-            this.setState({
-              branches: branches.all.map((b) => { return { label: b, value: b } }),
-              commits: [],
-              currentCommit: '',
-            });
-
-            fetch(`/api/documentations/${this.props.docuId}/${cb}/revisions`)
-              .then((r) => r.json())
-              .then((commits) => {
-                store.dispatch(
-                  revisionSelected({
-                    from: this.props.from,
-                    revisionData: {
-                      branch: cb,
-                      commit: this.getCurrentCommit() || (this.props.from ? commits.all[1].hash : commits.all[0].hash),
-                    }
-                  })
-                );
-
-                this.setState(
-                  {
-                    isLoaded: true,
-                    commits: commits.all.map((c) => { return { label: c.message, value: c.hash } }),
-                  },
-                );
-              });
-          },
-
-          (error) => {
-            this.setState({
-              isLoaded: true,
-              error,
-            });
-          },
-        );
   }
 
   componentDidMount() {
-    this.reloadData();  
+    this.reloadData();
   }
 
   componentDidUpdate(prev) {
-    if (this.props.docuId != prev.docuId){
-      this.reloadData();  
+    const { docuId } = this.props;
+    if (docuId !== prev.docuId) {
+      this.reloadData();
     }
   }
 
-  static getDerivedStateFromProps(props, state) {
-    return {error: null}
+  static getDerivedStateFromProps() {
+    return { error: null };
   }
 
   handleBranch(selectedOption) {
+    const { from, docuId } = this.props;
     store.dispatch(
       revisionSelected({
-        from: this.props.from,
+        from,
         revisionData: {
           branch: selectedOption.value,
           commit: null,
-        }
-      })
+        },
+      }),
     );
 
     this.setState(
       {
         isLoaded: false,
-        currentBranch: selectedOption.value,
       },
     );
 
-    fetch(`/api/documentations/${this.props.docuId}/${encodeURIComponent(selectedOption.value)}/revisions`)
+    fetch(`/api/documentations/${docuId}/${encodeURIComponent(selectedOption.value)}/revisions`)
       .then((r) => r.json())
       .then((commits) => {
         this.setState(
           {
             isLoaded: true,
-            commits: commits.all.map((c) => { return { label: c.message, value: c.hash } }),
+            commits: commits.all.map((c) => ({ label: c.message, value: c.hash })),
           },
         );
       });
   }
 
   handleCommit(selectedOption) {
-    const { currentBranch } = this.state;
+    const { from } = this.props;
 
     store.dispatch(
       revisionSelected({
-        from: this.props.from,
+        from,
         revisionData: {
-          branch: currentBranch,
+          branch: this.getCurrentBranch(),
           commit: selectedOption.value,
-        }
-      })
+        },
+      }),
     );
+  }
 
-    this.setState(() => (
-      {
-        currentCommit: selectedOption.value,
-      }));
+  getCurrentBranch() {
+    const { from, startRevision, endRevision } = this.props;
+    if (from) {
+      return startRevision ? startRevision.branch : null;
+    }
+
+    return endRevision ? endRevision.branch : null;
+  }
+
+  getCurrentCommit() {
+    const { from, startRevision, endRevision } = this.props;
+    if (from) {
+      return startRevision ? startRevision.commit : null;
+    }
+
+    return endRevision ? endRevision.commit : null;
+  }
+
+  reloadData() {
+    const { from, docuId } = this.props;
+    fetch(`/api/documentations/${docuId}/versions`)
+      .then((r) => r.json())
+      .then(
+        (branches) => {
+          // Let's be inclusive after the master branch debacle :)
+          let cb = this.getCurrentBranch() || branches.all.includes('master') ? 'master' : null;
+          if (!cb){
+            cb = branches.all.includes('main') ? 'main' : branches.all[0];
+          }
+          this.setState({
+            branches: branches.all.map((b) => ({ label: b, value: b })),
+            commits: [],
+          });
+
+          fetch(`/api/documentations/${docuId}/${cb}/revisions`)
+            .then((r) => r.json())
+            .then((commits) => {
+              store.dispatch(
+                revisionSelected({
+                  from,
+                  revisionData: {
+                    branch: cb,
+                    commit: this.getCurrentCommit()
+                      || (from ? commits.all[1].hash : commits.all[0].hash),
+                  },
+                }),
+              );
+
+              this.setState(
+                {
+                  isLoaded: true,
+                  commits: commits.all.map((c) => ({ label: c.message, value: c.hash })),
+                },
+              );
+            });
+        },
+
+        (error) => {
+          this.setState({
+            isLoaded: true,
+            error,
+          });
+        },
+      );
   }
 
   render() {
     const {
-      error, isLoaded, branches, commits
+      error, isLoaded, branches, commits,
     } = this.state;
 
     if (error) {
@@ -178,19 +174,19 @@ class CommitSelect extends React.Component {
       );
     }
     const customStyles = {
-      option: (provided, state) => ({
+      option: (provided) => ({
         ...provided,
-        wordWrap: 'break-word'
-      })
-    }
-    
+        wordWrap: 'break-word',
+      }),
+    };
+
     return (
       <Form.Row>
         <Col>
           <SelectSearch
             onChange={this.handleBranch}
             options={branches}
-            value={branches.find(o => o.value === this.getCurrentBranch())}
+            value={branches.find((o) => o.value === this.getCurrentBranch())}
             search
           />
         </Col>
@@ -198,7 +194,7 @@ class CommitSelect extends React.Component {
           <SelectSearch
             onChange={this.handleCommit}
             options={commits}
-            value={commits.find(o => o.value === this.getCurrentCommit())}
+            value={commits.find((o) => o.value === this.getCurrentCommit())}
             styles={customStyles}
             search
           />
@@ -212,10 +208,18 @@ CommitSelect.defaultProps = {
 };
 
 CommitSelect.propTypes = {
+  docuId: PropTypes.string.isRequired,
+  startRevision: PropTypes.object.isRequired,
+  endRevision: PropTypes.object.isRequired,
+  from: PropTypes.bool.isRequired,
 };
 
-const mapStateToProps = state => {
-  return { docuId: state.docuId, startRevision: state.startRevision, endRevision: state.endRevision};
-};
+const mapStateToProps = (state) => (
+  {
+    docuId: state.docuId,
+    startRevision: state.startRevision,
+    endRevision: state.endRevision,
+  }
+);
 
 export default hot(module)(connect(mapStateToProps)(CommitSelect));

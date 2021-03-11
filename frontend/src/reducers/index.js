@@ -1,39 +1,36 @@
-import { LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED } from "../constants/action-types";
-import { persistor } from "../store";
+import {
+  LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED,
+} from '../constants/action-types';
 
 const initialState = {
   loggedIn: false,
-  userData: null
+  userData: null,
 };
 
-
 function rootReducer(state = initialState, action) {
-  const payload = action.payload;
+  const { payload } = action;
   if (action.type === LOGIN) {
-    return Object.assign({}, state, {
+    return {
+      ...state,
       loggedIn: true,
-      userData: payload
-    });
-  } else if (action.type === LOGOUT) {
+      userData: payload,
+    };
+  } if (action.type === LOGOUT) {
     return {
       loggedIn: false,
     };
-  }else if (action.type === REVISION_SELECTED) {
-    if (payload.from){
-      return Object.assign({}, state, {
-        startRevision: payload.revisionData
-      });
-    }else{
-      return Object.assign({}, state, {
-        endRevision: payload.revisionData
-      });
+  } if (action.type === REVISION_SELECTED) {
+    if (payload.from) {
+      return { ...state, startRevision: payload.revisionData };
     }
-  }else if (action.type === DOCUMENTATION_SELECTED) {
-    return Object.assign({}, state, {
+    return { ...state, endRevision: payload.revisionData };
+  } if (action.type === DOCUMENTATION_SELECTED) {
+    return {
+      ...state,
       docuId: payload,
       startRevision: null,
-      endRevision: null
-    });
+      endRevision: null,
+    };
   }
 
   return state;

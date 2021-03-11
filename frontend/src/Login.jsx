@@ -2,47 +2,40 @@ import { hot } from 'react-hot-loader';
 import React from 'react';
 import Container from 'react-bootstrap/Container';
 import PropTypes from 'prop-types';
-import { Button, Card } from 'react-bootstrap';
+import { Alert, Button, Card } from 'react-bootstrap';
+import { connect } from 'react-redux';
+import { Redirect } from 'wouter';
 import { store } from './store/index';
 import { logIn, logOut } from './actions';
-import { connect } from "react-redux";
-import { Redirect } from 'wouter';
-
 
 class Login extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  componentWillReceiveProps(props){
-  }
-
   render() {
     const {
-      error, success, userLoaded,
+      error, success, logout, loggedIn,
     } = this.props;
 
-    
+    const {
+      userLoaded,
+    } = this.state;
 
     let alert = null;
-    if (error){
-      alert = <Alert variant={danger}>An error has occured, please try again later!</Alert>;;
-    } 
+    if (error) {
+      alert = <Alert variant="danger">An error has occured, please try again later!</Alert>;
+    }
 
-    if (success){
-      fetch(`/api/users/current`)
-      .then((r) => r.json())
-      .then((data) => {
-        store.dispatch( logIn(data.user) );
-        this.setState(
-          {
-            userLoaded: true,
-          }
-        );
-        }
-      );
-      
-      if (!userLoaded){
+    if (success) {
+      fetch('/api/users/current')
+        .then((r) => r.json())
+        .then((data) => {
+          store.dispatch(logIn(data.user));
+          this.setState(
+            {
+              userLoaded: true,
+            },
+          );
+        });
+
+      if (!userLoaded) {
         return (
           <Container className="mt-5">
             <h1>Logging you in, please wait...</h1>
@@ -51,16 +44,14 @@ class Login extends React.Component {
       }
     }
 
-    if (this.props.logout){
-      fetch(`/api/auth/logout`)
-      .then((r) => r.json())
-      .then((data) => {
-        console.log(data);
-        store.dispatch( logOut() );
-        }
-      );
+    if (logout) {
+      fetch('/api/auth/logout')
+        .then((r) => r.json())
+        .then(() => {
+          store.dispatch(logOut());
+        });
 
-      if (this.props.loggedIn){
+      if (loggedIn) {
         return (
           <Container className="mt-5">
             <h1>Logging you out, please wait...</h1>
@@ -68,7 +59,7 @@ class Login extends React.Component {
         );
       }
 
-      return <Redirect to="/login"></Redirect>
+      return <Redirect to="/login" />;
     }
 
     return (
@@ -89,15 +80,14 @@ class Login extends React.Component {
 Login.defaultProps = {
   error: false,
   success: false,
-  logout: false
+  logout: false,
 };
 
 Login.propTypes = {
   error: PropTypes.bool,
   success: PropTypes.bool,
-  logout: PropTypes.bool
+  logout: PropTypes.bool,
+  loggedIn: PropTypes.bool.isRequired,
 };
-const mapStateToProps = state => {
-  return { loggedIn: state.loggedIn||false };
-};
+const mapStateToProps = (state) => ({ loggedIn: state.loggedIn || false });
 export default hot(module)(connect(mapStateToProps)(Login));

@@ -1,9 +1,11 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
-import {Link} from 'wouter';
+import { Link } from 'wouter';
 import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
-import Diff from './diff/diff.js';
+import Markdown from 'markdown-to-jsx';
+import { Badge } from 'react-bootstrap';
+import Diff from './diff/diff';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -11,51 +13,45 @@ import Diff from './diff/diff.js';
  * probably be offloaded to the server.
  */
 class DiffView extends React.Component {
-  from = null;
-
-  to = null;
-
-  repo = null;
-
-  file = null;
-
-  insertions = null;
-
-  deletions = null;
-  
   link = null;
+
+  state = {
+    isLoaded: false,
+    content: '',
+  };
 
   constructor(props) {
     super(props);
-    this.from = props.from;
-    this.to = props.to;
-    this.repo = props.repo;
-    this.file = props.file;
-    this.insertions = props.insertions;
-    this.deletions = props.deletions;
-    this.options = {hideCode: props.hideCode};
+    this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
 
-    this.link = `/edit/${this.repo}/${encodeURIComponent(this.file).replace('.', '%2E')}`
-    
-    this.state = {
-      isLoaded: false,
-      content: '',
-    };
+    // This is needed because for some reason encodeUriComponent doesn't encode dots
+    this.link = `/edit/${this.docuId}/${encodeURIComponent(props.file).replace('.', '%2E')}`;
   }
 
   componentDidMount() {
-    fetch(`/api/documentations/${this.repo}/${this.from}/pages/${encodeURIComponent(this.file)}`)
+    const {
+      docuId, from, to, file,
+    } = this.props;
+    fetch(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(file)}`)
       .then((r) => r.json())
       .then(
         (original) => {
-          fetch(`/api/documentations/${this.repo}/${this.to}/pages/${encodeURIComponent(this.file)}`)
+          fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(file)}`)
             .then((r) => r.json())
             .then(
               (modified) => {
-                this.setState({
-                  isLoaded: true,
-                  content: Diff({ repo: this.repo, from: this.from, to: this.to }, original.content, modified.content, this.options),
+                const contentPromise = new Promise((resolve, reject) => {
+                  let content = Diff({ docuId, from, to }, original.content, modified.content, this.options)
+                  resolve(content)
                 });
+
+                contentPromise.then((content) => this.setState(
+                  {
+                    isLoaded: true,
+                    content
+                  }
+                )
+                )
               },
               (error) => {
                 this.setState({
@@ -74,26 +70,32 @@ class DiffView extends React.Component {
       );
   }
 
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
   render() {
     const {
-      error, isLoaded, changes, content,
+      error, isLoaded, content,
     } = this.state;
+
+    const { insertions, deletions, file } = this.props;
 
     if (error) {
       return (
         <Card>
           <Card.Header>
-            <a className="title">{this.file}</a>
+            <a className="title">{file}</a>
             <span className="changes float-right">
               Changes:
               <span className="additions">
                 +
-                {this.insertions}
+                {insertions}
               </span>
               {' '}
               <span className="deletions">
                 -
-                {this.deletions}
+                {deletions}
               </span>
             </span>
           </Card.Header>
@@ -101,6 +103,10 @@ class DiffView extends React.Component {
             Error:
             {' '}
             {error.message}
+            <br />
+            <br />
+            Content:
+            <pre>{content.content}</pre>
           </Card.Body>
           <Card.Footer>
             Invisible changes: N/A
@@ -113,17 +119,17 @@ class DiffView extends React.Component {
       return (
         <Card>
           <Card.Header>
-            <a className="title">{this.file}</a>
+            <span className="title">{file}</span>
             <span className="changes float-right">
               Changes:
               <span className="additions">
                 +
-                {this.insertions}
+                {insertions}
               </span>
               {' '}
               <span className="deletions">
                 -
-                {this.deletions}
+                {deletions}
               </span>
             </span>
           </Card.Header>
@@ -137,23 +143,31 @@ class DiffView extends React.Component {
       );
     }
 
+    let cls = '';
+    if (content.newFile) {
+      cls = 'newfile';
+    }
+
     return (
-      <Card>
+      <Card className={cls}>
         <Card.Header>
+          {content.newFile
+            && <Badge variant="success">NEW</Badge>}
+          &nbsp;
           <Link href={this.link}>
-          <a className="title">{this.file}</a>
+            <a className="title">{file}</a>
           </Link>
-          
+
           <span className="changes float-right">
             Changes:
             <span className="additions">
               +
-              {this.insertions}
+              {insertions}
             </span>
             {' '}
             <span className="deletions">
               -
-              {this.deletions}
+              {deletions}
             </span>
           </span>
         </Card.Header>
@@ -169,13 +183,13 @@ class DiffView extends React.Component {
 }
 
 DiffView.defaultProps = {
-  hideCode: true
+  hideCode: true,
 };
 
 DiffView.propTypes = {
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
-  repo: PropTypes.string.isRequired,
+  docuId: PropTypes.string.isRequired,
   file: PropTypes.string.isRequired,
   insertions: PropTypes.number.isRequired,
   deletions: PropTypes.number.isRequired,

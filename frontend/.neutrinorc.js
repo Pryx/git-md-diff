@@ -17,6 +17,11 @@ module.exports = {
       },
       devServer:{
         "proxy": {
+          "/api/render": {
+            "target": "http://render:4000",
+            "secure": false,
+            pathRewrite: { '^/api': '' },
+          },
           "/api": {
             "target": "http://backend:3000",
             "secure": false,

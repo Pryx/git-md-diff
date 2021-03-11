@@ -1,60 +1,50 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
- './App.css';
-import {Link} from 'wouter';
-import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
-import Diff from './diff/diff.js';
+import Markdown from 'markdown-to-jsx';
+import Diff from './diff/diff';
+
+import './App.css';
 
 /**
  * A slightly modified DiffView for display in the editor file.
  */
 // TODO: This should probably be rewritten so that it can use same components as the DiffView.
 class DiffViewEditor extends React.Component {
-  from = null;
-
-  to = null;
-
-  repo = null;
-
-  file = null;
-
-  insertions = null;
-
-  deletions = null;
-  
-  link = null;
+  state = {
+    isLoaded: false,
+    content: '',
+  };
 
   constructor(props) {
     super(props);
-    this.from = props.from;
-    this.to = props.to;
-    this.repo = props.repo;
-    this.file = props.file;
-    this.insertions = props.insertions;
-    this.deletions = props.deletions;
-    this.options = {hideCode: props.hideCode};
-
-    this.link = `/edit/${this.from}/${this.to}/${this.file}`
-    
-    this.state = {
-      isLoaded: false,
-      content: '',
-    };
+    this.options = { hideCode: props.hideCode, returnMdx: true };
   }
 
   componentDidMount() {
-    fetch(`/api/documentations/${this.repo}/${this.from}/pages/${encodeURIComponent(this.file)}/`)
+    const {
+      docuId, from, file, to,
+    } = this.props;
+    fetch(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(file)}`)
       .then((r) => r.json())
       .then(
         (original) => {
-          fetch(`/api/documentations/${this.repo}/${this.to}/pages/${encodeURIComponent(this.file)}`)
+          fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(file)}`)
             .then((r) => r.json())
             .then(
               (modified) => {
                 this.setState({
                   isLoaded: true,
-                  content: Diff({ repo: this.repo, from: this.from, to: this.to }, original.content, modified.content, this.options),
+                  content: Diff(
+                    {
+                      docuId,
+                      from,
+                      to,
+                    },
+                    original.content,
+                    modified.content,
+                    this.options,
+                  ),
                 });
               },
               (error) => {
@@ -76,17 +66,21 @@ class DiffViewEditor extends React.Component {
 
   render() {
     const {
-      error, isLoaded, changes, content,
+      error, isLoaded, content,
     } = this.state;
 
     if (error) {
       return (
-      <div>
-        <div>Error: {error.message}.</div>
         <div>
-          Invisible changes: Loading...
+          <div>
+            Error:
+            {error.message}
+            .
+          </div>
+          <div>
+            Invisible changes: Loading...
+          </div>
         </div>
-      </div>
       );
     }
 
@@ -103,10 +97,12 @@ class DiffViewEditor extends React.Component {
 
     return (
       <div>
-        < div dangerouslySetInnerHTML={{ __html: content.content }} />
+        <Markdown>{content.content}</Markdown>
         <hr />
         <div>
-          Invisible changes: {content.invisible.join(', ')}
+          Invisible changes:
+          {' '}
+          {content.invisible.join(', ')}
         </div>
       </div>
     );
@@ -114,17 +110,15 @@ class DiffViewEditor extends React.Component {
 }
 
 DiffViewEditor.defaultProps = {
-  hideCode: false
+  hideCode: false,
 };
 
 DiffViewEditor.propTypes = {
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
-  repo: PropTypes.string.isRequired,
+  docuId: PropTypes.string.isRequired,
   file: PropTypes.string.isRequired,
-  insertions: PropTypes.number.isRequired,
-  deletions: PropTypes.number.isRequired,
-  hideCode: PropTypes.boolean,
+  hideCode: PropTypes.bool,
 };
 
 export default hot(module)(DiffViewEditor);

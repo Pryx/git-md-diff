@@ -2,111 +2,65 @@ import { hot } from 'react-hot-loader';
 import React from 'react';
 import './App.css';
 import { Switch, Route, Redirect } from 'wouter';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
 import DiffPage from './DiffPage';
 import EditPage from './EditPage';
-import Login from './Login'
-import { connect } from "react-redux";
+import Login from './Login';
+import 'remark-admonitions/styles/classic.css';
 
 /**
  * The root app element. Takes care of routing and right now
  * it stores the app state. This should be changed when Redux
- * is implemented. 
+ * is implemented.
  */
-class App extends React.Component {
-  
-  constructor(props) {
-    super(props);
+const App = (props) => {
+  const { loggedIn } = props;
+  if (loggedIn) {
+    return (
+      <Switch>
+        <Route path="/edit/:docu/:file">
+          {(params) => <EditPage docuId={params.docu} file={params.file} />}
+        </Route>
 
-    this.state = {
-      commitFrom: { branch: '', commit: '' },
-      commitTo: { branch: '', commit: '' },
-      selectedDocumentation: null,
-      repos: [],
-      error: null,
-      cloneUrl: '',
-    };
+        <Route path="/logout">
+          <Login logout />
+        </Route>
+
+        <Route path="/">
+          <DiffPage />
+        </Route>
+
+        <Redirect to="/" />
+
+      </Switch>
+    );
   }
+  return (
+    <Switch>
+      <Route path="/login/error">
+        <Login error />
+      </Route>
 
-  updateFrom = (from) => {
-    this.setState({
-      commitFrom: from,
-    });
-  };
+      <Route path="/login/success">
+        <Login success />
+      </Route>
 
-  updateTo = (to) => {
-    this.setState({
-      commitTo: to,
-    });
-  };
+      <Route path="/logout">
+        <Login logout />
+      </Route>
 
-  //TODO: We should fail gracefully, so that the user isn't left with a broken page
-  componentDidMount() {
-    fetch('/api/documentations')
-      .then((r) => r.json())
-      .then(
-        (documentations) => {
-          this.setState({
-            repos: documentations,
-          });
-        },
+      <Route path="/login">
+        <Login />
+      </Route>
 
-        (error) => {
-          this.setState({
-            error,
-          });
-        },
-      );
-  }
-
-
-  render() {
-    if (this.props.loggedIn) {
-      return (
-        <Switch>
-          <Route path="/edit/:repo/:file" >
-            {(params) => <EditPage repo={params.repo} file={params.file} />}
-          </Route>
-
-          <Route path="/logout">
-            <Login logout={true} />
-          </Route>
-
-          <Route path="/">
-            <DiffPage />
-          </Route>
-
-          <Redirect to="/"></Redirect>
-
-        </Switch>
-      );
-    } else {
-      return (
-        <Switch>
-          <Route path="/login/error" >
-            <Login error={true} />
-          </Route>
-
-          <Route path="/login/success" >
-            <Login success={true} />
-          </Route>
-
-          <Route path="/logout">
-            <Login logout={true} />
-          </Route>
-
-          <Route path="/login">
-            <Login />
-          </Route>
-
-          <Redirect to="/login" />
-        </Switch>
-      );
-    }
-  }
-}
-
-const mapStateToProps = state => {
-  return { loggedIn: state.loggedIn };
+      <Redirect to="/login" />
+    </Switch>
+  );
 };
 
+const mapStateToProps = (state) => ({ loggedIn: state.loggedIn });
+App.propTypes = {
+  loggedIn: PropTypes.bool.isRequired,
+};
 export default hot(module)(connect(mapStateToProps)(App));

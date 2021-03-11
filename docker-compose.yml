@@ -21,11 +21,33 @@ services:
   apidoc:
     image: "redocly/redoc:latest"
     ports:
-      - "7888:80"
+      - "7000:80"
     volumes:
       - ./api.yaml:/usr/share/nginx/html/api.yaml
     environment:
       - SPEC_URL=api.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS http://0.0.0.0:80 || exit 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
+  render:
+    build: ./render/
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./render/:/usr/src/app
+    networks: 
+      - databases
+    environment:
+      - PORT=4000
+    command: bash -c "npm install && npm start"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS http://0.0.0.0:4000 || exit 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
 
   backend:
     build: ./backend/
@@ -56,6 +78,7 @@ services:
     links:
       - db
       - backend
+      - render
     networks: 
       - databases
     environment:
@@ -67,7 +90,6 @@ services:
       timeout: 10s
       retries: 3
 
-# cargo will try to redownload packages @ docker-compose up so store them here.
 volumes:
   pgdata: {}
 

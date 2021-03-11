@@ -8,37 +8,37 @@ import Alert from 'react-bootstrap/Alert';
 import 'codemirror/lib/codemirror.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
 import { Editor } from '@toast-ui/react-editor';
+import { connect } from 'react-redux';
+import Markdown from 'markdown-to-jsx';
+import PropTypes from 'prop-types';
 import DiffViewEditor from './DiffViewEditor';
-import { connect } from "react-redux";
 
 /**
  * Edit page encompasses the Editor and DiffViewEditor components.
  * It shows the edit page to the user and allows to save the changes.
  */
 class DiffPage extends React.Component {
-  repo = null;
-  from = null;
-  to = null;
   file = null;
 
   editorRef = React.createRef();
 
+  state = {
+    content: null,
+    isLoaded: false,
+    saveStatus: '',
+    saveMessage: '',
+  };
+
   constructor(props) {
     super(props);
-    this.file = decodeURIComponent(props.file);
-    this.state = {
-      content: null,
-      isLoaded: false,
-      saveStatus: '',
-      saveMessage: '',
-    };
-
+    const { file } = props;
+    this.file = decodeURIComponent(file);
     this.handleSave = this.handleSave.bind(this);
-
   }
 
   componentDidMount() {
-    fetch(`/api/documentations/${this.props.docuId}/${this.props.endRevision}/pages/${encodeURIComponent(this.file)}`)
+    const { docuId, to } = this.props;
+    fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(this.file)}`)
       .then((r) => r.json())
       .then(
         (data) => {
@@ -57,20 +57,25 @@ class DiffPage extends React.Component {
   }
 
   handleSave(e) {
-    alert('Still needs updated implementation...');
+    console.error('Still needs updated implementation...');
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file: this.file, repo: this.repo, commit: this.endRevision, content: this.editorRef.current.getInstance().getMarkdown() }),
+      body: JSON.stringify({
+        file: this.file,
+        repo: this.repo,
+        commit: this.endRevision,
+        content: this.editorRef.current.getInstance().getMarkdown(),
+      }),
     };
 
     fetch('/api/save', requestOptions)
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          this.setState({saveStatus: "success", saveMessage: "Successfully saved!"});
+          this.setState({ saveStatus: 'success', saveMessage: 'Successfully saved!' });
         } else {
-          this.setState({saveStatus: "danger", saveMessage: data.error});
+          this.setState({ saveStatus: 'danger', saveMessage: data.error });
         }
       });
   }
@@ -80,6 +85,8 @@ class DiffPage extends React.Component {
       error, isLoaded, content, saveStatus, saveMessage,
     } = this.state;
 
+    const { from, to, docuId } = this.props;
+
     if (error) {
       return (
         <Container className="mt-5">
@@ -88,12 +95,15 @@ class DiffPage extends React.Component {
       );
     }
 
-    if (!isLoaded){
+    if (!isLoaded) {
       return (
         <div className="p-5">
           <Row>
             <Col xl={12}>
-              <h3>Editing file: {this.file}</h3>
+              <h3>
+                Editing file:
+                {this.file}
+              </h3>
             </Col>
           </Row>
           <Row>
@@ -108,23 +118,27 @@ class DiffPage extends React.Component {
     return (
       <div>
         <Row className="mt-3 mr-3 ml-3">
+          <Markdown># Hello world!</Markdown>
           <Col xl={12}>
-            <h3>Editing file: {this.file}</h3>
+            <h3>
+              Editing file:
+              {this.file}
+            </h3>
           </Col>
         </Row>
         <Row className="mt-3 mr-3 ml-3">
-        <Col xl={6} md={12}>
+          <Col xl={6} md={12}>
             <Editor
               initialValue={content}
               previewStyle="tab"
               height="100%"
               initialEditType="markdown"
-              useCommandShortcut={true}
+              useCommandShortcut
               ref={this.editorRef}
             />
           </Col>
           <Col xl={6} md={12}>
-            <DiffViewEditor from={this.startRevision} repo={this.docuId} to={this.endRevision} file={this.file} />
+            <DiffViewEditor from={from} docuId={docuId} to={to} file={this.file} />
           </Col>
         </Row>
         <Row className="mt-3 mr-3 ml-3">
@@ -132,19 +146,30 @@ class DiffPage extends React.Component {
             <div className="clearfix mb-2">
               <Button variant="success" className="float-right" onClick={this.handleSave}>Save</Button>
             </div>
-            {saveStatus.length > 0 &&     
+            {saveStatus.length > 0
+              && (
               <Alert variant={saveStatus}>
                 {saveMessage}
-              </Alert>   
-            }
+              </Alert>
+              )}
           </Col>
         </Row>
       </div>
     );
   }
 }
-const mapStateToProps = state => {
-  return { docuId: state.docuId, startRevision: state.startRevision, endRevision: state.endRevision};
+
+DiffPage.propTypes = {
+  docuId: PropTypes.string.isRequired,
+  from: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+  file: PropTypes.string.isRequired,
 };
+
+const mapStateToProps = (state) => ({
+  docuId: state.docuId,
+  from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
+  to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
+});
 
 export default hot(module)(connect(mapStateToProps)(DiffPage));

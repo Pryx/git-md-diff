@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "render",
   "version": "1.0.0",
   "description": "",
   "main": "build/index.js",
@@ -24,6 +24,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "@babel/preset-react": "^7.12.13",
     "@mdx-js/runtime": "^1.6.22",
     "cors": "^2.8.5",
     "express": "^4.17.1",
@@ -32,6 +33,9 @@
     "passport": "^0.4.1",
     "passport-gitlab2": "^5.0.0",
     "postgres": "^1.0.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "remark-admonitions": "^1.2.1",
     "simple-git": "^2.22.0"
   }
 }

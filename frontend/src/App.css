@@ -18,7 +18,17 @@ pre{
   border-radius: 4px
 }
 
-.new-file *{
-  color:darkgreen;
-  background:#eaffea;
+.newfile .card-body {
+  background: #e1ffe1;
+}
+
+del img {
+  border: 2px solid rgba(255,0,0,0.5);
+  margin: 4px;
+  opacity: 0.7
+}
+
+ins img {
+  border: 2px solid rgba(0,200,0,0.5);
+  margin: 4px;
 }

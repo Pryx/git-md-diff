@@ -6,13 +6,13 @@ import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import FormControl from 'react-bootstrap/FormControl';
 import InputGroup from 'react-bootstrap/InputGroup';
+import { connect } from 'react-redux';
+import SelectSearch from 'react-select';
+import PropTypes from 'prop-types';
 import CommitSelect from './CommitSelect';
 import DiffOverview from './DiffOverview';
-import { connect } from "react-redux";
-import SelectSearch from 'react-select';
 import { store } from './store/index';
 import { documentationSelected } from './actions';
-
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -20,36 +20,16 @@ import { documentationSelected } from './actions';
  * and passess it to wrapped components.
  */
 class DiffPage extends React.Component {
+  state = {
+    docus: [],
+    error: null,
+    cloneUrl: '',
+  };
+
   constructor(props) {
     super(props);
-    this.state = {
-      docus: [],
-      error: null,
-      cloneUrl: '',
-    };
 
-    this.handleClone = this.handleClone.bind(this);
-    this.handleCloneUrl = this.handleCloneUrl.bind(this);
     this.handleDocuChange = this.handleDocuChange.bind(this);
-  }
-
-  handleClone(e) {
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: this.state.cloneUrl }),
-    };
-    fetch('/api/clone', requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          const { docus } = this.state;
-          docus.push(data.name);
-          this.setState({ docus, cloneUrl: '' });
-        } else {
-          this.setState({ error: "Couldn't clone repository!" });
-        }
-      });
   }
 
   componentDidMount() {
@@ -58,7 +38,7 @@ class DiffPage extends React.Component {
       .then(
         (docus) => {
           this.setState({
-            docus: docus.map((b) => {return {label: b, value: b}}),
+            docus: docus.map((b) => ({ label: b, value: b })),
           });
         },
 
@@ -70,16 +50,8 @@ class DiffPage extends React.Component {
       );
   }
 
-  handleCloneUrl(e) {
-    this.setState(
-      {
-        cloneUrl: e.currentTarget.value,
-      },
-    );
-  }
-
   handleDocuChange(selectedValue) {
-    store.dispatch(documentationSelected(selectedValue.value))
+    store.dispatch(documentationSelected(selectedValue.value));
   }
 
   render() {
@@ -87,37 +59,28 @@ class DiffPage extends React.Component {
       docus, error, cloneUrl,
     } = this.state;
 
+    const { docuId } = this.props;
+
     if (error) {
       return (
         <Container className="mt-5">
           <p>{error}</p>
         </Container>
       );
-    } 
-    
-    if (!this.props.docuId) {
+    }
+
+    if (!docuId) {
       return (
         <Container className="mt-5">
           <Row className="select-diff">
-            <Col lg={6} xs={12}>
+            <Col lg={12} xs={12}>
               Select documentation:
               <SelectSearch
                 onChange={this.handleDocuChange}
                 options={docus}
-                value={docus.find(o => o.value === this.props.docuId)}
+                value={docus.find((o) => o.value === docuId)}
                 search
-                />
-            </Col>
-            <Col lg={6} xs={12}>
-              Or clone a new one:
-              <InputGroup className="mb-3">
-                <FormControl onChange={this.handleCloneUrl} value={cloneUrl} disabled/>
-                <InputGroup.Append>
-                  <Button onClick={this.handleClone} disabled>
-                    Clone!
-                  </Button>
-                </InputGroup.Append>
-              </InputGroup>
+              />
             </Col>
           </Row>
         </Container>
@@ -132,11 +95,11 @@ class DiffPage extends React.Component {
           <Col lg={6} xs={12}>
             Select documentation:
             <SelectSearch
-                onChange={this.handleDocuChange}
-                options={docus}
-                value={docus.find(o => o.value === this.props.docuId)}
-                search
-                />
+              onChange={this.handleDocuChange}
+              options={docus}
+              value={docus.find((o) => o.value === docuId)}
+              search
+            />
           </Col>
           <Col lg={6} xs={12}>
             Or clone a new one:
@@ -144,8 +107,8 @@ class DiffPage extends React.Component {
               <FormControl onChange={this.handleCloneUrl} value={cloneUrl} disabled />
               <InputGroup.Append>
                 <Button onClick={this.handleClone} disabled>
-                    Clone!
-                  </Button>
+                  Clone!
+                </Button>
               </InputGroup.Append>
             </InputGroup>
           </Col>
@@ -153,7 +116,7 @@ class DiffPage extends React.Component {
         <Row className="select-diff">
           <Col lg={6} xs={12}>
             <strong>Starting with revision:</strong>
-            <CommitSelect id="from" from={true} />
+            <CommitSelect id="from" from />
           </Col>
           <Col lg={6} xs={12}>
             <strong>Ending with revision:</strong>
@@ -162,7 +125,7 @@ class DiffPage extends React.Component {
         </Row>
         <Row className="results">
           <Col>
-            <DiffOverview repo={this.props.docuId} />
+            <DiffOverview docu={docuId} />
           </Col>
         </Row>
       </Container>
@@ -170,8 +133,10 @@ class DiffPage extends React.Component {
   }
 }
 
-const mapStateToProps = state => {
-  return { docuId: state.docuId };
+DiffPage.propTypes = {
+  docuId: PropTypes.string.isRequired,
 };
+
+const mapStateToProps = (state) => ({ docuId: state.docuId });
 
 export default hot(module)(connect(mapStateToProps)(DiffPage));
