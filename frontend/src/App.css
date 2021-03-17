@@ -32,3 +32,50 @@ ins img {
   border: 2px solid rgba(0,200,0,0.5);
   margin: 4px;
 }
+
+del{
+  color:#a33;
+  background:#ffeaea;
+  text-decoration:line-through;
+  display: inline-block;
+}
+
+ins{
+  color:darkgreen;
+  background:#eaffea;
+  display: inline-block;
+}
+
+.docu-card.card {
+  width: calc(25% - 8px);
+  margin-right: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.docu-card.card .card-header{
+  font-weight: 600;
+}
+
+.docu-card.card .card-footer,
+.docu-card.card .card-header{
+  background: none;
+  border: none
+}
+
+.add-circle{
+  width: 48px;
+  height: 48px;
+  display: block;
+  background: green;
+  text-align: center;
+  color: white;
+  line-height: 48px;
+  border-radius: 100%;
+  font-size: 24px;
+  margin: auto;
+}
+
+.docu-card.card .card-footer .fa-gitlab{ 
+  color: #fc6d26
+}

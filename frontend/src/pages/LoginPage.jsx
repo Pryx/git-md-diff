@@ -5,10 +5,13 @@ import PropTypes from 'prop-types';
 import { Alert, Button, Card } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { Redirect } from 'wouter';
-import { store } from './store/index';
-import { logIn, logOut } from './actions';
+import { store } from '../store/index';
+import { logIn, logOut } from '../actions';
 
 class Login extends React.Component {
+  state = {
+    userLoaded: false
+  }
   render() {
     const {
       error, success, logout, loggedIn,
@@ -64,8 +67,8 @@ class Login extends React.Component {
 
     return (
       <Container className="mt-5">
+        {alert}
         <Card>
-          {alert}
           <Card.Header as="h5">Log in</Card.Header>
           <Card.Body>
             <Card.Title>You need to login before you start using the app</Card.Title>

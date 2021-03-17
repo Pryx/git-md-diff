@@ -1,10 +1,7 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
 import PropTypes from 'prop-types';
-import Markdown from 'markdown-to-jsx';
-import Diff from './diff/diff';
-
-import './App.css';
+import Diff from '../diff/diff';
 
 /**
  * A slightly modified DiffView for display in the editor file.
@@ -21,6 +18,7 @@ class DiffViewEditor extends React.Component {
     this.options = { hideCode: props.hideCode, returnMdx: true };
   }
 
+
   componentDidMount() {
     const {
       docuId, from, file, to,
@@ -33,19 +31,18 @@ class DiffViewEditor extends React.Component {
             .then((r) => r.json())
             .then(
               (modified) => {
-                this.setState({
-                  isLoaded: true,
-                  content: Diff(
-                    {
-                      docuId,
-                      from,
-                      to,
-                    },
-                    original.content,
-                    modified.content,
-                    this.options,
-                  ),
+                const contentPromise = new Promise((resolve, reject) => {
+                  let content = Diff({ docuId, from, to }, original.content, modified.content, this.options)
+                  resolve(content)
                 });
+
+                contentPromise.then((content) => this.setState(
+                  {
+                    isLoaded: true,
+                    content
+                  }
+                )
+                )
               },
               (error) => {
                 this.setState({
@@ -97,7 +94,7 @@ class DiffViewEditor extends React.Component {
 
     return (
       <div>
-        <Markdown>{content.content}</Markdown>
+        <div dangerouslySetInnerHTML={{ __html: content.content }} />
         <hr />
         <div>
           Invisible changes:

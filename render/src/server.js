@@ -38,5 +38,4 @@ app.get('*', (req, res) => {
   res.status(404).send('Please use endpoints documented in the OpenAPI file');
 });
 
-
 export default app;

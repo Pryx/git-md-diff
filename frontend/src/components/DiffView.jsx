@@ -3,9 +3,8 @@ import React from 'react';
 import { Link } from 'wouter';
 import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
-import Markdown from 'markdown-to-jsx';
 import { Badge } from 'react-bootstrap';
-import Diff from './diff/diff';
+import Diff from '../diff/diff';
 
 /**
  * Diff view shows the diff file contents. Currently this

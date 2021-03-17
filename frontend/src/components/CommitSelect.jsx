@@ -5,8 +5,8 @@ import Form from 'react-bootstrap/Form';
 import SelectSearch from 'react-select';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { store } from './store';
-import { revisionSelected } from './actions';
+import { store } from '../store';
+import { revisionSelected } from '../actions';
 
 /**
  * This is the commit selector component. This allows us to

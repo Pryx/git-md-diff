@@ -9,10 +9,10 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import { connect } from 'react-redux';
 import SelectSearch from 'react-select';
 import PropTypes from 'prop-types';
-import CommitSelect from './CommitSelect';
-import DiffOverview from './DiffOverview';
-import { store } from './store/index';
-import { documentationSelected } from './actions';
+import CommitSelect from '../components/CommitSelect';
+import DiffOverview from '../components/DiffOverview';
+import { store } from '../store/index';
+import { documentationSelected } from '../actions';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.

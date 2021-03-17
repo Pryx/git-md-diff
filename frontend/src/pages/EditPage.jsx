@@ -9,9 +9,8 @@ import 'codemirror/lib/codemirror.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
 import { Editor } from '@toast-ui/react-editor';
 import { connect } from 'react-redux';
-import Markdown from 'markdown-to-jsx';
 import PropTypes from 'prop-types';
-import DiffViewEditor from './DiffViewEditor';
+import DiffViewEditor from '../components/DiffViewEditor';
 
 /**
  * Edit page encompasses the Editor and DiffViewEditor components.
@@ -118,7 +117,6 @@ class DiffPage extends React.Component {
     return (
       <div>
         <Row className="mt-3 mr-3 ml-3">
-          <Markdown># Hello world!</Markdown>
           <Col xl={12}>
             <h3>
               Editing file:

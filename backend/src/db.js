@@ -15,7 +15,7 @@ const sql = postgres({
 });
 
 async function setupDb() {
-  await sql`DROP TABLE IF EXISTS users;`;
+  //await sql`DROP TABLE IF EXISTS documentations;`;
 
   await sql`CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY,
@@ -25,10 +25,30 @@ async function setupDb() {
     tokens jsonb
   );`;
 
+
+  await sql`CREATE TABLE IF NOT EXISTS documentations(
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL,
+    description TEXT,
+    provider TEXT,
+    providerId INTEGER ,
+    UNIQUE (provider, providerId)
+  );`;
+
+  await sql`CREATE TABLE IF NOT EXISTS roles(
+    userId INTEGER REFERENCES users(id),
+    docuId INTEGER REFERENCES documentations(id),
+    level SMALLINT,
+    PRIMARY KEY (userId, docuId)
+  );`;
+  
+  /*
   console.log(await sql`SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
     ORDER BY table_name;`);
+  */
 }
 
 setupDb();

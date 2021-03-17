@@ -18,19 +18,48 @@ export default class User {
   }
 
   static async getByEmail(email) {
-    return sql`SELECT * FROM users WHERE email=${email}`;
+    const result = await sql`SELECT * FROM users WHERE email=${email}`;
+    if (result.count){
+      const [user] = result;
+      return new User(user);
+    }
+    return null;
   }
 
   static async getById(id) {
-    return sql`SELECT * FROM users WHERE id=${id}`;
+    const result = await sql`SELECT * FROM users WHERE id=${id}`;
+    if (result.count){
+      const [user] = result;
+      return new User(user);
+    }
+    return null;
   }
 
   static async getByProviderId(id, provider) {
-    return sql`SELECT * FROM users WHERE linked->>'${sql(provider)}'=${id}`;
+    const result = await sql`SELECT * FROM users WHERE linked->>'${sql(provider)}'=${id}`;
+
+    if (result.count){
+      const [user] = result;
+      return new User(user);
+    }
+    return null;
+  }
+
+  updateTokens(provider, access, refresh){
+    this.tokens[provider].access = access;
+    this.tokens[provider].refresh = refresh;
   }
 
   async save() {
     return sql`INSERT INTO users (email, name, linked, tokens) VALUES (${this.email}, ${this.name},${sql.json(this.linked)}, ${sql.json(this.tokens)}) ON CONFLICT (email) DO
     UPDATE SET name=${this.name}, linked=${sql.json(this.linked)}, tokens=${sql.json(this.tokens)}`;
+  }
+  
+  getPublic(){
+    return {
+      id: this.id,
+      email: this.email,
+      name: this.name,
+    };
   }
 }

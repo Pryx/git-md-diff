@@ -53,7 +53,7 @@ const Navigation = (props) => {
 };
 
 Navigation.propTypes = {
-  userData: PropTypes.object.isRequired,
+  userData: PropTypes.object,
   loggedIn: PropTypes.bool.isRequired,
 };
 
