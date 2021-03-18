@@ -1,4 +1,5 @@
 import sql from '../db';
+import Role from './role';
 
 const defaults = {
   id: -1,
@@ -13,14 +14,14 @@ export default class Documentation {
   constructor(params) {
     this.id = params.id || defaults.id;
     this.provider = params.provider || defaults.provider;
-    this.providerId = params.providerId || defaults.providerId;
+    this.providerId = params.providerId || params.providerid || defaults.providerId;
     this.name = params.name || defaults.name;
     this.slug = params.slug || defaults.slug;
     this.description = params.description || defaults.description;
   }
 
   static async get(id) {
-    let docu = await sql`SELECT * FROM documentations WHERE id=${id}`;
+    let [docu] = await sql`SELECT * FROM documentations WHERE id=${id}`;
     return new Documentation(docu);
   }
 
@@ -39,11 +40,22 @@ export default class Documentation {
     const results = await sql`SELECT * FROM documentations WHERE id IN (SELECT docuId FROM roles WHERE userId=${userId})`;
 
     if (results.count) {
-      let docus = results.map(docu => new Documentation(docu));
+      let docus = await Promise.all(
+        results.map(async docu => {
+          const d = new Documentation(docu)
+          d.accessLevel = await d.getAccessLevel(userId);
+          return d;
+        }));
       return docus;
     }
 
     return [];
+  }
+
+  
+  async getAccessLevel(userId){
+    const role = await Role.get(userId, this.id);
+    return role.level;
   }
 
 

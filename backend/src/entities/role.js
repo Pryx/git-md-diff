@@ -1,7 +1,7 @@
 import sql from '../db';
 
 const defaults = {
-  level: 3,
+  level: -1,
   docuId: -1,
   userId: -1,
 };
@@ -14,7 +14,9 @@ export default class Role {
   }
 
   static async get(userId, docuId) {
-    return sql`SELECT * FROM roles WHERE userId=${userId} AND docuId=${docuId}`;
+    let [res] = await sql`SELECT * FROM roles WHERE userId=${userId} AND docuId=${docuId}`;
+    const role = new Role(res);
+    return role;
   }
 
   async remove() {

@@ -27,22 +27,30 @@ export default class DocumentationService {
     return docus;
   }
 
+  async get(docuId) {
+    const docu = await Documentation.get(docuId);
+    docu.accessLevel = docu.getAccessLevel(this.user.id);
+    return d;
+  }
+
+
   async getVersions(docuId) {
     const docu = await Documentation.get(docuId);
+    console.error(docu)
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const versions = provider.getVersions(docu.providerId);
+    const versions = await provider.getVersions(docu.providerId);
     //TODO: Transform
     console.error(versions)
-    throw "Not implemented yet"
+    return versions;
   }
 
   async getRevisions(docuId, version) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const revisions = provider.getRevisions(docu.providerId, version);
+    const revisions = await provider.getRevisions(docu.providerId, version);
     //TODO: Transform
     console.error(revisions)
-    throw "Not implemented yet"
+    return revisions
   }
 
   async getChanges(docuId, from, to) {
@@ -98,7 +106,7 @@ export default class DocumentationService {
         return DocumentationService.gitlab;
 
       default:
-        throw 'Unknown provider specified!';
+        throw  {message: `Unknown provider ${slug} specified!`};
     }
   }
 }

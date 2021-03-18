@@ -5,6 +5,11 @@ import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
 import { Alert, Badge, Row } from 'react-bootstrap';
 import Diff from '../diff/diff';
+import { store } from '../store/index';
+import { connect } from 'react-redux';
+import { updateDocumentationList } from '../actions';
+
+
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -16,7 +21,6 @@ class DocuOverview extends React.Component {
 
   state = {
     isLoaded: false,
-    docus: [],
   };
 
   constructor(props) {
@@ -32,10 +36,12 @@ class DocuOverview extends React.Component {
       .then((r) => r.json())
       .then(
         (response) => {
-          let docus = response.data;
+
+          store.dispatch(
+            updateDocumentationList(response.data)
+          );
           this.setState({
             isLoaded: true,
-            docus
           });
         },
         (error) => {
@@ -52,8 +58,10 @@ class DocuOverview extends React.Component {
 
   render() {
     const {
-      error, isLoaded, docus,
+      error, isLoaded,
     } = this.state;
+
+    const {docuList} = this.props
 
     if (error) {
       return (
@@ -77,10 +85,10 @@ class DocuOverview extends React.Component {
       );
     }
 
-
+    console.error(docuList)
     let items = null;
-    if (docus.length){
-      items = docus.map((docu) =>    (
+    if (docuList.length){
+      items = docuList.map((docu) =>    (
         <Link href={"/documentation/"+docu.id}>
           <Card className="docu-card">
             <Card.Header>
@@ -120,7 +128,13 @@ DocuOverview.defaultProps = {
 };
 
 DocuOverview.propTypes = {
-
+  docuList: PropTypes.array
 };
 
-export default hot(module)(DocuOverview);
+const mapStateToProps = (state) => (
+  {
+    docuList: state.docuList
+  }
+);
+
+export default hot(module)(connect(mapStateToProps)(DocuOverview));

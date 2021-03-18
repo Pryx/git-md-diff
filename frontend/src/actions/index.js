@@ -13,3 +13,11 @@ export function revisionSelected(payload) {
 export function documentationSelected(payload) {
   return { type: 'DOCUMENTATION_SELECTED', payload };
 }
+
+export function updateDocumentationList(payload) {
+  return { type: 'DOCUMENTATION_LIST_UPDATE', payload };
+}
+
+export function documentationEmpty() {
+  return { type: 'DOCUMENTATION_EMPTY', payload: null };
+}

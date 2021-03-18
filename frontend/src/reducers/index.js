@@ -1,10 +1,11 @@
 import {
-  LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED,
+  LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED, DOCUMENTATION_LIST_UPDATE, DOCUMENTATION_EMPTY,
 } from '../constants/action-types';
 
 const initialState = {
   loggedIn: false,
   userData: null,
+  docuList: []
 };
 
 function rootReducer(state = initialState, action) {
@@ -15,21 +16,35 @@ function rootReducer(state = initialState, action) {
       loggedIn: true,
       userData: payload,
     };
-  } if (action.type === LOGOUT) {
+  } else if (action.type === LOGOUT) {
     return {
       loggedIn: false,
     };
-  } if (action.type === REVISION_SELECTED) {
+  } else if (action.type === REVISION_SELECTED) {
     if (payload.from) {
       return { ...state, startRevision: payload.revisionData };
     }
     return { ...state, endRevision: payload.revisionData };
-  } if (action.type === DOCUMENTATION_SELECTED) {
+  } else if (action.type === DOCUMENTATION_SELECTED) {
+    const {docuId} = state
+    if (state != payload){
+      return {
+        ...state,
+        docuId: payload,
+        startRevision: null,
+        endRevision: null,
+        docuEmpty: false
+      };
+    }
+  } else if (action.type === DOCUMENTATION_LIST_UPDATE) {
     return {
       ...state,
-      docuId: payload,
-      startRevision: null,
-      endRevision: null,
+      docuList: payload,
+    };
+  }else if (action.type === DOCUMENTATION_EMPTY) {
+    return {
+      ...state,
+      docuEmpty: true,
     };
   }
 

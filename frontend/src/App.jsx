@@ -5,13 +5,13 @@ import '@fortawesome/fontawesome-free/js/all.js';
 import { Switch, Route, Redirect } from 'wouter';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import DiffPage from './pages/DiffPage';
+import DiffPage from './components/DiffWrapper';
 import EditPage from './pages/EditPage';
 import Login from './pages/LoginPage';
 import 'remark-admonitions/styles/classic.css';
 import Dashboard from './pages/Dashboard';
 import NewDocumentation from './pages/NewDocumentation';
-import DocumentationOverview from './pages/DocumentationOverview';
+import DocumentationPage from './pages/DocumentationPage';
 
 /**
  * The root app element. Takes care of routing and right now
@@ -23,24 +23,20 @@ const App = (props) => {
   if (loggedIn) {
     return (
       <Switch>
-        <Route path="/edit/:docu/:file">
-          {(params) => <EditPage docuId={params.docu} file={params.file} />}
+        <Route path="/documentation/:docuId/edit/:file">
+          {(params) => <EditPage docuId={params.docuId} file={params.file} />}
         </Route>
 
         <Route path="/logout">
           <Login logout />
         </Route>
 
-        <Route path="/diff/:docu">
-          <DiffPage />
-        </Route>
-
-        <Route path="/documentation/:id">
-          <DocumentationOverview />
-        </Route>
-
         <Route path="/documentation/new">
           <NewDocumentation />
+        </Route>
+
+        <Route path="/documentation/:docuId">
+          {(params) => <DocumentationPage docuId={params.docuId} />}
         </Route>
 
         <Route path="/">
@@ -48,7 +44,6 @@ const App = (props) => {
         </Route>
 
         <Redirect to="/" />
-
       </Switch>
     );
   }

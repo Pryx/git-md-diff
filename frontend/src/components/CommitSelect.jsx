@@ -6,7 +6,8 @@ import SelectSearch from 'react-select';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { store } from '../store';
-import { revisionSelected } from '../actions';
+import { documentationEmpty, revisionSelected } from '../actions';
+import { Alert } from 'react-bootstrap';
 
 /**
  * This is the commit selector component. This allows us to
@@ -109,13 +110,18 @@ class CommitSelect extends React.Component {
       .then((r) => r.json())
       .then(
         (branches) => {
+          if (!branches.data.length){
+            store.dispatch(documentationEmpty());
+            return;
+          }
+
           // Let's be inclusive after the master branch debacle :)
-          let cb = this.getCurrentBranch() || branches.all.includes('master') ? 'master' : null;
+          let cb = this.getCurrentBranch() || branches.data.includes('master') ? 'master' : null;
           if (!cb){
-            cb = branches.all.includes('main') ? 'main' : branches.all[0];
+            cb = branches.data.includes('main') ? 'main' : branches.data[0];
           }
           this.setState({
-            branches: branches.all.map((b) => ({ label: b, value: b })),
+            branches: branches.data.map((b) => ({ label: b, value: b })),
             commits: [],
           });
 
@@ -128,7 +134,7 @@ class CommitSelect extends React.Component {
                   revisionData: {
                     branch: cb,
                     commit: this.getCurrentCommit()
-                      || (from ? commits.all[1].hash : commits.all[0].hash),
+                      || (from ? commits.data[1].hash : commits.data[0].hash),
                   },
                 }),
               );
@@ -136,7 +142,7 @@ class CommitSelect extends React.Component {
               this.setState(
                 {
                   isLoaded: true,
-                  commits: commits.all.map((c) => ({ label: c.message, value: c.hash })),
+                  commits: commits.data.map((c) => ({ label: c.message, value: c.hash })),
                 },
               );
             });
@@ -153,7 +159,7 @@ class CommitSelect extends React.Component {
 
   render() {
     const {
-      error, isLoaded, branches, commits,
+      error, isLoaded, branches, commits
     } = this.state;
 
     if (error) {
@@ -173,6 +179,7 @@ class CommitSelect extends React.Component {
         </div>
       );
     }
+
     const customStyles = {
       option: (provided) => ({
         ...provided,
@@ -209,8 +216,8 @@ CommitSelect.defaultProps = {
 
 CommitSelect.propTypes = {
   docuId: PropTypes.string.isRequired,
-  startRevision: PropTypes.object.isRequired,
-  endRevision: PropTypes.object.isRequired,
+  startRevision: PropTypes.object,
+  endRevision: PropTypes.object,
   from: PropTypes.bool.isRequired,
 };
 
