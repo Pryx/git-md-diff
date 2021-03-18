@@ -52,21 +52,11 @@ export default class DocumentationService {
     return provider.getChanges(docu.providerId, from, to);
   }
 
-  async getPage(docuId, revision, page) {
-    const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const p = await provider.getPage(docu.providerId, revision, page);
-    return p
-  }
-
   async getBlob(docuId, revision, blob) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const blobObj = provider.getBlob(docuId, revision, blob);
-
-    console.error(blobObj)
-
-    throw "Not implemented yet"
+    const p = await provider.getBlob(docu.providerId, revision, blob);
+    return p
   }
 
   async savePage(docuId, page) {

@@ -18,7 +18,6 @@ export function revisionTransformer(revision){
 
 export function changesTransformer(change){
   const ext = change.new_path.split('.').pop();
-  console.log(change)
 
   if (change.deleted_file || (ext.toLowerCase() != 'md' && ext.toLowerCase() != 'mdx')) {
     return null;

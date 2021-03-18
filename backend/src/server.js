@@ -3,15 +3,12 @@ import session from 'express-session';
 import passport from 'passport';
 import GitLabStrategy from 'passport-gitlab2';
 import fs from 'fs';
-import FileType from 'file-type';
-import simpleGit from 'simple-git';
 import cors from 'cors';
-import crypto from 'crypto';
 import User from './entities/user';
 import verifyAuth from './middleware/auth-verification';
 import { findOrCreateUser } from './services/auth';
 import DocumentationService from './services/documentation'
-import GitlabProvider from './providers/gitlab-provider';
+import mime from 'mime-types'
 
 const app = express();
 
@@ -174,15 +171,19 @@ app.get('/documentations/:docu/changes/:from/:to', (req, res) => {
 // Text file
 app.get('/documentations/:docu/:revision/pages/:page', (req, res) => {
   const service = new DocumentationService(req.user);
-  service.getPage(req.params.docu, req.params.revision, req.params.page)
+  service.getBlob(req.params.docu, req.params.revision, req.params.page)
     .then((data) => res.send({success: true, data}))
     .catch((error) => res.status(500).send({success: false, error: error.message}));
 });
 
 // Blob file
 app.get('/documentations/:docu/:revision/blobs/:blob', (req, res) => {
+  const type = mime.lookup(req.params.blob);
+  console.error(type)
   const service = new DocumentationService(req.user);
-  service.getBlob(req.params.docu, req.params.revision, req.params.page).then((blob) => res.send(blob)).catch((e) => res.send(''));
+  service.getBlob(req.params.docu, req.params.revision, req.params.blob)
+    .then((data) => res.type(type).send(data))
+    .catch((error) => res.status(500).send(error) );
 });
 
 // Catchall

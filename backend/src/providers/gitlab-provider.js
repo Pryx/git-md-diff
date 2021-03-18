@@ -1,5 +1,6 @@
 import { Gitlab } from '@gitbeaker/node';
 import {versionTransformer, revisionTransformer, changesTransformer} from '../transformers/gitlab' 
+import fs from 'fs';
 
 export default class GitlabProvider{
   constructor(token) {
@@ -38,18 +39,15 @@ export default class GitlabProvider{
     return []
   }
 
-  async getPage(projectId, revision, file) {
+  async getBlob(projectId, revision, blob) {
     try{
-      const page = await this.gitlab.RepositoryFiles.showRaw(projectId, file, revision);
-      return page
+      const b = await this.gitlab.RepositoryFiles.showRaw(projectId, blob, revision);
+      return b
     }catch(e){
       return "";
     }
   }
 
-  async getBlob(projectId, revision, blob) {
-    throw "Not implemented yet"
-  }
 
   async savePage(projectId, page) {
     throw "Not implemented yet"
