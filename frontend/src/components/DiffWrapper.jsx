@@ -14,7 +14,7 @@ import { Alert } from 'react-bootstrap';
  * Currently it stores the info about current repository and selected commits
  * and passess it to wrapped components.
  */
-class DiffPage extends React.Component {
+class DiffWrapper extends React.Component {
   state = {
     error: null,
   };
@@ -63,11 +63,11 @@ class DiffPage extends React.Component {
   }
 }
 
-DiffPage.propTypes = {
+DiffWrapper.propTypes = {
   docuId: PropTypes.string.isRequired,
   docuEmpty: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({ docuId: state.docuId, docuEmpty: state.docuEmpty });
 
-export default hot(module)(connect(mapStateToProps)(DiffPage));
+export default hot(module)(connect(mapStateToProps)(DiffWrapper));

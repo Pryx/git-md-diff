@@ -41,7 +41,7 @@ class DiffOverview extends React.Component {
           (changes) => {
             this.setState({
               isLoaded: true,
-              changes,
+              changes: changes.data,
             });
           },
           // Note: it's important to handle errors here
@@ -90,7 +90,7 @@ class DiffOverview extends React.Component {
       );
     }
 
-    if (changes.length === 0) {
+    if (!changes.length) {
       return (
         <Row className="mt-4">
           <Col>
@@ -103,12 +103,12 @@ class DiffOverview extends React.Component {
     return (
       changes.map(
         (change) => (
-          <Row key={change.file} className="mt-4">
+          <Row key={change.newFile} className="mt-4">
             <Col>
               <DiffView
-                file={change.file}
-                insertions={change.insertions}
-                deletions={change.deletions}
+                newFile={change.newFile}
+                oldFile={change.oldFile}
+                renamed={change.renamed}
                 from={from}
                 to={to}
                 docuId={docuId}

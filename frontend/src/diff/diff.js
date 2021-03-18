@@ -49,8 +49,9 @@ export default async function diff(revisionInfo, original, modified, opts) {
 
   const invisibleChanges = [];
   const cleanDocs = removeDocusaurusInfo(original, modified);
+
   if (cleanDocs.changed) {
-    invisibleChanges.push('Front matter changed');
+    invisibleChanges.push({text: 'Front matter changed', variant: 'info', id: "fm"});
   }
 
   const orig = cleanDocs.original;
@@ -84,6 +85,10 @@ export default async function diff(revisionInfo, original, modified, opts) {
   };
 
   const response = await fetch('/api/render', requestOptions);
+
+  if (!invisibleChanges.length){
+    invisibleChanges.push({text: 'No invisible changes', variant: 'secondary', id: "no"});
+  }
 
   try {
     const content = await response.json(); 

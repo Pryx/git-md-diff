@@ -6,7 +6,6 @@ import MDX from '@mdx-js/runtime'
 import useBaseUrl from './baseurl'
 import admonitions from 'remark-admonitions';
 
-
 const app = express();
 
 app.use(cors());

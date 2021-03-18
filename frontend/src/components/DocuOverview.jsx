@@ -85,11 +85,10 @@ class DocuOverview extends React.Component {
       );
     }
 
-    console.error(docuList)
     let items = null;
     if (docuList.length){
       items = docuList.map((docu) =>    (
-        <Link href={"/documentation/"+docu.id}>
+        <Link key={docu.id} href={"/documentation/"+docu.id}>
           <Card className="docu-card">
             <Card.Header>
               {docu.name}
@@ -98,7 +97,7 @@ class DocuOverview extends React.Component {
               {docu.description}
             </Card.Body>
             <Card.Footer className="text-right">
-              <i class={"fab fa-"+docu.provider}></i>
+              <i className={"fab fa-"+docu.provider}></i>
             </Card.Footer>
           </Card>
         </Link>  

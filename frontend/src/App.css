@@ -79,3 +79,7 @@ ins{
 .docu-card.card .card-footer .fa-gitlab{ 
   color: #fc6d26
 }
+
+.card-footer .badge {
+  margin-right: 8px;
+}

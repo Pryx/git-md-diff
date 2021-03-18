@@ -24,23 +24,23 @@ class DiffView extends React.Component {
     this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
 
     // This is needed because for some reason encodeUriComponent doesn't encode dots
-    this.link = `/edit/${this.docuId}/${encodeURIComponent(props.file).replace('.', '%2E')}`;
+    this.link = `/edit/${this.docuId}/${encodeURIComponent(props.newFile).replaceAll('.', '%2E')}`;
   }
 
   componentDidMount() {
     const {
-      docuId, from, to, file,
+      docuId, from, to, newFile, oldFile
     } = this.props;
-    fetch(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(file)}`)
+    fetch(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`)
       .then((r) => r.json())
       .then(
         (original) => {
-          fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(file)}`)
+          fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`)
             .then((r) => r.json())
             .then(
               (modified) => {
                 const contentPromise = new Promise((resolve, reject) => {
-                  let content = Diff({ docuId, from, to }, original.content, modified.content, this.options)
+                  let content = Diff({ docuId, from, to }, original.data, modified.data, this.options)
                   resolve(content)
                 });
 
@@ -78,25 +78,19 @@ class DiffView extends React.Component {
       error, isLoaded, content,
     } = this.state;
 
-    const { insertions, deletions, file } = this.props;
+    const { renamed, newFile, oldFile } = this.props;
+    const filename = newFile == oldFile ? newFile : `${oldFile} => ${newFile}`;
+
+    let badges = [];
+    if (renamed){
+      badges.push(<Badge variant="warning">Renamed</Badge>)
+    }
 
     if (error) {
       return (
         <Card>
           <Card.Header>
-            <a className="title">{file}</a>
-            <span className="changes float-right">
-              Changes:
-              <span className="additions">
-                +
-                {insertions}
-              </span>
-              {' '}
-              <span className="deletions">
-                -
-                {deletions}
-              </span>
-            </span>
+            {filename}
           </Card.Header>
           <Card.Body>
             Error:
@@ -108,7 +102,7 @@ class DiffView extends React.Component {
             <pre>{content.content}</pre>
           </Card.Body>
           <Card.Footer>
-            Invisible changes: N/A
+            {badges}
           </Card.Footer>
         </Card>
       );
@@ -118,25 +112,13 @@ class DiffView extends React.Component {
       return (
         <Card>
           <Card.Header>
-            <span className="title">{file}</span>
-            <span className="changes float-right">
-              Changes:
-              <span className="additions">
-                +
-                {insertions}
-              </span>
-              {' '}
-              <span className="deletions">
-                -
-                {deletions}
-              </span>
-            </span>
+            {filename}
           </Card.Header>
           <Card.Body>
             Loading...
           </Card.Body>
           <Card.Footer>
-            Invisible changes: Loading...
+            {badges}
           </Card.Footer>
         </Card>
       );
@@ -145,36 +127,26 @@ class DiffView extends React.Component {
     let cls = '';
     if (content.newFile) {
       cls = 'newfile';
+      badges.push(<Badge variant="success">NEW</Badge>)
+    }
+
+    let items = null;
+    if (content.invisible.length){
+      items = content.invisible.map((change) => ( 
+        <Badge variant={change.variant} key={change.id}>{change.text}</Badge>
+      )  
+      );
+      badges = badges.concat(items)
     }
 
     return (
       <Card className={cls}>
         <Card.Header>
-          {content.newFile
-            && <Badge variant="success">NEW</Badge>}
-          &nbsp;
-          <Link href={this.link}>
-            <a className="title">{file}</a>
-          </Link>
-
-          <span className="changes float-right">
-            Changes:
-            <span className="additions">
-              +
-              {insertions}
-            </span>
-            {' '}
-            <span className="deletions">
-              -
-              {deletions}
-            </span>
-          </span>
+          <Link href={this.link}>{filename}</Link>
         </Card.Header>
         <Card.Body dangerouslySetInnerHTML={{ __html: content.content }} />
         <Card.Footer>
-          Invisible changes:
-          {' '}
-          {content.invisible.join(', ')}
+          {badges}
         </Card.Footer>
       </Card>
     );
@@ -189,10 +161,10 @@ DiffView.propTypes = {
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
   docuId: PropTypes.string.isRequired,
-  file: PropTypes.string.isRequired,
-  insertions: PropTypes.number.isRequired,
-  deletions: PropTypes.number.isRequired,
+  newFile: PropTypes.string.isRequired,
+  oldFile: PropTypes.string.isRequired,
   hideCode: PropTypes.bool,
+  renamed: PropTypes.bool.isRequired,
 };
 
 export default hot(module)(DiffView);

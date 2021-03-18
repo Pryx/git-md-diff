@@ -30,58 +30,39 @@ export default class DocumentationService {
   async get(docuId) {
     const docu = await Documentation.get(docuId);
     docu.accessLevel = docu.getAccessLevel(this.user.id);
-    return d;
+    return docu;
   }
 
 
   async getVersions(docuId) {
     const docu = await Documentation.get(docuId);
-    console.error(docu)
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const versions = await provider.getVersions(docu.providerId);
-    //TODO: Transform
-    console.error(versions)
-    return versions;
+    return provider.getVersions(docu.providerId);
   }
 
   async getRevisions(docuId, version) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const revisions = await provider.getRevisions(docu.providerId, version);
-    //TODO: Transform
-    console.error(revisions)
-    return revisions
+    return provider.getRevisions(docu.providerId, version);
   }
 
   async getChanges(docuId, from, to) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const changes = provider.getChanges(docu.providerId, from, to);
-    //TODO: Transform
-
-    // Todo: More robust file filtering
-    const fileChanges = changes.files.filter((change) => change.file.includes('.md'));
-
-
-    console.error(changes)
-    throw "Not implemented yet"
+    return provider.getChanges(docu.providerId, from, to);
   }
 
   async getPage(docuId, revision, page) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    const pageObj = provider.getPage(docu.providerId, revision, page);
-    //TODO: Transform
-    console.error(pageObj)
-
-    throw "Not implemented yet"
+    const p = await provider.getPage(docu.providerId, revision, page);
+    return p
   }
 
   async getBlob(docuId, revision, blob) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
     const blobObj = provider.getBlob(docuId, revision, blob);
-    //TODO: Transform
 
     console.error(blobObj)
 
