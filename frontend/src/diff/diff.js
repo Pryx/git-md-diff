@@ -18,6 +18,40 @@ function shallowEqual(object1, object2) {
   return true;
 }
 
+function docusaurusBaseImages(markdown) {
+  //Replace useBaseUrl; base = static
+  return markdown.replace(/\{[\s]*useBaseUrl\([\s]*["'](.*?)["'][\s]*\)[\s]*\}/gimu, '"/static/$1"');
+}
+
+function htmlImages(repository, from, to, markdown) {
+  //Replace url with our API url; if not relative to domain, keep it
+  let url = `src="/api/documentations/${repository}/${to}/blobs/`;
+  let clean = markdown.replace(/(<img.*?)src=["'](?!http|\/\/)(.*?["'])/gimu, "$1"+url+"$2");
+
+  //Replace old version with old version links
+  let reg = new RegExp(`(<del.*?src=["'].*?)\/${to}\/(.*?["'].*?\/del>)`,"gimu");
+  clean = clean.replace(reg,  "$1/"+from+"/$2");
+
+  return clean;
+}
+
+function markdownImages(repository, from, to, markdown) {
+  //Replace url with our API url; if not relative to domain, keep it
+  let url = `/api/documentations/${repository}/${to}/blobs/`;
+  let clean = markdown.replace(/(!\[.*?\]\()(.*?\))/gimu, "$1"+url+"$2");
+
+  //Replace old version with old version links
+  let reg = new RegExp(`(<del.*?!\[.*?\].*?)\/${to}\/(.*?\/del>)`,"gimu");
+  clean = clean.replace(reg,  "$1/"+from+"/$2");
+
+  //Appease the MDX lord, that just needs to have a special syntax requirements
+  // <del>![AAA](AAA)</del> => <del>\n\n![AAA](AAA)\n\n</del>
+  clean = clean.replace(/<del>(.*?!\[.*?\].*?)<\/del>/gimu,  "<del>\n\n$1\n\n</del>");
+  clean = clean.replace(/<ins>(.*?!\[.*?\].*?)<\/ins>/gimu,  "<ins>\n\n$1\n\n</ins>");
+  return clean;
+}
+
+
 function removeDocusaurusInfo(original, modified) {
   const originalMatter = matter(original);
   const modifiedMatter = matter(modified);
@@ -75,6 +109,11 @@ export default async function diff(revisionInfo, original, modified, opts) {
       }
     });
   }
+
+  res = docusaurusBaseImages(res);
+  res = htmlImages(revisionInfo.docuId, revisionInfo.from, revisionInfo.to, res);
+  res = markdownImages(revisionInfo.docuId, revisionInfo.from, revisionInfo.to, res);
+  
 
   const requestOptions = {
     method: 'POST',

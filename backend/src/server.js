@@ -179,7 +179,6 @@ app.get('/documentations/:docu/:revision/pages/:page', (req, res) => {
 // Blob file
 app.get('/documentations/:docu/:revision/blobs/:blob', (req, res) => {
   const type = mime.lookup(req.params.blob);
-  console.error(type)
   const service = new DocumentationService(req.user);
   service.getBlob(req.params.docu, req.params.revision, req.params.blob)
     .then((data) => res.type(type).send(data))
