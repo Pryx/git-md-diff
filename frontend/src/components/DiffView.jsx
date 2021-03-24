@@ -24,7 +24,7 @@ class DiffView extends React.Component {
     this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
 
     // This is needed because for some reason encodeUriComponent doesn't encode dots
-    this.link = `/edit/${this.docuId}/${encodeURIComponent(props.newFile).replaceAll('.', '%2E')}`;
+    this.link = `/documentation/${props.docuId}/edit/${encodeURIComponent(props.newFile).replaceAll('.', '%2E')}`;
   }
 
   componentDidMount() {

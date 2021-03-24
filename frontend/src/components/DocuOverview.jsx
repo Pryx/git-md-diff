@@ -17,20 +17,10 @@ import { updateDocumentationList } from '../actions';
  * probably be offloaded to the server.
  */
 class DocuOverview extends React.Component {
-  link = null;
-
   state = {
     isLoaded: false,
   };
-
-  constructor(props) {
-    super(props);
-    this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
-
-    // This is needed because for some reason encodeUriComponent doesn't encode dots
-    this.link = `/edit/${this.docuId}/${encodeURIComponent(props.file).replace('.', '%2E')}`;
-  }
-
+  
   componentDidMount() {
     fetch('/api/documentations')
       .then((r) => r.json())

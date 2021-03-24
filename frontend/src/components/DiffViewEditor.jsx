@@ -2,6 +2,7 @@ import { hot } from 'react-hot-loader';
 import React from 'react';
 import PropTypes from 'prop-types';
 import Diff from '../diff/diff';
+import { Badge } from 'react-bootstrap';
 
 /**
  * A slightly modified DiffView for display in the editor file.
@@ -23,6 +24,8 @@ class DiffViewEditor extends React.Component {
     const {
       docuId, from, file, to,
     } = this.props;
+
+    console.error(from, to, docuId, file)
     fetch(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(file)}`)
       .then((r) => r.json())
       .then(
@@ -32,7 +35,7 @@ class DiffViewEditor extends React.Component {
             .then(
               (modified) => {
                 const contentPromise = new Promise((resolve, reject) => {
-                  let content = Diff({ docuId, from, to }, original.content, modified.content, this.options)
+                  let content = Diff({ docuId, from, to }, original.data, modified.data, this.options)
                   resolve(content)
                 });
 
@@ -92,14 +95,20 @@ class DiffViewEditor extends React.Component {
       );
     }
 
+    let badges = null;
+    if (content.invisible.length){
+      badges = content.invisible.map((change) => ( 
+        <Badge variant={change.variant} key={change.id}>{change.text}</Badge>
+      )  
+      );
+    }
+
     return (
       <div>
-        <div dangerouslySetInnerHTML={{ __html: content.content }} />
+        <div className="editor-diff-content" dangerouslySetInnerHTML={{ __html: content.content }} />
         <hr />
         <div>
-          Invisible changes:
-          {' '}
-          {content.invisible.join(', ')}
+          {badges}
         </div>
       </div>
     );

@@ -12,6 +12,7 @@ import 'remark-admonitions/styles/classic.css';
 import Dashboard from './pages/Dashboard';
 import NewDocumentation from './pages/NewDocumentation';
 import DocumentationPage from './pages/DocumentationPage';
+import { hotjar } from 'react-hotjar';
 
 /**
  * The root app element. Takes care of routing and right now
@@ -19,6 +20,8 @@ import DocumentationPage from './pages/DocumentationPage';
  * is implemented.
  */
 const App = (props) => {
+  hotjar.initialize(2314358, 6);
+
   const { loggedIn } = props;
   if (loggedIn) {
     return (

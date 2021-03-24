@@ -88,3 +88,7 @@ ins{
 .card-body img{
   max-width: 100%;
 }
+
+.editor-diff-content img{
+  max-width: 100%;
+}

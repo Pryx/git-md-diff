@@ -42,7 +42,7 @@ class DiffPage extends React.Component {
       .then(
         (data) => {
           this.setState({
-            content: data.content,
+            content: data.data,
             isLoaded: true,
           });
         },
@@ -133,6 +133,7 @@ class DiffPage extends React.Component {
               initialEditType="markdown"
               useCommandShortcut
               ref={this.editorRef}
+              frontMatter={true}
             />
           </Col>
           <Col xl={6} md={12}>

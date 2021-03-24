@@ -30,6 +30,7 @@
     "react-bootstrap": "^1.4.0",
     "react-dom": "^16.14.0",
     "react-hot-loader": "^4.13.0",
+    "react-hotjar": "^2.2.1",
     "react-redux": "^7.2.2",
     "react-select": "^4.1.0",
     "redux": "^4.0.5",
