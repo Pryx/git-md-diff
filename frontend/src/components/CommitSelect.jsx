@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { store } from '../store';
 import { documentationEmpty, revisionSelected } from '../actions';
-import { Alert } from 'react-bootstrap';
+import ky from 'ky'
 
 /**
  * This is the commit selector component. This allows us to
@@ -25,6 +25,7 @@ class CommitSelect extends React.Component {
     super(props);
     this.handleBranch = this.handleBranch.bind(this);
     this.handleCommit = this.handleCommit.bind(this);
+    this.reloadData = this.reloadData.bind(this);
   }
 
   componentDidMount() {
@@ -34,12 +35,9 @@ class CommitSelect extends React.Component {
   componentDidUpdate(prev) {
     const { docuId } = this.props;
     if (docuId !== prev.docuId) {
+      this.setState({ error: null });
       this.reloadData();
     }
-  }
-
-  static getDerivedStateFromProps() {
-    return { error: null };
   }
 
   handleBranch(selectedOption) {
@@ -60,16 +58,18 @@ class CommitSelect extends React.Component {
       },
     );
 
-    fetch(`/api/documentations/${docuId}/${encodeURIComponent(selectedOption.value)}/revisions`)
-      .then((r) => r.json())
-      .then((commits) => {
-        this.setState(
-          {
-            isLoaded: true,
-            commits: commits.all.map((c) => ({ label: c.message, value: c.hash })),
-          },
-        );
-      });
+    const fetchCommits = async () => {
+      const json = await ky(`/api/documentations/${docuId}/${encodeURIComponent(selectedOption.value)}/revisions`).json();
+
+      this.setState(
+        {
+          isLoaded: true,
+          commits: json.map((c) => ({ label: c.message, value: c.hash })),
+        },
+      );
+    };
+
+    fetchCommits();
   }
 
   handleCommit(selectedOption) {
@@ -106,62 +106,59 @@ class CommitSelect extends React.Component {
 
   reloadData() {
     const { from, docuId } = this.props;
-    fetch(`/api/documentations/${docuId}/versions`)
-      .then((r) => r.json())
-      .then(
-        (branches) => {
-          if (!branches.data.length){
-            store.dispatch(documentationEmpty());
-            return;
-          }
 
-          // Let's be inclusive after the master branch debacle :)
-          let cb = this.getCurrentBranch() || branches.data.includes('master') ? 'master' : null;
-          if (!cb){
-            cb = branches.data.includes('main') ? 'main' : branches.data[0];
-          }
-          this.setState({
-            branches: branches.data.map((b) => ({ label: b, value: b })),
-            commits: [],
-          });
+    const fetchData = async () => {
+      const branches = await ky(`/api/documentations/${docuId}/versions`).json();
 
-          fetch(`/api/documentations/${docuId}/${cb}/revisions`)
-            .then((r) => r.json())
-            .then((commits) => {
-              store.dispatch(
-                revisionSelected({
-                  from,
-                  revisionData: {
-                    branch: cb,
-                    commit: this.getCurrentCommit()
-                      || (from && commits.data.length>1 ? commits.data[1].id : commits.data[0].id),
-                  },
-                }),
-              );
+      if (!branches.data.length){
+        store.dispatch(documentationEmpty());
+        return;
+      }
 
-              this.setState(
-                {
-                  isLoaded: true,
-                  commits: commits.data.map((c) => ({ label: `[${c.shortId}] ${c.title} (Author: ${c.author.name})`, value: c.id })),
-                },
-              );
-            });
-        },
+      // Do not blindly assume the default branch of the repository
+      let cb = branches.data.find((o) => o.default === true).name || branches[0].name;
 
-        (error) => {
-          this.setState({
-            isLoaded: true,
-            error,
-          });
+      this.setState({
+        branches: branches.data.map((b) => ({ label: b.name, value: b.name })),
+        commits: [],
+      });
+
+      const commits = await ky(`/api/documentations/${docuId}/${cb}/revisions`).json();
+
+      store.dispatch(
+        revisionSelected({
+          from,
+          revisionData: {
+            branch: cb,
+            commit: this.getCurrentCommit()
+              || (from && commits.data.length>1 ? commits.data[1].id : commits.data[0].id),
+          },
+        }),
+      );
+
+      this.setState(
+        {
+          isLoaded: true,
+          commits: commits.data.map((c) => ({ label: `[${c.shortId}] ${c.title} (Author: ${c.author.name})`, value: c.id })),
         },
       );
+    };
+
+    const setState = (s) => this.setState(s);
+    fetchData().catch(function (e) {
+        setState({
+          isLoaded: false,
+          error: e,
+        })
+      }
+    );
   }
 
   render() {
     const {
       error, isLoaded, branches, commits
     } = this.state;
-
+    
     if (error) {
       return (
         <div>

@@ -27,6 +27,11 @@ export default class DocumentationService {
     return docus;
   }
 
+  async getProviderList() {
+    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    return provider.getUserDocumentations();
+  }
+
   async get(docuId) {
     const docu = await Documentation.get(docuId);
     docu.accessLevel = docu.getAccessLevel(this.user.id);

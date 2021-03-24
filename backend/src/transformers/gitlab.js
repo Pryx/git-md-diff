@@ -1,5 +1,5 @@
 export function versionTransformer(version){
-  return version.name
+  return {name: version.name, default: version.default}
 }
 
 export function revisionTransformer(revision){

@@ -24,7 +24,9 @@ class DocumentationPage extends React.Component {
     error: ""
   }
 
-  componentDidMount(){
+  constructor(props){
+    super(props);
+
     const {docuId} = this.props;
     store.dispatch(documentationSelected(docuId));
   }

@@ -1,5 +1,5 @@
 import {
-  LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED, DOCUMENTATION_LIST_UPDATE, DOCUMENTATION_EMPTY,
+  LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED, DOCUMENTATION_LIST_UPDATE, DOCUMENTATION_EMPTY, CHANGES_UPDATE,
 } from '../constants/action-types';
 
 const initialState = {
@@ -26,7 +26,6 @@ function rootReducer(state = initialState, action) {
     }
     return { ...state, endRevision: payload.revisionData };
   } else if (action.type === DOCUMENTATION_SELECTED) {
-    const {docuId} = state
     if (state != payload){
       return {
         ...state,
@@ -45,6 +44,11 @@ function rootReducer(state = initialState, action) {
     return {
       ...state,
       docuEmpty: true,
+    };
+  }else if (action.type === CHANGES_UPDATE) {
+    return {
+      ...state,
+      changes: payload,
     };
   }
 

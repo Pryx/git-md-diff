@@ -21,3 +21,7 @@ export function updateDocumentationList(payload) {
 export function documentationEmpty() {
   return { type: 'DOCUMENTATION_EMPTY', payload: null };
 }
+
+export function updateChangesList(payload) {
+  return { type: 'CHANGES_UPDATE', payload };
+}

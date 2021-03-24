@@ -40,6 +40,21 @@ class NewDocumentation extends React.Component {
 
     const {slug, name, description} = this.state
 
+    const fetchUser = async () => {
+      const json = await ky(`/api/users/current`).json();
+      this.setState(
+        {
+          userLoaded: true,
+        },
+      );
+      store.dispatch(logIn(json.user));
+    };
+
+    fetchUser().catch((error) => this.setState({
+      isLoaded: true,
+      error,
+    }));
+
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -79,7 +94,6 @@ class NewDocumentation extends React.Component {
   }
 
   handleDescriptionUpdate(e){
-    console.log(e.target.value)
     this.setState({description: e.target.value})
   }
 
@@ -96,7 +110,6 @@ class NewDocumentation extends React.Component {
 
     let alert = null;
     if (error) {
-      console.log(error)
       alert = <Alert variant="danger">An error has occured: {error}</Alert>;
     }
 

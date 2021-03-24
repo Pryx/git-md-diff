@@ -5,6 +5,9 @@ import Row from 'react-bootstrap/Row';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DiffView from './DiffView';
+import ky from 'ky';
+import { updateChangesList } from '../actions';
+import { store } from '../store';
 
 /**
  * The diff overview component acts as a wrapper to
@@ -13,7 +16,6 @@ import DiffView from './DiffView';
  */
 class DiffOverview extends React.Component {
   state = {
-    changes: [],
     isLoaded: false,
     ready: false,
   };
@@ -34,32 +36,30 @@ class DiffOverview extends React.Component {
         ready: true,
         isLoaded: false,
       });
+      
+      const fetchChanges = async () => {
+        const json = await ky(`/api/documentations/${docuId}/changes/${from}/${to}`).json();
 
-      fetch(`/api/documentations/${docuId}/changes/${from}/${to}`)
-        .then((r) => r.json())
-        .then(
-          (changes) => {
-            this.setState({
-              isLoaded: true,
-              changes: changes.data,
-            });
-          },
-          // Note: it's important to handle errors here
-          // instead of a catch() block so that we don't swallow
-          // exceptions from actual bugs in components.
-          (error) => {
-            this.setState({
-              isLoaded: true,
-              error,
-            });
-          },
+        store.dispatch(
+          updateChangesList(json.data)
         );
+
+        this.setState({
+          isLoaded: true,
+          changes: json.data
+        });
+      };
+
+      fetchChanges().catch((error) => this.setState({
+        isLoaded: true,
+        error,
+      }));
     }
   }
 
   render() {
     const {
-      error, isLoaded, changes, ready,
+      error, isLoaded, ready, changes
     } = this.state;
 
     const { from, docuId, to } = this.props;

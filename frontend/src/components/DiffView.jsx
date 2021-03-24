@@ -5,6 +5,7 @@ import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
 import { Badge } from 'react-bootstrap';
 import Diff from '../diff/diff';
+import ky from 'ky';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -31,42 +32,24 @@ class DiffView extends React.Component {
     const {
       docuId, from, to, newFile, oldFile
     } = this.props;
-    fetch(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`)
-      .then((r) => r.json())
-      .then(
-        (original) => {
-          fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`)
-            .then((r) => r.json())
-            .then(
-              (modified) => {
-                const contentPromise = new Promise((resolve, reject) => {
-                  let content = Diff({ docuId, from, to }, original.data, modified.data, this.options)
-                  resolve(content)
-                });
 
-                contentPromise.then((content) => this.setState(
-                  {
-                    isLoaded: true,
-                    content
-                  }
-                )
-                )
-              },
-              (error) => {
-                this.setState({
-                  isLoaded: true,
-                  error,
-                });
-              },
-            );
-        },
-        (error) => {
-          this.setState({
-            isLoaded: true,
-            error,
-          });
-        },
+    const fetchDiff = async () => {
+      const original = await ky(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`).json();
+      const modified = await ky(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`).json();
+      const content = await Diff({ docuId, from, to }, original.data, modified.data, this.options);
+
+      this.setState(
+        {
+          isLoaded: true,
+          content
+        }
       );
+    };
+
+    fetchDiff().catch((error) => this.setState({
+      isLoaded: true,
+      error,
+    }));
   }
 
   static getDerivedStateFromError(error) {

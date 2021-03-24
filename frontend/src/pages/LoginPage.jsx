@@ -7,14 +7,20 @@ import { connect } from 'react-redux';
 import { Redirect } from 'wouter';
 import { store } from '../store/index';
 import { logIn, logOut } from '../actions';
+import ky from 'ky';
 
 class Login extends React.Component {
   state = {
     userLoaded: false
   }
+
+  componentWillUnmount(){
+    this.setState({});
+  }
+
   render() {
     const {
-      error, success, logout, loggedIn,
+      error, success, logout, loggedIn, mounted
     } = this.props;
 
     const {
@@ -27,16 +33,20 @@ class Login extends React.Component {
     }
 
     if (success) {
-      fetch('/api/users/current')
-        .then((r) => r.json())
-        .then((data) => {
-          store.dispatch(logIn(data.user));
-          this.setState(
-            {
-              userLoaded: true,
-            },
-          );
-        });
+      const fetchUser = async () => {
+        const json = await ky(`/api/users/current`).json();
+        this.setState(
+          {
+            userLoaded: true,
+          },
+        );
+        store.dispatch(logIn(json.user));
+      };
+  
+      fetchUser().catch((error) => this.setState({
+        isLoaded: true,
+        error,
+      }));
 
       if (!userLoaded) {
         return (
@@ -45,15 +55,23 @@ class Login extends React.Component {
           </Container>
         );
       }
+
+      return <Redirect to="/" />;
     }
 
     if (logout) {
-      fetch('/api/auth/logout')
-        .then((r) => r.json())
-        .then(() => {
-          store.dispatch(logOut());
-        });
-
+      const logoutUser = async () => {
+        const json = await ky(`/api/auth/logout`).json();
+        store.dispatch(logOut());
+      };
+  
+      logoutUser().catch((error) => {store.dispatch(logOut());
+        this.setState({
+          isLoaded: true,
+          error,
+        })
+      });
+      
       if (loggedIn) {
         return (
           <Container className="mt-5">

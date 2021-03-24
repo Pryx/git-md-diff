@@ -11,6 +11,7 @@ import { Editor } from '@toast-ui/react-editor';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DiffViewEditor from '../components/DiffViewEditor';
+import ky from 'ky';
 
 /**
  * Edit page encompasses the Editor and DiffViewEditor components.
@@ -37,25 +38,22 @@ class DiffPage extends React.Component {
 
   componentDidMount() {
     const { docuId, to } = this.props;
-    fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(this.file)}`)
-      .then((r) => r.json())
-      .then(
-        (data) => {
-          this.setState({
-            content: data.data,
-            isLoaded: true,
-          });
-        },
+    const fetchPage = async () => {
+      const json = await ky(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(this.file)}`).json();
+      this.setState({
+        content: json.data,
+        isLoaded: true,
+      });
+    };
 
-        (error) => {
-          this.setState({
-            error,
-          });
-        },
-      );
+    fetchPage().catch((error) => this.setState({
+      isLoaded: true,
+      error,
+    }));
   }
 
   handleSave(e) {
+    //TODO: Rewrite
     console.error('Still needs updated implementation...');
     const requestOptions = {
       method: 'POST',
@@ -168,7 +166,7 @@ DiffPage.propTypes = {
 const mapStateToProps = (state) => ({
   docuId: state.docuId,
   from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
-  to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
+  to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : ''
 });
 
 export default hot(module)(connect(mapStateToProps)(DiffPage));

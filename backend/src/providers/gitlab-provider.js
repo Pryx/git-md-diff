@@ -1,13 +1,15 @@
 import { Gitlab } from '@gitbeaker/node';
 import {versionTransformer, revisionTransformer, changesTransformer} from '../transformers/gitlab' 
-import fs from 'fs';
-
 export default class GitlabProvider{
   constructor(token) {
     this.gitlab = new Gitlab({
       oauthToken: token,
       requestTimeout: 3000
     });    
+  }
+
+  async getUserDocumentations(){
+    return this.gitlab.Projects.all()
   }
 
   async createDocumentation(docuObj){

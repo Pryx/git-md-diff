@@ -153,6 +153,14 @@ app.get('/documentations/:docu', (req, res) => {
 
 
 // Get documentation versions
+app.get('/documentations/provider/:provider', (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getProviderList(req.params.provider)
+    .then((data) => res.send({success: true, data}))
+    .catch((error) => res.status(500).send({success: false, error: error.message}));
+});
+
+// Get documentation versions
 app.get('/documentations/:docu/versions', (req, res) => {
   const service = new DocumentationService(req.user);
   service.getVersions(req.params.docu)

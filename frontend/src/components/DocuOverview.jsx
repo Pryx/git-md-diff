@@ -4,10 +4,10 @@ import { Link } from 'wouter';
 import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
 import { Alert, Badge, Row } from 'react-bootstrap';
-import Diff from '../diff/diff';
 import { store } from '../store/index';
 import { connect } from 'react-redux';
 import { updateDocumentationList } from '../actions';
+import ky from 'ky';
 
 
 
@@ -22,24 +22,20 @@ class DocuOverview extends React.Component {
   };
   
   componentDidMount() {
-    fetch('/api/documentations')
-      .then((r) => r.json())
-      .then(
-        (response) => {
-
-          store.dispatch(
-            updateDocumentationList(response.data)
-          );
-          this.setState({
-            isLoaded: true,
-          });
-        },
-        (error) => {
-          this.setState({
-            error,
-          });
-        },
+    const fetchDocus = async () => {
+      const json = await ky(`/api/documentations`).json();
+      store.dispatch(
+        updateDocumentationList(json.data)
       );
+      this.setState({
+        isLoaded: true,
+      });
+    };
+
+    fetchDocus().catch((error) => this.setState({
+      isLoaded: true,
+      error,
+    }));
   }
 
   static getDerivedStateFromError(error) {

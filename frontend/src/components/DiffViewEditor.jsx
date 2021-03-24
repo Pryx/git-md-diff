@@ -3,6 +3,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Diff from '../diff/diff';
 import { Badge } from 'react-bootstrap';
+import ky from 'ky';
+import { connect } from 'react-redux';
 
 /**
  * A slightly modified DiffView for display in the editor file.
@@ -22,46 +24,38 @@ class DiffViewEditor extends React.Component {
 
   componentDidMount() {
     const {
-      docuId, from, file, to,
+      docuId, from, to, changes, file
     } = this.props;
 
-    console.error(from, to, docuId, file)
-    fetch(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(file)}`)
-      .then((r) => r.json())
-      .then(
-        (original) => {
-          fetch(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(file)}`)
-            .then((r) => r.json())
-            .then(
-              (modified) => {
-                const contentPromise = new Promise((resolve, reject) => {
-                  let content = Diff({ docuId, from, to }, original.data, modified.data, this.options)
-                  resolve(content)
-                });
-
-                contentPromise.then((content) => this.setState(
-                  {
-                    isLoaded: true,
-                    content
-                  }
-                )
-                )
-              },
-              (error) => {
-                this.setState({
-                  isLoaded: true,
-                  error,
-                });
-              },
-            );
-        },
-        (error) => {
-          this.setState({
-            isLoaded: true,
-            error,
-          });
-        },
+    if (!changes.length){
+      this.setState(
+        {
+          isLoaded: true,
+          error: "Couldn't load change data"
+        }
       );
+      return;
+    }
+
+    const { oldFile, newFile } = changes.find((v) => v.newFile == file);
+
+    const fetchDiff = async () => {
+      const original = await ky(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`).json();
+      const modified = await ky(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`).json();
+      const content = await Diff({ docuId, from, to }, original.data, modified.data, this.options);
+
+      this.setState(
+        {
+          isLoaded: true,
+          content
+        }
+      );
+    };
+
+    fetchDiff().catch((error) => this.setState({
+      isLoaded: true,
+      error,
+    }));
   }
 
   render() {
@@ -125,6 +119,14 @@ DiffViewEditor.propTypes = {
   docuId: PropTypes.string.isRequired,
   file: PropTypes.string.isRequired,
   hideCode: PropTypes.bool,
+  changes: PropTypes.array.isRequired,
 };
 
-export default hot(module)(DiffViewEditor);
+
+const mapStateToProps = (state) => (
+  {
+    changes: state.changes || []
+  }
+);
+
+export default hot(module)(connect(mapStateToProps)(DiffViewEditor));
