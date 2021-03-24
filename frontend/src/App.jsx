@@ -14,14 +14,14 @@ import NewDocumentation from './pages/NewDocumentation';
 import DocumentationPage from './pages/DocumentationPage';
 import smartlookClient from 'smartlook-client'
 
+smartlookClient.init('96987d432f762d1afd5dff3e5ec07f38ac5924fa');
+
 /**
  * The root app element. Takes care of routing and right now
  * it stores the app state. This should be changed when Redux
  * is implemented.
  */
 const App = (props) => {
-  smartlookClient.init('96987d432f762d1afd5dff3e5ec07f38ac5924fa');
-
   const { loggedIn } = props;
   if (loggedIn) {
     return (

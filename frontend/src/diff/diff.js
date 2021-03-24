@@ -41,7 +41,7 @@ function markdownImages(repository, from, to, markdown) {
   let clean = markdown.replace(/(!\[.*?\]\()(.*?\))/gimu, "$1"+url+"$2");
 
   //Replace old version with old version links
-  let reg = new RegExp(`(<del.*?!\[.*?\].*?)\/${to}\/(.*?\/del>)`,"gimu");
+  let reg = new RegExp(`(<del.*?![.*?].*?)\/${to}\/(.*?\/del>)`,"gimu");
   clean = clean.replace(reg,  "$1/"+from+"/$2");
 
   //Appease the MDX lord, that just needs to have a special syntax requirements

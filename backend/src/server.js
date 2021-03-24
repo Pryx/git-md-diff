@@ -9,6 +9,7 @@ import verifyAuth from './middleware/auth-verification';
 import { findOrCreateUser } from './services/auth';
 import DocumentationService from './services/documentation'
 import mime from 'mime-types'
+import rateLimit from 'express-rate-limit'
 
 const app = express();
 
@@ -46,7 +47,14 @@ passport.use(new GitLabStrategy({
 
 app.get('/auth/gitlab', passport.authenticate('gitlab', { scope: ['api'] }));
 
-app.get('/auth/gitlab/callback',
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: 5, // start blocking after 5 requests
+  message:
+    "Too many login attempts in 1 minute. Please try again later."
+});
+
+app.get('/auth/gitlab/callback', limiter,
   (req, res, next) => passport.authenticate('gitlab', (err, user, info) => {
     if (err) {
       next(err);
