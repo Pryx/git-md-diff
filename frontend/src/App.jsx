@@ -12,7 +12,7 @@ import 'remark-admonitions/styles/classic.css';
 import Dashboard from './pages/Dashboard';
 import NewDocumentation from './pages/NewDocumentation';
 import DocumentationPage from './pages/DocumentationPage';
-import { hotjar } from 'react-hotjar';
+import smartlookClient from 'smartlook-client'
 
 /**
  * The root app element. Takes care of routing and right now
@@ -20,7 +20,7 @@ import { hotjar } from 'react-hotjar';
  * is implemented.
  */
 const App = (props) => {
-  hotjar.initialize(2314358, 6);
+  smartlookClient.init('96987d432f762d1afd5dff3e5ec07f38ac5924fa');
 
   const { loggedIn } = props;
   if (loggedIn) {

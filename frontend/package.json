@@ -37,6 +37,7 @@
     "redux-persist": "^6.0.0",
     "remark-admonitions": "^1.2.1",
     "slugify": "^1.4.7",
+    "smartlook-client": "^4.6.1",
     "wouter": "^2.6.0"
   },
   "devDependencies": {
