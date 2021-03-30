@@ -12,6 +12,8 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DiffViewEditor from '../components/DiffViewEditor';
 import ky from 'ky';
+import { store } from '../store';
+import { logOut } from '../actions';
 
 /**
  * Edit page encompasses the Editor and DiffViewEditor components.
@@ -46,10 +48,16 @@ class DiffPage extends React.Component {
       });
     };
 
-    fetchPage().catch((error) => this.setState({
-      isLoaded: true,
-      error,
-    }));
+    fetchPage().catch((error) => {
+      if (error.response.status == 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    });
   }
 
   handleSave(e) {
@@ -145,9 +153,9 @@ class DiffPage extends React.Component {
             </div>
             {saveStatus.length > 0
               && (
-              <Alert variant={saveStatus}>
-                {saveMessage}
-              </Alert>
+                <Alert variant={saveStatus}>
+                  {saveMessage}
+                </Alert>
               )}
           </Col>
         </Row>

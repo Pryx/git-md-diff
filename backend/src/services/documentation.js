@@ -27,9 +27,15 @@ export default class DocumentationService {
     return docus;
   }
 
-  async getProviderList() {
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
-    return provider.getUserDocumentations();
+  async getRemoteList(providerId) {
+    const provider = DocumentationService.getProvider(providerId, this.user);
+    const ids = await Documentation.getProviderIds(this.user.id, providerId)
+    return (await provider.getUserDocumentations()).filter((d) => !ids.includes(d.id));
+  }
+
+  async getRemoteUserList(providerId, search) {
+    const provider = DocumentationService.getProvider(providerId, this.user);
+    return provider.getUserList(search);
   }
 
   async get(docuId) {
@@ -38,6 +44,9 @@ export default class DocumentationService {
     return docu;
   }
 
+  async getUsers(docuId){
+    return Documentation.getUsers(docuId);
+  }
 
   async getVersions(docuId) {
     const docu = await Documentation.get(docuId);

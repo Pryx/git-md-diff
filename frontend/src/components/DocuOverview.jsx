@@ -1,12 +1,12 @@
 import { hot } from 'react-hot-loader';
 import React from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
 import { Alert, Badge, Row } from 'react-bootstrap';
 import { store } from '../store/index';
 import { connect } from 'react-redux';
-import { updateDocumentationList } from '../actions';
+import { logOut, updateDocumentationList } from '../actions';
 import ky from 'ky';
 
 
@@ -20,7 +20,7 @@ class DocuOverview extends React.Component {
   state = {
     isLoaded: false,
   };
-  
+
   componentDidMount() {
     const fetchDocus = async () => {
       const json = await ky(`/api/documentations`).json();
@@ -32,10 +32,16 @@ class DocuOverview extends React.Component {
       });
     };
 
-    fetchDocus().catch((error) => this.setState({
-      isLoaded: true,
-      error,
-    }));
+    fetchDocus().catch((error) => {
+      if (error.response.status == 403){
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    });
   }
 
   static getDerivedStateFromError(error) {
@@ -47,7 +53,7 @@ class DocuOverview extends React.Component {
       error, isLoaded,
     } = this.state;
 
-    const {docuList} = this.props
+    const { docuList } = this.props
 
     if (error) {
       return (
@@ -72,9 +78,9 @@ class DocuOverview extends React.Component {
     }
 
     let items = null;
-    if (docuList.length){
-      items = docuList.map((docu) =>    (
-        <Link key={docu.id} href={"/documentation/"+docu.id}>
+    if (docuList.length) {
+      items = docuList.map((docu) => (
+        <Link key={docu.id} href={"/documentation/" + docu.id}>
           <Card className="docu-card">
             <Card.Header>
               {docu.name}
@@ -83,11 +89,11 @@ class DocuOverview extends React.Component {
               {docu.description}
             </Card.Body>
             <Card.Footer className="text-right">
-              <i className={"fab fa-"+docu.provider}></i>
+              <i className={"fab fa-" + docu.provider}></i>
             </Card.Footer>
           </Card>
-        </Link>  
-        )  
+        </Link>
+      )
       );
     }
 

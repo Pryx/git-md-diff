@@ -5,12 +5,12 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { store } from '../store/index';
 import { documentationSelected } from '../actions';
-import { Alert } from 'react-bootstrap';
+import { Alert, Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import accessLevels from '../constants/access-levels';
 import DiffWrapper from '../components/DiffWrapper';
-import { Redirect } from 'wouter';
+import { Link, Redirect } from 'wouter';
 
 
 /**
@@ -41,8 +41,10 @@ class DocumentationPage extends React.Component {
     const docu = docuList.find(d => d.id == docuId);
 
     let page = null;
+    let settings = null;
     if (docu.accessLevel <= accessLevels.manager){
       page = <DiffWrapper />;
+      settings = <Link href={`/documentation/${docuId}/settings`}><Button variant="primary" className="float-right"><i className="fas fa-cog"></i></Button></Link>;
     } else if (docu.accessLevel == accessLevels.author) {
       page = <Alert variant="info">Todo: Display files for author access</Alert>
     } else {
@@ -53,7 +55,7 @@ class DocumentationPage extends React.Component {
       <Container className="mt-5">
         <Row>
           <Col lg={12} xs={12}>
-            <h1>{docu.name}</h1>
+            <h1>{docu.name} {settings}</h1>
             <p>{docu.description}</p>
           </Col>
         </Row>

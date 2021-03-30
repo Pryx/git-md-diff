@@ -20,7 +20,7 @@ class Login extends React.Component {
 
   render() {
     const {
-      error, success, logout, loggedIn, mounted
+      error, success, logout, loggedIn
     } = this.props;
 
     const {
@@ -30,7 +30,7 @@ class Login extends React.Component {
     let alert = null;
     if (error) {
       alert = <Alert variant="danger">An error has occured, please try again later!</Alert>;
-    }
+    } 
 
     if (success) {
       const fetchUser = async () => {

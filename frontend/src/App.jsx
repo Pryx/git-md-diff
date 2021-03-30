@@ -5,7 +5,6 @@ import '@fortawesome/fontawesome-free/js/all.js';
 import { Switch, Route, Redirect } from 'wouter';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import DiffPage from './components/DiffWrapper';
 import EditPage from './pages/EditPage';
 import Login from './pages/LoginPage';
 import 'remark-admonitions/styles/classic.css';
@@ -13,6 +12,8 @@ import Dashboard from './pages/Dashboard';
 import NewDocumentation from './pages/NewDocumentation';
 import DocumentationPage from './pages/DocumentationPage';
 import smartlookClient from 'smartlook-client'
+import DocumentationSettings from './pages/DocumentationSettings';
+import UserProfile from './pages/UserProfile';
 
 smartlookClient.init('96987d432f762d1afd5dff3e5ec07f38ac5924fa');
 
@@ -36,6 +37,18 @@ const App = (props) => {
 
         <Route path="/documentation/new">
           <NewDocumentation />
+        </Route>
+
+        <Route path="/profile">
+          <UserProfile />
+        </Route>
+
+        <Route path="/profile/:id">
+        {(params) => <UserProfile id={params.id} /> }
+        </Route>
+
+        <Route path="/documentation/:docuId/settings">
+          {(params) => <DocumentationSettings docuId={params.docuId} />}
         </Route>
 
         <Route path="/documentation/:docuId">

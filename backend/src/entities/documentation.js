@@ -1,5 +1,6 @@
 import sql from '../db';
 import Role from './role';
+import User from './user';
 
 const defaults = {
   id: -1,
@@ -25,6 +26,10 @@ export default class Documentation {
     return new Documentation(docu);
   }
 
+  static async getProviderIds(userId, provider) {
+    return (await sql`SELECT providerId FROM documentations WHERE id IN (SELECT docuId FROM roles WHERE userId=${userId}) AND provider=${provider}`).map((r) => r.providerid);
+  }
+
   static async getByProviderId(provider, id) {
     const results = await sql`SELECT * FROM documentations WHERE provider=${provider} AND providerId=${id}`;
 
@@ -47,6 +52,22 @@ export default class Documentation {
           return d;
         }));
       return docus;
+    }
+
+    return [];
+  }
+
+  static async getUsers(docuId) {
+    const results = await sql`SELECT userId, level FROM roles WHERE docuId=${docuId}`;
+
+    if (results.count) {
+      let users = await Promise.all(
+        results.map(async r => {
+          let user = (await User.getById(r.userid)).getPublic()
+          user.accessLevel = r.level;
+          return user;
+        }));
+      return users;
     }
 
     return [];

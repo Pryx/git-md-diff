@@ -5,6 +5,8 @@ import Diff from '../diff/diff';
 import { Badge } from 'react-bootstrap';
 import ky from 'ky';
 import { connect } from 'react-redux';
+import { store } from '../store';
+import { logOut } from '../actions';
 
 /**
  * A slightly modified DiffView for display in the editor file.
@@ -52,10 +54,16 @@ class DiffViewEditor extends React.Component {
       );
     };
 
-    fetchDiff().catch((error) => this.setState({
-      isLoaded: true,
-      error,
-    }));
+    fetchDiff().catch((error) => {
+      if (error.response.status == 403){
+        store.dispatch(logOut());
+      }
+      
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    });
   }
 
   render() {

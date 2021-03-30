@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DiffView from './DiffView';
 import ky from 'ky';
-import { updateChangesList } from '../actions';
+import { logOut, updateChangesList } from '../actions';
 import { store } from '../store';
 
 /**
@@ -50,10 +50,16 @@ class DiffOverview extends React.Component {
         });
       };
 
-      fetchChanges().catch((error) => this.setState({
-        isLoaded: true,
-        error,
-      }));
+      fetchChanges().catch((error) => {
+        if (error.response.status == 403){
+          store.dispatch(logOut());
+        }
+        
+        this.setState({
+          isLoaded: true,
+          error,
+        })
+      });
     }
   }
 

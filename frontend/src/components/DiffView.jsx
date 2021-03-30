@@ -6,6 +6,8 @@ import PropTypes from 'prop-types';
 import { Badge } from 'react-bootstrap';
 import Diff from '../diff/diff';
 import ky from 'ky';
+import { store } from '../store';
+import { logOut } from '../actions';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -46,10 +48,16 @@ class DiffView extends React.Component {
       );
     };
 
-    fetchDiff().catch((error) => this.setState({
-      isLoaded: true,
-      error,
-    }));
+    fetchDiff().catch((error) => {
+      if (error.response.status == 403){
+        store.dispatch(logOut());
+      }
+      
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    });
   }
 
   static getDerivedStateFromError(error) {

@@ -29,3 +29,12 @@ export function changesTransformer(change){
     renamed: change.renamed_file,
   }
 }
+
+export function repositoryTransformer(repo){
+  return {
+    id: repo.id,
+    name: repo.name,
+    slug: repo.path,
+    description: repo.description,
+  }
+}

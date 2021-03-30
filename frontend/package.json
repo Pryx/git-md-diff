@@ -24,6 +24,7 @@
     "front-matter": "^4.0.2",
     "immer": "^8.0.1",
     "ky": "^0.27.0",
+    "lodash": "^4.17.21",
     "markdown-diff": "github:Pryx/markdown-diff#c98391e",
     "markdown-it": "^12.0.2",
     "prop-types": "^15.7.2",

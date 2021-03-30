@@ -8,6 +8,8 @@ import { Button } from 'react-bootstrap';
 import slugify from 'slugify';
 import { Redirect } from 'wouter';
 import { Alert } from 'react-bootstrap';
+import { store } from '../store';
+import { logOut } from '../actions';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -35,10 +37,10 @@ class NewDocumentation extends React.Component {
 
   }
 
-  handleSubmit(e){
+  handleSubmit(e) {
     e.preventDefault();
 
-    const {slug, name, description} = this.state
+    const { slug, name, description } = this.state
 
     const fetchUser = async () => {
       const json = await ky(`/api/users/current`).json();
@@ -50,10 +52,16 @@ class NewDocumentation extends React.Component {
       store.dispatch(logIn(json.user));
     };
 
-    fetchUser().catch((error) => this.setState({
-      isLoaded: true,
-      error,
-    }));
+    fetchUser().catch((error) => {
+      if (error.response.status == 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    });
 
     const requestOptions = {
       method: 'POST',
@@ -72,39 +80,39 @@ class NewDocumentation extends React.Component {
           this.setState({ error: data.error });
         }
       },
-      (data) => {
-        this.setState({
-          error: data.error,
+        (data) => {
+          this.setState({
+            error: data.error,
+          });
         });
-      });
     return false;
   }
 
-  handleNameUpdate(e){
-    const {origSlug} = this.state 
-    this.setState({name: e.target.value})
-    if (this.slugChanged && !origSlug.length){
+  handleNameUpdate(e) {
+    const { origSlug } = this.state
+    this.setState({ name: e.target.value })
+    if (this.slugChanged && !origSlug.length) {
       this.slugChanged = false;
     }
-    
-    if (!this.slugChanged){
-      const slug = slugify(e.target.value, {lower: true})
-      this.setState({slug: slug})
+
+    if (!this.slugChanged) {
+      const slug = slugify(e.target.value, { lower: true })
+      this.setState({ slug: slug })
     }
   }
 
-  handleDescriptionUpdate(e){
-    this.setState({description: e.target.value})
+  handleDescriptionUpdate(e) {
+    this.setState({ description: e.target.value })
   }
 
-  handleSlugUpdate(e){
-    this.setState({slug: e.target.value})
+  handleSlugUpdate(e) {
+    this.setState({ slug: e.target.value })
     this.slugChanged = true;
   }
 
   render() {
-    const {slug, description, name, success, error} = this.state;
-    if (success){
+    const { slug, description, name, success, error } = this.state;
+    if (success) {
       return (<Redirect to="/" />);
     }
 
@@ -127,7 +135,7 @@ class NewDocumentation extends React.Component {
               <Form.Row>
                 <Form.Group controlId="name" as={Col}>
                   <Form.Label>Documentation name</Form.Label>
-                  <Form.Control type="text" name="name" placeholder="Enter name" required onChange={this.handleNameUpdate} value={name}/>
+                  <Form.Control type="text" name="name" placeholder="Enter name" required onChange={this.handleNameUpdate} value={name} />
                   <Form.Text className="text-muted">
                     Required: This name will be displayed in your dashboard.
                   </Form.Text>
@@ -135,7 +143,7 @@ class NewDocumentation extends React.Component {
 
                 <Form.Group controlId="slug" as={Col}>
                   <Form.Label>Documentation slug</Form.Label>
-                  <Form.Control type="text" placeholder="Enter slug" name="slug" pattern="^[a-z0-9-]+$" onChange={this.handleSlugUpdate} ref={this.slugControl} value={slug} required/>
+                  <Form.Control type="text" placeholder="Enter slug" name="slug" pattern="^[a-z0-9-]+$" onChange={this.handleSlugUpdate} ref={this.slugControl} value={slug} required />
                   <Form.Text className="text-muted">
                     Required: This is the internal name used for links and more.
                   </Form.Text>
