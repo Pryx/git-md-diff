@@ -51,7 +51,7 @@ class DiffOverview extends React.Component {
       };
 
       fetchChanges().catch((error) => {
-        if (error.response.status == 403){
+        if (error.response && error.response.status == 403){
           store.dispatch(logOut());
         }
         

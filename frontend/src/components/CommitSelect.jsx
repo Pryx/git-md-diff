@@ -6,7 +6,7 @@ import SelectSearch from 'react-select';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { store } from '../store';
-import { documentationEmpty, revisionSelected } from '../actions';
+import { documentationEmpty, logOut, revisionSelected } from '../actions';
 import ky from 'ky'
 
 /**
@@ -145,13 +145,16 @@ class CommitSelect extends React.Component {
     };
 
     const setState = (s) => this.setState(s);
-    fetchData().catch(function (e) {
-        setState({
-          isLoaded: false,
-          error: e,
-        })
+    fetchData().catch((error) => {
+      if (error.response && error.response.status == 403) {
+        store.dispatch(logOut());
       }
-    );
+
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    })
   }
 
   render() {

@@ -7,6 +7,8 @@ import ky from 'ky';
 import Select from 'react-select';
 import accessLevels from '../constants/access-levels'
 import { Button, Col, Row } from 'react-bootstrap';
+import { store } from '../store';
+import { logOut } from '../actions';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -42,7 +44,12 @@ class DocumentationSettings extends React.Component {
           <Col>
             <AsyncSelect
               value={user}
-              loadOptions={(val) => this.getOptionsAsync(val)}
+              loadOptions={(val) => this.getOptionsAsync(val).catch((error) => {
+                if (error.response && error.response.status == 403) {
+                  store.dispatch(logOut());
+                }
+                return []
+              })}
               placeholder="Start typing..."
               onChange={(user) => {
                 this.setState({ user })

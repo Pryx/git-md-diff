@@ -4,7 +4,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { store } from '../store/index';
-import { documentationSelected } from '../actions';
+import { documentationSelected, logOut } from '../actions';
 import { Alert, Button, Card, Form, Table } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -42,7 +42,16 @@ class UserProfile extends React.Component {
       );
     };
 
-    fetchCommits();
+    fetchCommits().catch((error) => {
+      if (error.response && error.response.status == 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    });
   }
 
   render() {

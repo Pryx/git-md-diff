@@ -14,6 +14,9 @@ import DocumentationPage from './pages/DocumentationPage';
 import smartlookClient from 'smartlook-client'
 import DocumentationSettings from './pages/DocumentationSettings';
 import UserProfile from './pages/UserProfile';
+import { store } from './store';
+import { logOut } from './actions';
+import ky from 'ky';
 
 smartlookClient.init('96987d432f762d1afd5dff3e5ec07f38ac5924fa');
 
@@ -22,9 +25,27 @@ smartlookClient.init('96987d432f762d1afd5dff3e5ec07f38ac5924fa');
  * it stores the app state. This should be changed when Redux
  * is implemented.
  */
+let check = false;
+setInterval(async () => {
+  if (!check){
+    return;
+  }
+
+  try {
+    const json = await ky(`/api/users/current`).json();
+  } catch (error) {
+    if (error.response && error.response.status == 403){
+      store.dispatch(logOut())
+    }else {
+      console.error(error);
+    }
+  }
+}, 30000);
+
 const App = (props) => {
   const { loggedIn } = props;
   if (loggedIn) {
+    check = true;
     return (
       <Switch>
         <Route path="/documentation/:docuId/edit/:file">
@@ -63,6 +84,8 @@ const App = (props) => {
       </Switch>
     );
   }
+
+  check = false;
   return (
     <Switch>
       <Route path="/login/error">

@@ -80,7 +80,16 @@ class DocumentationSettings extends React.Component {
       );
     };
 
-    fetchUsers();
+    fetchUsers().catch((error) => {
+      if (error.response && error.response.status == 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error,
+      })
+    });
   }
 
   render() {
