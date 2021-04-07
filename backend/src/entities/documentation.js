@@ -8,7 +8,7 @@ const defaults = {
   providerId: -1,
   name: '',
   description: '',
-  slug: ''
+  slug: '',
 };
 
 export default class Documentation {
@@ -22,7 +22,7 @@ export default class Documentation {
   }
 
   static async get(id) {
-    let [docu] = await sql`SELECT * FROM documentations WHERE id=${id}`;
+    const [docu] = await sql`SELECT * FROM documentations WHERE id=${id}`;
     return new Documentation(docu);
   }
 
@@ -45,12 +45,13 @@ export default class Documentation {
     const results = await sql`SELECT * FROM documentations WHERE id IN (SELECT docuId FROM roles WHERE userId=${userId})`;
 
     if (results.count) {
-      let docus = await Promise.all(
-        results.map(async docu => {
-          const d = new Documentation(docu)
+      const docus = await Promise.all(
+        results.map(async (docu) => {
+          const d = new Documentation(docu);
           d.accessLevel = await d.getAccessLevel(userId);
           return d;
-        }));
+        }),
+      );
       return docus;
     }
 
@@ -61,32 +62,31 @@ export default class Documentation {
     const results = await sql`SELECT userId, level FROM roles WHERE docuId=${docuId}`;
 
     if (results.count) {
-      let users = await Promise.all(
-        results.map(async r => {
-          let user = (await User.getById(r.userid)).getPublic()
+      const users = await Promise.all(
+        results.map(async (r) => {
+          const user = (await User.getById(r.userid)).getPublic();
           user.accessLevel = r.level;
           return user;
-        }));
+        }),
+      );
       return users;
     }
 
     return [];
   }
 
-  
-  async getAccessLevel(userId){
+  async getAccessLevel(userId) {
     const role = await Role.get(userId, this.id);
     return role.level;
   }
 
-
   static async remove(docuId) {
-    return sql`DELETE FROM documentations WHERE id=${userId} CASCADE`;
+    return sql`DELETE FROM documentations WHERE id=${docuId} CASCADE`;
   }
 
   async save() {
     return sql`INSERT INTO documentations (provider, providerId, name, slug, description) 
       VALUES (${this.provider}, ${this.providerId}, ${this.name}, ${this.slug}, ${this.description})  
-      ON CONFLICT (provider, providerId) DO UPDATE SET name=${this.name}, slug=${this.slug}, description=${this.description};`
+      ON CONFLICT (provider, providerId) DO UPDATE SET name=${this.name}, slug=${this.slug}, description=${this.description};`;
   }
 }

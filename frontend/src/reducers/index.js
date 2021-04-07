@@ -1,11 +1,18 @@
 import {
-  LOGIN, LOGOUT, REVISION_SELECTED, DOCUMENTATION_SELECTED, DOCUMENTATION_LIST_UPDATE, DOCUMENTATION_EMPTY, CHANGES_UPDATE,
+  LOGIN,
+  LOGOUT,
+  REVISION_SELECTED,
+  DOCUMENTATION_SELECTED,
+  DOCUMENTATION_LIST_UPDATE,
+  DOCUMENTATION_EMPTY,
+  CHANGES_UPDATE,
+  TOKENS_RECEIVED,
 } from '../constants/action-types';
 
 const initialState = {
   loggedIn: false,
   userData: null,
-  docuList: []
+  docuList: [],
 };
 
 function rootReducer(state = initialState, action) {
@@ -16,40 +23,56 @@ function rootReducer(state = initialState, action) {
       loggedIn: true,
       userData: payload,
     };
-  } else if (action.type === LOGOUT) {
+  }
+
+  if (action.type === LOGOUT) {
     return {
       loggedIn: false,
     };
-  } else if (action.type === REVISION_SELECTED) {
+  }
+
+  if (action.type === REVISION_SELECTED) {
     if (payload.from) {
       return { ...state, startRevision: payload.revisionData };
     }
     return { ...state, endRevision: payload.revisionData };
-  } else if (action.type === DOCUMENTATION_SELECTED) {
-    if (state != payload){
+  }
+
+  if (action.type === DOCUMENTATION_SELECTED) {
+    if (state.docuId !== payload) {
       return {
         ...state,
         docuId: payload,
         startRevision: null,
         endRevision: null,
-        docuEmpty: false
+        docuEmpty: false,
       };
     }
-  } else if (action.type === DOCUMENTATION_LIST_UPDATE) {
+  }
+
+  if (action.type === DOCUMENTATION_LIST_UPDATE) {
     return {
       ...state,
       docuList: payload,
     };
-  }else if (action.type === DOCUMENTATION_EMPTY) {
+  }
+
+  if (action.type === DOCUMENTATION_EMPTY) {
     return {
       ...state,
       docuEmpty: true,
     };
-  }else if (action.type === CHANGES_UPDATE) {
+  }
+
+  if (action.type === CHANGES_UPDATE) {
     return {
       ...state,
       changes: payload,
     };
+  }
+
+  if (action.type === TOKENS_RECEIVED) {
+    return { ...state, ...payload };
   }
 
   return state;

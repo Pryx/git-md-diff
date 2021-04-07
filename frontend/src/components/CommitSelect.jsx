@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { store } from '../store';
 import { documentationEmpty, logOut, revisionSelected } from '../actions';
-import ky from 'ky'
+import secureKy from '../entities/secure-ky';
 
 /**
  * This is the commit selector component. This allows us to
@@ -35,7 +35,7 @@ class CommitSelect extends React.Component {
   componentDidUpdate(prev) {
     const { docuId } = this.props;
     if (docuId !== prev.docuId) {
-      this.setState({ error: null });
+      this.setState({ error: null }); // eslint-disable-line
       this.reloadData();
     }
   }
@@ -59,7 +59,7 @@ class CommitSelect extends React.Component {
     );
 
     const fetchCommits = async () => {
-      const json = await ky(`/api/documentations/${docuId}/${encodeURIComponent(selectedOption.value)}/revisions`).json();
+      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${encodeURIComponent(selectedOption.value)}/revisions`).json();
 
       this.setState(
         {
@@ -108,22 +108,22 @@ class CommitSelect extends React.Component {
     const { from, docuId } = this.props;
 
     const fetchData = async () => {
-      const branches = await ky(`/api/documentations/${docuId}/versions`).json();
+      const branches = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/versions`).json();
 
-      if (!branches.data.length){
+      if (!branches.data.length) {
         store.dispatch(documentationEmpty());
         return;
       }
 
       // Do not blindly assume the default branch of the repository
-      let cb = branches.data.find((o) => o.default === true).name || branches[0].name;
+      const cb = branches.data.find((o) => o.default === true).name || branches[0].name;
 
       this.setState({
         branches: branches.data.map((b) => ({ label: b.name, value: b.name })),
         commits: [],
       });
 
-      const commits = await ky(`/api/documentations/${docuId}/${cb}/revisions`).json();
+      const commits = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${cb}/revisions`).json();
 
       store.dispatch(
         revisionSelected({
@@ -131,7 +131,7 @@ class CommitSelect extends React.Component {
           revisionData: {
             branch: cb,
             commit: this.getCurrentCommit()
-              || (from && commits.data.length>1 ? commits.data[1].id : commits.data[0].id),
+              || (from && commits.data.length > 1 ? commits.data[1].id : commits.data[0].id),
           },
         }),
       );
@@ -144,24 +144,23 @@ class CommitSelect extends React.Component {
       );
     };
 
-    const setState = (s) => this.setState(s);
     fetchData().catch((error) => {
-      if (error.response && error.response.status == 403) {
+      if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
 
       this.setState({
         isLoaded: true,
-        error,
-      })
-    })
+        error: error.toString(),
+      });
+    });
   }
 
   render() {
     const {
-      error, isLoaded, branches, commits
+      error, isLoaded, branches, commits,
     } = this.state;
-    
+
     if (error) {
       return (
         <div>
@@ -212,12 +211,14 @@ class CommitSelect extends React.Component {
 }
 
 CommitSelect.defaultProps = {
+  startRevision: {},
+  endRevision: {},
 };
 
 CommitSelect.propTypes = {
-  docuId: PropTypes.string.isRequired,
-  startRevision: PropTypes.object,
-  endRevision: PropTypes.object,
+  docuId: PropTypes.number.isRequired,
+  startRevision: PropTypes.objectOf(PropTypes.string),
+  endRevision: PropTypes.objectOf(PropTypes.string),
   from: PropTypes.bool.isRequired,
 };
 

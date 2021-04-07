@@ -1,12 +1,13 @@
-import { hot } from 'react-hot-loader';
+import PropTypes from 'prop-types';
 import React from 'react';
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
-import Nav from 'react-bootstrap/Nav';
-import Container from 'react-bootstrap/Container';
-import { Link } from 'wouter';
+import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
+import { Link } from 'wouter';
+import User from './entities/user';
 
 const Navigation = (props) => {
   const { userData, loggedIn } = props;
@@ -52,8 +53,12 @@ const Navigation = (props) => {
   );
 };
 
+Navigation.defaultProps = {
+  userData: {},
+};
+
 Navigation.propTypes = {
-  userData: PropTypes.object,
+  userData: PropTypes.shape(User.getShape()),
   loggedIn: PropTypes.bool.isRequired,
 };
 

@@ -2,6 +2,10 @@ export function logIn(payload) {
   return { type: 'LOGIN', payload };
 }
 
+export function tokensReceived(payload) {
+  return { type: 'TOKENS_RECEIVED', payload };
+}
+
 export function logOut() {
   return { type: 'LOGOUT' };
 }

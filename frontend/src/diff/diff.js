@@ -1,56 +1,40 @@
 import { markdownDiff } from 'markdown-diff';
+import lodash from 'lodash';
 
 const matter = require('front-matter');
-function shallowEqual(object1, object2) {
-  const keys1 = Object.keys(object1);
-  const keys2 = Object.keys(object2);
-
-  if (keys1.length !== keys2.length) {
-    return false;
-  }
-
-  for (const key of keys1) {
-    if (object1[key] !== object2[key]) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 function docusaurusBaseImages(markdown) {
-  //Replace useBaseUrl; base = static
+  // Replace useBaseUrl; base = static
   return markdown.replace(/\{[\s]*useBaseUrl\([\s]*["'](.*?)["'][\s]*\)[\s]*\}/gimu, '"/static/$1"');
 }
 
 function htmlImages(repository, from, to, markdown) {
-  //Replace url with our API url; if not relative to domain, keep it
-  let url = `src="/api/documentations/${repository}/${to}/blobs/`;
-  let clean = markdown.replace(/(<img.*?)src=["'](?!http|\/\/)(.*?["'])/gimu, "$1"+url+"$2");
+  // Replace url with our API url; if not relative to domain, keep it
+  const url = `src="/api/documentations/${repository}/${to}/blobs/`;
+  let clean = markdown.replace(/(<img.*?)src=["'](?!http|\/\/)(.*?["'])/gimu, `$1${url}$2`);
 
-  //Replace old version with old version links
-  let reg = new RegExp(`(<del.*?src=["'].*?)\/${to}\/(.*?["'].*?\/del>)`,"gimu");
-  clean = clean.replace(reg,  "$1/"+from+"/$2");
+  // Replace old version with old version links
+  const reg = new RegExp(`(<del.*?src=["'].*?)/${to}/(.*?["'].*?/del>)`, 'gimu');
+  clean = clean.replace(reg, `$1/${from}/$2`);
 
   return clean;
 }
 
 function markdownImages(repository, from, to, markdown) {
-  //Replace url with our API url; if not relative to domain, keep it
-  let url = `/api/documentations/${repository}/${to}/blobs/`;
-  let clean = markdown.replace(/(!\[.*?\]\()(.*?\))/gimu, "$1"+url+"$2");
+  // Replace url with our API url; if not relative to domain, keep it
+  const url = `/api/documentations/${repository}/${to}/blobs/`;
+  let clean = markdown.replace(/(!\[.*?\]\()(.*?\))/gimu, `$1${url}$2`);
 
-  //Replace old version with old version links
-  let reg = new RegExp(`(<del.*?![.*?].*?)\/${to}\/(.*?\/del>)`,"gimu");
-  clean = clean.replace(reg,  "$1/"+from+"/$2");
+  // Replace old version with old version links
+  const reg = new RegExp(`(<del.*?![.*?].*?)/${to}/(.*?/del>)`, 'gimu');
+  clean = clean.replace(reg, `$1/${from}/$2`);
 
-  //Appease the MDX lord, that just needs to have a special syntax requirements
+  // Appease the MDX lord, that just needs to have a special syntax requirements
   // <del>![AAA](AAA)</del> => <del>\n\n![AAA](AAA)\n\n</del>
-  clean = clean.replace(/<del>(.*?!\[.*?\].*?)<\/del>/gimu,  "<del>\n\n$1\n\n</del>");
-  clean = clean.replace(/<ins>(.*?!\[.*?\].*?)<\/ins>/gimu,  "<ins>\n\n$1\n\n</ins>");
+  clean = clean.replace(/<del>(.*?!\[.*?\].*?)<\/del>/gimu, '<del>\n\n$1\n\n</del>');
+  clean = clean.replace(/<ins>(.*?!\[.*?\].*?)<\/ins>/gimu, '<ins>\n\n$1\n\n</ins>');
   return clean;
 }
-
 
 function removeDocusaurusInfo(original, modified) {
   const originalMatter = matter(original);
@@ -72,7 +56,7 @@ function removeDocusaurusInfo(original, modified) {
   return {
     original: ori,
     modified: mod,
-    changed: !shallowEqual(originalMatter.attributes, modifiedMatter.attributes),
+    changed: !lodash.isEqual(originalMatter.attributes, modifiedMatter.attributes),
   };
 }
 
@@ -85,7 +69,7 @@ export default async function diff(revisionInfo, original, modified, opts) {
   const cleanDocs = removeDocusaurusInfo(original, modified);
 
   if (cleanDocs.changed) {
-    invisibleChanges.push({text: 'Front matter changed', variant: 'info', id: "fm"});
+    invisibleChanges.push({ text: 'Front matter changed', variant: 'info', id: 'fm' });
   }
 
   const orig = cleanDocs.original;
@@ -99,21 +83,22 @@ export default async function diff(revisionInfo, original, modified, opts) {
   }
 
   // (```[\sa-z]*\n[\s\S]*?\n```)
-  const codeblocks = [... res.matchAll(/(```[\sa-z]*?\n?[\s\S]*?\n?```)/gm)].map((m) => m[1]);
-  if (codeblocks) {
-    codeblocks.forEach((codeblock) => {
-      if (codeblock.includes('<del') || codeblock.includes('<ins')){
-        res = res.replace(codeblock, `<pre><code>Code block changed</code></pre>`);
-      }else{
-        res = res.replace(codeblock, `<pre><code>Code block</code></pre>`);
-      }
-    });
+  if (options.hideCode) {
+    const codeblocks = [...res.matchAll(/(```[\sa-z]*?\n?[\s\S]*?\n?```)/gm)].map((m) => m[1]);
+    if (codeblocks) {
+      codeblocks.forEach((codeblock) => {
+        if (codeblock.includes('<del') || codeblock.includes('<ins')) {
+          res = res.replace(codeblock, '<pre><code>Code block changed</code></pre>');
+        } else {
+          res = res.replace(codeblock, '<pre><code>Code block</code></pre>');
+        }
+      });
+    }
   }
 
   res = docusaurusBaseImages(res);
   res = htmlImages(revisionInfo.docuId, revisionInfo.from, revisionInfo.to, res);
   res = markdownImages(revisionInfo.docuId, revisionInfo.from, revisionInfo.to, res);
-  
 
   const requestOptions = {
     method: 'POST',
@@ -125,12 +110,12 @@ export default async function diff(revisionInfo, original, modified, opts) {
 
   const response = await fetch('/api/render', requestOptions);
 
-  if (!invisibleChanges.length){
-    invisibleChanges.push({text: 'No invisible changes', variant: 'secondary', id: "no"});
+  if (!invisibleChanges.length) {
+    invisibleChanges.push({ text: 'No invisible changes', variant: 'secondary', id: 'no' });
   }
 
   try {
-    const content = await response.json(); 
+    const content = await response.json();
     return { content: content.rendered, invisible: invisibleChanges, newFile: !orig.length };
   } catch (error) {
     return { content: error, invisible: invisibleChanges, newFile: !orig.length };

@@ -1,21 +1,22 @@
 // db.js
+import config from '../config/config.prod';
+
 const postgres = require('postgres');
 
-// TODO: Load from config!
 const sql = postgres({
-  host: 'db', // Postgres ip address or domain name
-  port: 5432, // Postgres server port
-  database: 'postgres', // Name of database to connect to
-  username: 'postgres', // Username of database user
-  password: 'postgres', // Password of database user
-  ssl: false, // True, or options for tls.connect
+  host: config.db.host, // Postgres ip address or domain name
+  port: config.db.port, // Postgres server port
+  database: config.db.database, // Name of database to connect to
+  username: config.db.username, // Username of database user
+  password: config.db.password, // Password of database user
+  ssl: config.db.ssl, // True, or options for tls.connect
   max: 10, // Max number of connections
   idle_timeout: 0, // Idle connection timeout in seconds
   connect_timeout: 30, // Connect timeout in seconds
 });
 
 async function setupDb() {
-  //await sql`DROP TABLE IF EXISTS documentations;`;
+  // await sql`DROP TABLE IF EXISTS documentations;`;
 
   await sql`CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY,
@@ -24,7 +25,6 @@ async function setupDb() {
     linked jsonb,
     tokens jsonb
   );`;
-
 
   await sql`CREATE TABLE IF NOT EXISTS documentations(
     id SERIAL PRIMARY KEY,
@@ -42,7 +42,7 @@ async function setupDb() {
     level SMALLINT,
     PRIMARY KEY (userId, docuId)
   );`;
-  
+
   /*
   console.log(await sql`SELECT table_name
     FROM information_schema.tables
@@ -53,4 +53,4 @@ async function setupDb() {
 
 setupDb();
 
-module.exports = sql;
+export default sql;

@@ -17,7 +17,7 @@ export default class DocumentationService {
     await docu.save();
 
     const resDocu = await Documentation.getByProviderId(docu.provider, docu.providerId);
-    const role = new Role({docuId: resDocu.id, userId: this.user.id, level: accessLevels.admin });
+    const role = new Role({ docuId: resDocu.id, userId: this.user.id, level: accessLevels.admin });
     role.save();
     return docu;
   }
@@ -29,7 +29,7 @@ export default class DocumentationService {
 
   async getRemoteList(providerId) {
     const provider = DocumentationService.getProvider(providerId, this.user);
-    const ids = await Documentation.getProviderIds(this.user.id, providerId)
+    const ids = await Documentation.getProviderIds(this.user.id, providerId);
     return (await provider.getUserDocumentations()).filter((d) => !ids.includes(d.id));
   }
 
@@ -44,8 +44,22 @@ export default class DocumentationService {
     return docu;
   }
 
-  async getUsers(docuId){
+  static async getUsers(docuId) {
     return Documentation.getUsers(docuId);
+  }
+
+  async removeUser(docuId, userId) {
+    const docu = await Documentation.get(docuId);
+    const provider = DocumentationService.getProvider(docu.providerId, this.user);
+    provider.removeUser(docu.providerId, userId);
+    (await Role.get(userId, docuId)).remove();
+  }
+
+  async removeDocu(docuId) {
+    const docu = await Documentation.get(docuId);
+    const provider = DocumentationService.getProvider(docu.providerId, this.user);
+    provider.removeDocu(docu.providerId);
+    Documentation.remove(docuId);
   }
 
   async getVersions(docuId) {
@@ -70,14 +84,15 @@ export default class DocumentationService {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
     const p = await provider.getBlob(docu.providerId, revision, blob);
-    return p
+    return p;
   }
 
   async savePage(docuId, page) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
+    provider.savePage(page);
     //! TODO: We should implement proper branching and more...
-    throw "Not implemented yet"
+    throw Error('Not implemented yet');
   }
 
   static getProvider(slug, user) {
@@ -91,7 +106,7 @@ export default class DocumentationService {
         return DocumentationService.gitlab;
 
       default:
-        throw  {message: `Unknown provider ${slug} specified!`};
+        throw Error(`Unknown provider ${slug} specified!`);
     }
   }
 }

@@ -19,7 +19,7 @@ export default class User {
 
   static async getByEmail(email) {
     const result = await sql`SELECT * FROM users WHERE email=${email}`;
-    if (result.count){
+    if (result.count) {
       const [user] = result;
       return new User(user);
     }
@@ -28,7 +28,7 @@ export default class User {
 
   static async getById(id) {
     const result = await sql`SELECT * FROM users WHERE id=${id}`;
-    if (result.count){
+    if (result.count) {
       const [user] = result;
       return new User(user);
     }
@@ -38,14 +38,33 @@ export default class User {
   static async getByProviderId(id, provider) {
     const result = await sql`SELECT * FROM users WHERE linked->>'${sql(provider)}'=${id}`;
 
-    if (result.count){
+    if (result.count) {
       const [user] = result;
       return new User(user);
     }
     return null;
   }
 
-  updateTokens(provider, access, refresh){
+  static async findOrCreate(profile, accessToken, refreshToken) {
+    const u = await User.getByProviderId(profile.id, 'gitlab');
+
+    if (u === null) {
+      // Create user
+      const user = new User({
+        email: profile.emails[0].value,
+        name: profile.displayName,
+        linked: { gitlab: profile.id },
+        tokens: { gitlab: { access: accessToken, refresh: refreshToken } },
+      });
+      user.save();
+      return User.getByProviderId(profile.id, 'gitlab');
+    }
+    u.updateTokens('gitlab', accessToken, refreshToken);
+    u.save();
+    return u;
+  }
+
+  updateTokens(provider, access, refresh) {
     this.tokens[provider].access = access;
     this.tokens[provider].refresh = refresh;
   }
@@ -54,8 +73,8 @@ export default class User {
     return sql`INSERT INTO users (email, name, linked, tokens) VALUES (${this.email}, ${this.name},${sql.json(this.linked)}, ${sql.json(this.tokens)}) ON CONFLICT (email) DO
     UPDATE SET name=${this.name}, linked=${sql.json(this.linked)}, tokens=${sql.json(this.tokens)}`;
   }
-  
-  getPublic(){
+
+  getPublic() {
     return {
       id: this.id,
       email: this.email,

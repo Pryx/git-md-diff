@@ -1,15 +1,14 @@
-import { hot } from 'react-hot-loader';
-import React from 'react';
-import { Link, useLocation } from 'wouter';
-import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
-import { Alert, Badge, Row } from 'react-bootstrap';
-import { store } from '../store/index';
+import React from 'react';
+import { Alert, Row } from 'react-bootstrap';
+import Card from 'react-bootstrap/Card';
+import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
+import { Link } from 'wouter';
 import { logOut, updateDocumentationList } from '../actions';
-import ky from 'ky';
-
-
+import Documentation from '../entities/documentation';
+import secureKy from '../entities/secure-ky';
+import { store } from '../store/index';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -23,9 +22,9 @@ class DocuOverview extends React.Component {
 
   componentDidMount() {
     const fetchDocus = async () => {
-      const json = await ky(`/api/documentations`).json();
+      const json = await secureKy().get(`${window.env.api.backend}/documentations`).json();
       store.dispatch(
-        updateDocumentationList(json.data)
+        updateDocumentationList(json.data),
       );
       this.setState({
         isLoaded: true,
@@ -33,14 +32,14 @@ class DocuOverview extends React.Component {
     };
 
     fetchDocus().catch((error) => {
-      if (error.response && error.response.status == 403){
+      if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
 
       this.setState({
         isLoaded: true,
-        error,
-      })
+        error: error.toString(),
+      });
     });
   }
 
@@ -53,7 +52,7 @@ class DocuOverview extends React.Component {
       error, isLoaded,
     } = this.state;
 
-    const { docuList } = this.props
+    const { docuList } = this.props;
 
     if (error) {
       return (
@@ -80,7 +79,7 @@ class DocuOverview extends React.Component {
     let items = null;
     if (docuList.length) {
       items = docuList.map((docu) => (
-        <Link key={docu.id} href={"/documentation/" + docu.id}>
+        <Link key={docu.id} href={`/documentation/${docu.id}`}>
           <Card className="docu-card">
             <Card.Header>
               {docu.name}
@@ -89,12 +88,11 @@ class DocuOverview extends React.Component {
               {docu.description}
             </Card.Body>
             <Card.Footer className="text-right">
-              <i className={"fab fa-" + docu.provider}></i>
+              <i className={`fab fa-${docu.provider}`} />
             </Card.Footer>
           </Card>
         </Link>
-      )
-      );
+      ));
     }
 
     return (
@@ -105,7 +103,7 @@ class DocuOverview extends React.Component {
               Create new documentation
             </Card.Header>
             <Card.Body>
-              <span className="add-circle"><i className="fas fa-plus"></i></span>
+              <span className="add-circle"><i className="fas fa-plus" /></span>
             </Card.Body>
           </Card>
         </Link>
@@ -119,12 +117,12 @@ DocuOverview.defaultProps = {
 };
 
 DocuOverview.propTypes = {
-  docuList: PropTypes.array
+  docuList: PropTypes.arrayOf(PropTypes.shape(Documentation.getShape())).isRequired,
 };
 
 const mapStateToProps = (state) => (
   {
-    docuList: state.docuList
+    docuList: state.docuList,
   }
 );
 

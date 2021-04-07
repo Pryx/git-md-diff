@@ -92,3 +92,7 @@ ins{
 .editor-diff-content img{
   max-width: 100%;
 }
+
+.editor-wrap .col-xl-6.col-md-12{
+  min-height: 80vh;
+}

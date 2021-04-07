@@ -5,9 +5,9 @@ import Row from 'react-bootstrap/Row';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DiffView from './DiffView';
-import ky from 'ky';
 import { logOut, updateChangesList } from '../actions';
 import { store } from '../store';
+import secureKy from '../entities/secure-ky';
 
 /**
  * The diff overview component acts as a wrapper to
@@ -21,51 +21,48 @@ class DiffOverview extends React.Component {
   };
 
   componentDidMount() {
-    this.componentWillReceiveProps(this.props);
+    this.componentDidUpdate();
   }
 
-  componentWillReceiveProps(props) {
-    const { from, docuId, to } = props;
+  static getDerivedStateFromProps(props, state) {
+    const { from, to } = props;
+    return { ...state, error: null, ready: from && to };
+  }
+
+  componentDidUpdate() {
+    const { from, docuId, to } = this.props;
     // You don't have to do this check first, but it can help prevent an unneeded render
-    this.setState({
-      ready: false,
-      error: null,
-    });
-    if (props.from && props.to) {
-      this.setState({
-        ready: true,
-        isLoaded: false,
-      });
-      
+    // TODO: This should get fixed
+    if (from && to) {
       const fetchChanges = async () => {
-        const json = await ky(`/api/documentations/${docuId}/changes/${from}/${to}`).json();
+        const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/changes/${from}/${to}`).json();
 
         store.dispatch(
-          updateChangesList(json.data)
+          updateChangesList(json.data),
         );
 
         this.setState({
           isLoaded: true,
-          changes: json.data
+          changes: json.data,
         });
       };
 
       fetchChanges().catch((error) => {
-        if (error.response && error.response.status == 403){
+        if (error.response && error.response.status === 403) {
           store.dispatch(logOut());
         }
-        
+
         this.setState({
           isLoaded: true,
           error,
-        })
+        });
       });
     }
   }
 
   render() {
     const {
-      error, isLoaded, ready, changes
+      error, isLoaded, ready, changes,
     } = this.state;
 
     const { from, docuId, to } = this.props;
@@ -131,7 +128,7 @@ DiffOverview.defaultProps = {
 };
 
 DiffOverview.propTypes = {
-  docuId: PropTypes.string.isRequired,
+  docuId: PropTypes.number.isRequired,
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
 };

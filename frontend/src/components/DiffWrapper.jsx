@@ -5,9 +5,9 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { Alert } from 'react-bootstrap';
 import CommitSelect from './CommitSelect';
 import DiffOverview from './DiffOverview';
-import { Alert } from 'react-bootstrap';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -63,8 +63,12 @@ class DiffWrapper extends React.Component {
   }
 }
 
+DiffWrapper.defaultProps = {
+  docuEmpty: false,
+};
+
 DiffWrapper.propTypes = {
-  docuId: PropTypes.string.isRequired,
+  docuId: PropTypes.number.isRequired,
   docuEmpty: PropTypes.bool,
 };
 

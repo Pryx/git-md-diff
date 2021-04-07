@@ -1,13 +1,25 @@
-const airbnbBase = require('@neutrinojs/airbnb-base');
+const airbnb = require('@neutrinojs/airbnb');
 const node = require('@neutrinojs/node');
 const jest = require('@neutrinojs/jest');
+const eslint = require('@neutrinojs/eslint');
 
 module.exports = {
   options: {
     root: __dirname,
   },
   use: [
-    airbnbBase(),
+    airbnb({
+      eslint: {
+        baseConfig: {
+          plugins: ['babel', 'react', 'react-hooks'],
+          settings: {
+            react: {
+              version: 'detect',
+            },
+          }
+        }
+      }
+    }),
     node({
       babel: {
         // Override options for @babel/preset-env:
@@ -23,7 +35,7 @@ module.exports = {
             },
           ],
         ],
-      },
+      }
     }
     ),
     jest(),

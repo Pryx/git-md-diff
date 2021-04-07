@@ -14,7 +14,7 @@ export default class Role {
   }
 
   static async get(userId, docuId) {
-    let [res] = await sql`SELECT * FROM roles WHERE userId=${userId} AND docuId=${docuId}`;
+    const [res] = await sql`SELECT * FROM roles WHERE userId=${userId} AND docuId=${docuId}`;
     const role = new Role(res);
     return role;
   }

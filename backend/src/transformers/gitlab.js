@@ -1,8 +1,8 @@
-export function versionTransformer(version){
-  return {name: version.name, default: version.default}
+export function versionTransformer(version) {
+  return { name: version.name, default: version.default };
 }
 
-export function revisionTransformer(revision){
+export function revisionTransformer(revision) {
   return {
     id: revision.id,
     shortId: revision.short_id,
@@ -11,30 +11,30 @@ export function revisionTransformer(revision){
     created: revision.created_at,
     author: {
       name: revision.author_name,
-      email: revision.author_email
-    }
-  }
+      email: revision.author_email,
+    },
+  };
 }
 
-export function changesTransformer(change){
+export function changesTransformer(change) {
   const ext = change.new_path.split('.').pop();
 
-  if (change.deleted_file || (ext.toLowerCase() != 'md' && ext.toLowerCase() != 'mdx')) {
+  if (change.deleted_file || (ext.toLowerCase() !== 'md' && ext.toLowerCase() !== 'mdx')) {
     return null;
   }
-  
+
   return {
     oldFile: change.old_path,
     newFile: change.new_path,
     renamed: change.renamed_file,
-  }
+  };
 }
 
-export function repositoryTransformer(repo){
+export function repositoryTransformer(repo) {
   return {
     id: repo.id,
     name: repo.name,
     slug: repo.path,
     description: repo.description,
-  }
+  };
 }

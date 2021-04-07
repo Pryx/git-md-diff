@@ -1,7 +1,8 @@
 import http from 'http';
+import config from '../config/config.prod';
 import app from './server';
 
-const port = process.env.PORT || 3000;
+const port = config.app.port || 3000;
 const server = http.createServer(app);
 
 let currentApp = app;

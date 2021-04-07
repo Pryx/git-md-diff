@@ -1,5 +1,16 @@
-FROM node:latest
+FROM node:15
 
+# Create app directory
 WORKDIR /usr/src/app
 
-EXPOSE 4000
+# Bundle app source
+COPY . .
+
+# Install app dependencies
+RUN npm install
+
+# Build on the newer node image
+RUN npm run build
+
+EXPOSE 3000
+CMD [ "node", "build" ]

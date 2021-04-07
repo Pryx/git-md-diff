@@ -1,42 +1,40 @@
-import { hot } from 'react-hot-loader';
-import React from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import AsyncSelect from 'react-select/async';
-import ky from 'ky';
-import Select from 'react-select';
-import accessLevels from '../constants/access-levels'
+import React from 'react';
 import { Button, Col, Row } from 'react-bootstrap';
-import { store } from '../store';
+import { hot } from 'react-hot-loader';
+import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { logOut } from '../actions';
+import accessLevels from '../constants/access-levels';
+import Documentation from '../entities/documentation';
+import secureKy from '../entities/secure-ky';
+import { store } from '../store';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
  * Currently it stores the info about current repository and selected commits
  * and passess it to wrapped components.
  */
-class DocumentationSettings extends React.Component {
+class UserAdd extends React.Component {
   state = {
-    success: false,
-    error: "",
     accesslvl: null,
-    user: null
-  }
+    user: null,
+  };
 
   async getOptionsAsync(search) {
     if (!search) {
-      return;
+      return [];
     }
 
     const { docu } = this.props;
-    const json = await ky(`/api/documentations/provider/${docu.provider}/users/${encodeURIComponent(search)}`).json();
+    const json = await secureKy().get(`${window.env.api.backend}/documentations/provider/${docu.provider}/users/${encodeURIComponent(search)}`).json();
     const mapped = json.data.map((c) => ({ label: `${c.name} (${c.username})`, value: c.id }));
-    return mapped
+    return mapped;
   }
 
   render() {
     const { user, accesslvl } = this.state;
-    const access = Object.entries(accessLevels).map((v) => ({ label: v[0], value: v[1] }))
+    const access = Object.entries(accessLevels).map((v) => ({ label: v[0], value: v[1] }));
 
     return (
       <div>
@@ -45,24 +43,26 @@ class DocumentationSettings extends React.Component {
             <AsyncSelect
               value={user}
               loadOptions={(val) => this.getOptionsAsync(val).catch((error) => {
-                if (error.response && error.response.status == 403) {
+                if (error.response && error.response.status === 403) {
                   store.dispatch(logOut());
                 }
-                return []
+                return [];
               })}
               placeholder="Start typing..."
-              onChange={(user) => {
-                this.setState({ user })
-              }} />
+              onChange={(u) => {
+                this.setState({ user: u });
+              }}
+            />
           </Col>
           <Col>
             <Select
               options={access}
               placeholder="Access level"
               value={accesslvl}
-              onChange={(accesslvl) => {
-                this.setState({ accesslvl })
-              }} />
+              onChange={(lvl) => {
+                this.setState({ accesslvl: lvl });
+              }}
+            />
           </Col>
         </Row>
         <Row className="mt-3">
@@ -75,14 +75,8 @@ class DocumentationSettings extends React.Component {
   }
 }
 
-DocumentationSettings.propTypes = {
-  docuList: PropTypes.array
+UserAdd.propTypes = {
+  docu: PropTypes.shape(Documentation.getShape()).isRequired,
 };
 
-const mapStateToProps = (state) => (
-  {
-    docuList: state.docuList
-  }
-);
-
-export default hot(module)(connect(mapStateToProps)(DocumentationSettings));
+export default hot(module)(UserAdd);

@@ -10,12 +10,21 @@ module.exports = {
     fs: 'empty'
   },
   use: [
-    airbnb(),
+    airbnb({
+      eslint: {
+        rules: {
+          'max-len': 1,
+        },
+      }
+    }),
     react({
       html: {
         title: 'Git md diff'
       },
       devServer:{
+        historyApiFallback: {
+          disableDotRule: true
+        },    
         "proxy": {
           "/api/render": {
             "target": "http://render:4000",

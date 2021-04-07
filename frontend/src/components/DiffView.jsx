@@ -5,9 +5,9 @@ import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
 import { Badge } from 'react-bootstrap';
 import Diff from '../diff/diff';
-import ky from 'ky';
 import { store } from '../store';
 import { logOut } from '../actions';
+import secureKy from '../entities/secure-ky';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -27,36 +27,36 @@ class DiffView extends React.Component {
     this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
 
     // This is needed because for some reason encodeUriComponent doesn't encode dots
-    this.link = `/documentation/${props.docuId}/edit/${encodeURIComponent(props.newFile).replaceAll('.', '%2E')}`;
+    this.link = `/documentation/${props.docuId}/edit/${encodeURIComponent(props.newFile)}`;
   }
 
   componentDidMount() {
     const {
-      docuId, from, to, newFile, oldFile
+      docuId, from, to, newFile, oldFile,
     } = this.props;
 
     const fetchDiff = async () => {
-      const original = await ky(`/api/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`).json();
-      const modified = await ky(`/api/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`).json();
+      const original = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`).json();
+      const modified = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`).json();
       const content = await Diff({ docuId, from, to }, original.data, modified.data, this.options);
 
       this.setState(
         {
           isLoaded: true,
-          content
-        }
+          content,
+        },
       );
     };
 
     fetchDiff().catch((error) => {
-      if (error.response && error.response.status == 403){
+      if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
-      
+
       this.setState({
         isLoaded: true,
-        error,
-      })
+        error: error.toString(),
+      });
     });
   }
 
@@ -70,11 +70,11 @@ class DiffView extends React.Component {
     } = this.state;
 
     const { renamed, newFile, oldFile } = this.props;
-    const filename = newFile == oldFile ? newFile : `${oldFile} => ${newFile}`;
+    const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
 
     let badges = [];
-    if (renamed){
-      badges.push(<Badge variant="warning">Renamed</Badge>)
+    if (renamed) {
+      badges.push(<Badge variant="warning">Renamed</Badge>);
     }
 
     if (error) {
@@ -118,16 +118,15 @@ class DiffView extends React.Component {
     let cls = '';
     if (content.newFile) {
       cls = 'newfile';
-      badges.push(<Badge variant="success">NEW</Badge>)
+      badges.push(<Badge variant="success">NEW</Badge>);
     }
 
     let items = null;
-    if (content.invisible.length){
-      items = content.invisible.map((change) => ( 
+    if (content.invisible.length) {
+      items = content.invisible.map((change) => (
         <Badge variant={change.variant} key={change.id}>{change.text}</Badge>
-      )  
-      );
-      badges = badges.concat(items)
+      ));
+      badges = badges.concat(items);
     }
 
     return (
@@ -151,7 +150,7 @@ DiffView.defaultProps = {
 DiffView.propTypes = {
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
-  docuId: PropTypes.string.isRequired,
+  docuId: PropTypes.number.isRequired,
   newFile: PropTypes.string.isRequired,
   oldFile: PropTypes.string.isRequired,
   hideCode: PropTypes.bool,
