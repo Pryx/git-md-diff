@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { store } from '../store';
 import { documentationEmpty, logOut, revisionSelected } from '../actions';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 
 /**
  * This is the commit selector component. This allows us to

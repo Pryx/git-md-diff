@@ -158,6 +158,12 @@ app.put('/documentations/', passport.authenticate('jwt', { session: false }), (r
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+app.delete('/documentations/:docu', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.remove(req.params.docu, req.body.deleteRepo).then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
 // Save file and commit to git
 app.put('/documentations/:docu/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
   // TODO: Fix this

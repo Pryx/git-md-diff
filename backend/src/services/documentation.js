@@ -2,6 +2,7 @@ import accessLevels from '../entities/access-levels';
 import Documentation from '../entities/documentation';
 import Role from '../entities/role';
 import GitlabProvider from '../providers/gitlab-provider';
+import lodash from 'lodash';
 
 export default class DocumentationService {
   constructor(user) {
@@ -9,17 +10,34 @@ export default class DocumentationService {
   }
 
   async create(params) {
-    const docu = new Documentation(params);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
-    //* This will throw if there is any duplicity etc.
-    const docuObj = await provider.createDocumentation(docu);
-    docu.providerId = docuObj.id;
-    await docu.save();
+    if (params.id){
+      let docu = await Documentation.get(params.id);
 
-    const resDocu = await Documentation.getByProviderId(docu.provider, docu.providerId);
-    const role = new Role({ docuId: resDocu.id, userId: this.user.id, level: accessLevels.admin });
-    role.save();
-    return docu;
+      docu = lodash.merge(docu, params);
+
+      const provider = DocumentationService.getProvider(docu.provider, this.user);
+
+      //? This will throw if there is any duplicity etc.
+      await provider.createDocumentation(docu);
+
+      await docu.save();
+      
+      return docu;
+    }else{
+      const docu = new Documentation(params);
+      const provider = DocumentationService.getProvider(docu.provider, this.user);
+
+      //? This will throw if there is any duplicity etc.
+      const docuObj = await provider.createDocumentation(docu);
+      docu.providerId = docuObj.id;
+
+      await docu.save();
+
+      const resDocu = await Documentation.getByProviderId(docu.provider, docu.providerId);
+      const role = new Role({ docuId: resDocu.id, userId: this.user.id, level: accessLevels.admin });
+      role.save();
+      return docu;
+    }
   }
 
   async getList() {
@@ -50,15 +68,17 @@ export default class DocumentationService {
 
   async removeUser(docuId, userId) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.providerId, this.user);
+    const provider = DocumentationService.getProvider(docu.provider, this.user);
     provider.removeUser(docu.providerId, userId);
     (await Role.get(userId, docuId)).remove();
   }
 
-  async removeDocu(docuId) {
+  async remove(docuId, deleteRepo) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.providerId, this.user);
-    provider.removeDocu(docu.providerId);
+    if (deleteRepo){
+      const provider = DocumentationService.getProvider(docu.provider, this.user);
+      provider.removeDocu(docu.providerId);
+    }
     Documentation.remove(docuId);
   }
 

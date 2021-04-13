@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import DiffView from './DiffView';
 import { logOut, updateChangesList } from '../actions';
 import { store } from '../store';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 
 /**
  * The diff overview component acts as a wrapper to
@@ -29,11 +29,18 @@ class DiffOverview extends React.Component {
     return { ...state, error: null, ready: from && to };
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     const { from, docuId, to } = this.props;
     // You don't have to do this check first, but it can help prevent an unneeded render
-    // TODO: This should get fixed
-    if (from && to) {
+    let lastFrom = null;
+    let lastTo = null;
+
+    if (prevProps){
+      lastFrom = prevProps.from;
+      lastTo = prevProps.to;
+    }
+
+    if (from && to && ( lastFrom !== from || lastTo !== to)) {
       const fetchChanges = async () => {
         const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/changes/${from}/${to}`).json();
 

@@ -7,7 +7,7 @@ import { hot } from 'react-hot-loader';
 import slugify from 'slugify';
 import { Redirect } from 'wouter';
 import { logOut } from '../actions';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 import { store } from '../store';
 
 /**
@@ -41,7 +41,7 @@ class NewDocumentation extends React.Component {
 
     const { slug, name, description } = this.state;
 
-    const postData = async () => {
+    const putData = async () => {
       const json = await secureKy().put(`${window.env.api.backend}/documentations/`, {
         json: {
           name, slug, description, provider: 'gitlab',
@@ -51,17 +51,17 @@ class NewDocumentation extends React.Component {
       if (json.success) {
         this.setState({ success: true });
       } else {
-        this.setState({ error: json.error });
+        this.setState({ error: 'An error has occured: ' + json.error });
       }
     };
 
-    postData().catch(async (error) => {
+    putData().catch(async (error) => {
       if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
 
       this.setState({
-        error: (await error.response.json()).error,
+        error: 'Error making request: ' + (await error.response.json()).error,
       });
     });
 
@@ -102,7 +102,6 @@ class NewDocumentation extends React.Component {
     if (error) {
       alert = (
         <Alert variant="danger">
-          An error has occured:
           {error}
         </Alert>
       );

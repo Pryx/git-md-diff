@@ -23,6 +23,10 @@ export default class Role {
     return sql`DELETE FROM roles WHERE userId=${this.userId} AND docuId=${this.docuId}`;
   }
 
+  static async removeAll(docuId) {
+    return sql`DELETE FROM roles WHERE docuId=${docuId}`;
+  }
+
   async save() {
     return sql`INSERT INTO roles (userId, docuId, level) VALUES (${this.userId}, ${this.docuId},${this.level}) ON CONFLICT (userId, docuId) DO
     UPDATE SET level=${this.level}`;

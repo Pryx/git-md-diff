@@ -14,11 +14,9 @@ import NewDocumentation from './pages/NewDocumentation';
 import DocumentationPage from './pages/DocumentationPage';
 import DocumentationSettings from './pages/DocumentationSettings';
 import UserProfile from './pages/UserProfile';
-import { store } from './store';
-import { logOut, tokensReceived } from './actions';
 import Login from './components/Login';
 import LoginPage from './pages/LoginPage';
-import secureKy from './entities/secure-ky';
+import {refreshTokens} from './entities/secure-ky';
 
 smartlookClient.init(window.env.api.smartlook);
 
@@ -33,24 +31,15 @@ setInterval(async () => {
     return;
   }
 
-  try {
-    const json = await secureKy().get(`${window.env.api.backend}/auth/token`).json();
-    if (json.data) {
-      store.dispatch(tokensReceived(json.data));
-    }
-  } catch (error) {
-    if (error.response && error.response.status === 403) {
-      store.dispatch(logOut());
-    } else {
-      console.error(error);
-    }
-  }
+  refreshTokens();
+  
 }, 30000);
 
 const App = (props) => {
   const { loggedIn } = props;
   if (loggedIn) {
     check = true;
+    refreshTokens();
     return (
       <Switch>
         <Route path="/documentation/:docuId/edit/:file">

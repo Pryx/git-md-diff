@@ -81,7 +81,8 @@ export default class Documentation {
   }
 
   static async remove(docuId) {
-    return sql`DELETE FROM documentations WHERE id=${docuId} CASCADE`;
+    await Role.removeAll(docuId);
+    return sql`DELETE FROM documentations WHERE id=${docuId}`;
   }
 
   async save() {

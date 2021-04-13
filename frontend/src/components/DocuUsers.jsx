@@ -11,7 +11,7 @@ import accessLevels from '../constants/access-levels';
 import { store } from '../store/index';
 import Documentation from '../entities/documentation';
 import { logOut } from '../actions';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.

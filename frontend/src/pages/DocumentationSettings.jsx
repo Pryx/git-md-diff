@@ -15,7 +15,7 @@ import { documentationSelected, logOut } from '../actions';
 import DocuUsers from '../components/DocuUsers';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 import { store } from '../store/index';
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -35,14 +35,18 @@ class DocumentationSettings extends React.Component {
     store.dispatch(documentationSelected(docuId));
     this.docu = docuList.find((d) => d.id === docuId);
 
-    const { slug, name, description } = this.docu;
-    this.setState({ slug, name, description });
-
     this.handleSlugUpdate = this.handleSlugUpdate.bind(this);
     this.handleNameUpdate = this.handleNameUpdate.bind(this);
     this.slugControl = React.createRef();
     this.handleDescriptionUpdate = this.handleDescriptionUpdate.bind(this);
     this.handleDeleteDocu = this.handleDeleteDocu.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+
+  }
+
+  componentDidMount(){
+    const { slug, name, description } = this.docu;
+    this.setState({ slug, name, description });
   }
 
   handleDeleteDocu() {
@@ -86,6 +90,39 @@ class DocumentationSettings extends React.Component {
   handleSlugUpdate(e) {
     this.setState({ slug: e.target.value });
     this.slugChanged = true;
+  }
+
+  handleSubmit(e) {
+    e.preventDefault();
+
+    const { slug, name, description } = this.state;
+    const { docuId } = this.props;
+
+    const putData = async () => {
+      const json = await secureKy().put(`${window.env.api.backend}/documentations/`, {
+        json: {
+          id: docuId, name, slug, description, provider: 'gitlab',
+        },
+      }).json();
+
+      if (json.success) {
+        this.setState({ success: true });
+      } else {
+        this.setState({ error: json.error });
+      }
+    };
+
+    putData().catch(async (error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        error: 'Error making request: ' + (await error.response.json()).error,
+      });
+    });
+
+    return false;
   }
 
   deleteDocu(deleteRepo) {

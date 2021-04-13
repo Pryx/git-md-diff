@@ -12,7 +12,7 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { logOut } from '../actions';
 import DiffViewEditor from '../components/DiffViewEditor';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 import { store } from '../store';
 
 /**
@@ -134,7 +134,7 @@ class DiffPage extends React.Component {
           <Col xl={6} md={12}>
             <Editor
               initialValue={content}
-              previewStyle="tab"
+              previewStyle="global"
               height="100%"
               initialEditType="markdown"
               useCommandShortcut

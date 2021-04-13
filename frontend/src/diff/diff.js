@@ -1,5 +1,6 @@
 import { markdownDiff } from 'markdown-diff';
 import lodash from 'lodash';
+import ky from 'ky';
 
 const matter = require('front-matter');
 
@@ -100,15 +101,7 @@ export default async function diff(revisionInfo, original, modified, opts) {
   res = htmlImages(revisionInfo.docuId, revisionInfo.from, revisionInfo.to, res);
   res = markdownImages(revisionInfo.docuId, revisionInfo.from, revisionInfo.to, res);
 
-  const requestOptions = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: res,
-    }),
-  };
-
-  const response = await fetch('/api/render', requestOptions);
+  const response = await ky.post(`${window.env.api.render}/render`, { json: { content: res } });
 
   if (!invisibleChanges.length) {
     invisibleChanges.push({ text: 'No invisible changes', variant: 'secondary', id: 'no' });

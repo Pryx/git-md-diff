@@ -7,7 +7,7 @@ import AsyncSelect from 'react-select/async';
 import { logOut } from '../actions';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 import { store } from '../store';
 
 /**

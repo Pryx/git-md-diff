@@ -30,8 +30,16 @@ export default class GitlabProvider {
   }
 
   async createDocumentation(docuObj) {
-    const { name, slug, description } = docuObj;
+    const { name, slug, description, providerId } = docuObj;
+    if (providerId != -1){
+      return this.gitlab.Projects.edit(providerId, { name, path: slug, description });
+    }
+
     return this.gitlab.Projects.create({ name, path: slug, description });
+  }
+
+  async removeDocu(id) {
+    return this.gitlab.Projects.remove(id);
   }
 
   async getDocumentation(id) {

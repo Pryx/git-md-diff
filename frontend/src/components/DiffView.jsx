@@ -7,7 +7,7 @@ import { Badge } from 'react-bootstrap';
 import Diff from '../diff/diff';
 import { store } from '../store';
 import { logOut } from '../actions';
-import secureKy from '../entities/secure-ky';
+import {secureKy} from '../entities/secure-ky';
 
 /**
  * Diff view shows the diff file contents. Currently this
