@@ -1,5 +1,5 @@
 import http from 'http';
-import config from '../config/config.prod';
+import config from './config';
 import app from './server';
 
 const port = config.app.port || 3000;

@@ -8,6 +8,8 @@ import { logOut } from '../actions';
 import { store } from '../store/index';
 
 class LoginPage extends React.Component {
+  state = { error: null };
+
   componentWillUnmount() {
     this.setState({});
   }

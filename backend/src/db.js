@@ -1,7 +1,9 @@
 // db.js
-import config from '../config/config.prod';
+import config from './config';
 
 const postgres = require('postgres');
+
+console.log(config);
 
 const sql = postgres({
   host: config.db.host, // Postgres ip address or domain name

@@ -1,12 +1,12 @@
 {
   "name": "git-md-diff-frontend",
-  "version": "0.0.4",
+  "version": "0.1.9",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "webpack-dev-server --host 0.0.0.0 --mode development --open",
-    "build": "webpack --mode production",
+    "start": "cp config/runtime-configuration.js public/runtime-configuration.js && webpack-dev-server --host 0.0.0.0 --mode development --open",
+    "build": "cp config/runtime-configuration.js public/runtime-configuration.js && webpack --mode production",
     "lint": "eslint --cache --format codeframe --ext mjs,jsx,js src test"
   },
   "keywords": [],

@@ -1,6 +1,7 @@
 const airbnb = require('@neutrinojs/airbnb');
 const react = require('@neutrinojs/react');
 const jest = require('@neutrinojs/jest');
+const path = require('path');
 
 module.exports = {
   options: {
@@ -19,24 +20,18 @@ module.exports = {
     }),
     react({
       html: {
-        title: 'Git md diff'
+        template: require.resolve(path.join(__dirname, 'index.ejs')),
+        title: 'Git md tdiff',
       },
       devServer:{
+        contentBase: [
+          path.resolve(__dirname, 'build'),
+          path.join(__dirname, 'public')
+        ],
+        publicPath: '/',
         historyApiFallback: {
           disableDotRule: true
-        },    
-        "proxy": {
-          "/api/render": {
-            "target": "http://render:4000",
-            "secure": false,
-            pathRewrite: { '^/api': '' },
-          },
-          "/api": {
-            "target": "http://backend:3000",
-            "secure": false,
-            pathRewrite: { '^/api': '' },
-          }
-        },
+        }
       }
     }),
     jest(),

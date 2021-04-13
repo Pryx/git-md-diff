@@ -1,0 +1,21 @@
+{
+  "app": {
+    "port": 3000,
+    "jwtSecret": "tokenSecret",
+    "refreshSecret": "refreshSecret"
+  },
+  "db": {
+    "host": "db",
+    "port": "5432",
+    "database": "postgres",
+    "username": "postgres",
+    "password": "postgres",
+    "ssl": false
+  },
+  "gitlab": {
+    "appid": "---",
+    "secret": "---",
+    "callback": "http://localhost:3000/auth/gitlab/callback",
+    "authRedirect": "http://localhost:5000"
+  }
+}

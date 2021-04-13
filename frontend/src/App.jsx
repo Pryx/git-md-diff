@@ -14,14 +14,11 @@ import NewDocumentation from './pages/NewDocumentation';
 import DocumentationPage from './pages/DocumentationPage';
 import DocumentationSettings from './pages/DocumentationSettings';
 import UserProfile from './pages/UserProfile';
-import '../config/config.prod';
 import { store } from './store';
 import { logOut, tokensReceived } from './actions';
 import Login from './components/Login';
 import LoginPage from './pages/LoginPage';
 import secureKy from './entities/secure-ky';
-
-console.log(window.env);
 
 smartlookClient.init(window.env.api.smartlook);
 

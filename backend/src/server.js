@@ -6,7 +6,7 @@ import mime from 'mime-types';
 import passport from 'passport';
 import GitLabStrategy from 'passport-gitlab2';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
-import config from '../config/config.prod';
+import config from './config';
 import User from './entities/user';
 import Auth from './services/auth';
 import DocumentationService from './services/documentation';
@@ -88,7 +88,7 @@ app.get('/auth/gitlab/callback', limiter,
       const accessToken = jwt.sign({ id: user }, config.app.jwtSecret, { expiresIn: '30m' });
       const refreshToken = jwt.sign({ id: user }, config.app.refreshSecret, { expiresIn: '1d' });
 
-      res.redirect(`/login/success/${encodeURIComponent(accessToken)}/${encodeURIComponent(refreshToken)}`);
+      res.redirect(`${config.gitlab.authRedirect}/login/success/${encodeURIComponent(accessToken)}/${encodeURIComponent(refreshToken)}`);
     });
   })(req, res, next));
 

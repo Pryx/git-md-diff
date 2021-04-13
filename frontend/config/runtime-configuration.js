@@ -5,6 +5,7 @@ window.env = {
   api: {
     backend: "http://localhost:3000",
     render: "http://localhost:4000",
-    smartlook: "--"
+    smartlook: "96987d432f762d1afd5dff3e5ec07f38ac5924fa"
   }
 };
+

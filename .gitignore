@@ -113,4 +113,4 @@ backend/repositories
 *credentials.json
 
 **/.git
-**/config.prod.js
+**/config.prod.*

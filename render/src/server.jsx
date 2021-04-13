@@ -11,6 +11,9 @@ app.use(cors());
 app.use(express.json());
 
 // #endregion
+
+// ? Maybe auth would be a good idea so that the render component is not used elsewhere...
+// ? Rignt now this isn't an issue though and does not warrant another library.
 app.post('/render', (req, res) => {
   const cont = req.body.content;
 
