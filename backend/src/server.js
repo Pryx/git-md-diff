@@ -97,7 +97,7 @@ app.get('/auth/logout', passport.authenticate('jwt', { session: false }), (req, 
   return res.send({ success: true });
 });
 
-app.get('/auth/token', (req, res) => {
+app.get('/auth/token', limiter, (req, res) => {
   const token = ExtractJwt.fromAuthHeaderWithScheme('JWT')(req);
   jwt.verify(token, config.app.jwtSecret, (err) => {
     if (!err) {
