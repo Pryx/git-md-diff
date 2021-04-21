@@ -21,7 +21,7 @@ module.exports = {
     react({
       html: {
         template: require.resolve(path.join(__dirname, 'index.ejs')),
-        title: 'Git md tdiff',
+        title: 'Git md diff',
       },
       devServer:{
         contentBase: [

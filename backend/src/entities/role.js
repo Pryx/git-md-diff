@@ -19,8 +19,8 @@ export default class Role {
     return role;
   }
 
-  async remove() {
-    return sql`DELETE FROM roles WHERE userId=${this.userId} AND docuId=${this.docuId}`;
+  static async remove(userId, docuId) {
+    return sql`DELETE FROM roles WHERE userId=${userId} AND docuId=${docuId}`;
   }
 
   static async removeAll(docuId) {

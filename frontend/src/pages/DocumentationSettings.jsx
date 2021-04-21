@@ -26,6 +26,9 @@ class DocumentationSettings extends React.Component {
   state = {
     error: '',
     deleted: false,
+    slug: '', 
+    name: '', 
+    description: ''
   };
 
   constructor(props) {
@@ -156,7 +159,7 @@ class DocumentationSettings extends React.Component {
     }
 
     const {
-      slug, name, description, deleted, error,
+      slug, name, description, deleted, error, success
     } = this.state;
 
     if (deleted) {
@@ -169,6 +172,14 @@ class DocumentationSettings extends React.Component {
         <Alert variant="danger">
           Error:
           {error}
+        </Alert>
+      );
+    }
+
+    if (success) {
+      alert = (
+        <Alert variant="success">
+          Successfully updated
         </Alert>
       );
     }

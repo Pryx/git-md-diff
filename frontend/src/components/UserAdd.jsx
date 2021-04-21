@@ -21,6 +21,39 @@ class UserAdd extends React.Component {
     user: null,
   };
 
+  constructor(props) {
+    super(props);
+
+    this.handleAdd = this.handleAdd.bind(this);
+  }
+
+  handleAdd(e){
+    const { docu, callback } = this.props;
+    const {accesslvl, user} = this.state;
+    const addUser = async () => {
+      const json = await secureKy().put(`${window.env.api.backend}/documentations/${docu.id}/users/`,  { json: {providerId: user.value, level: accesslvl.value}});
+
+      if (json.success === false) {
+        throw Error("Couldn't add user!");
+      }
+
+      callback();
+    };
+
+    addUser().catch((error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        error: error.toString(),
+      });
+    });
+    
+
+    this.setState({accesslvl: null, user: null});
+  }
+
   async getOptionsAsync(search) {
     if (!search) {
       return [];
@@ -67,7 +100,7 @@ class UserAdd extends React.Component {
         </Row>
         <Row className="mt-3">
           <Col>
-            <Button variant="success" className="float-right">Add</Button>
+            <Button variant="success" className="float-right" onClick={this.handleAdd}>Add</Button>
           </Col>
         </Row>
       </div>
@@ -77,6 +110,7 @@ class UserAdd extends React.Component {
 
 UserAdd.propTypes = {
   docu: PropTypes.shape(Documentation.getShape()).isRequired,
+  callback: PropTypes.func.isRequired
 };
 
 export default hot(module)(UserAdd);

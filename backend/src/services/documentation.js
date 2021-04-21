@@ -3,6 +3,7 @@ import Documentation from '../entities/documentation';
 import Role from '../entities/role';
 import GitlabProvider from '../providers/gitlab-provider';
 import lodash from 'lodash';
+import User from '../entities/user';
 
 export default class DocumentationService {
   constructor(user) {
@@ -69,8 +70,31 @@ export default class DocumentationService {
   async removeUser(docuId, userId) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);
-    provider.removeUser(docu.providerId, userId);
-    (await Role.get(userId, docuId)).remove();
+    const user = await User.getById(userId);
+    provider.removeUser(docu.providerId, user.linked[docu.provider]);
+    await Role.remove(userId, docuId);
+  }
+
+  async addUser(docuId, userInfo) {
+    const docu = await Documentation.get(docuId);
+    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    userInfo.providerId = userInfo.providerId.toString();
+    let found = await User.getByProviderId(userInfo.providerId, docu.provider);
+
+    if (found === null){
+      const providerUser = await provider.getUser(userInfo.providerId);
+      const {name, public_email} = providerUser;
+      const linked = {};
+      linked[docu.provider] = userInfo.providerId;
+      const user = new User({name, email: public_email, linked});
+      await user.save();
+      found = await User.getByProviderId(userInfo.providerId.toString(), docu.provider);
+    }
+
+    provider.addUser(docu.providerId, userInfo.providerId, userInfo.level);
+
+    const role = new Role({level: userInfo.level, docuId, userId: found.id})
+    role.save();
   }
 
   async remove(docuId, deleteRepo) {
@@ -81,6 +105,7 @@ export default class DocumentationService {
     }
     Documentation.remove(docuId);
   }
+
 
   async getVersions(docuId) {
     const docu = await Documentation.get(docuId);

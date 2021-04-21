@@ -12,6 +12,8 @@ import { store } from '../store/index';
 import Documentation from '../entities/documentation';
 import { logOut } from '../actions';
 import {secureKy} from '../entities/secure-ky';
+import User from '../entities/user';
+import { connect } from 'react-redux';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -30,6 +32,11 @@ class DocuUsers extends React.Component {
     this.handleRemoveUser = this.handleRemoveUser.bind(this);
     this.removeUser = this.removeUser.bind(this);
     this.fetchUsers = this.fetchUsers.bind(this);
+    this.addUserCallback = this.addUserCallback.bind(this);
+  }
+
+  addUserCallback(){
+    this.fetchUsers();
   }
 
   componentDidMount() {
@@ -97,16 +104,19 @@ class DocuUsers extends React.Component {
 
   render() {
     const { users, error } = this.state;
-    const { docu } = this.props;
+    const { docu, userData } = this.props;
 
     const accessLevelsFlipped = lodash.invert(accessLevels);
     const tableContent = users.map((u) => (
       <tr key={u.id}>
         <td>{u.id}</td>
         <td>{u.name}</td>
-        <td>{u.email}</td>
+        <td>{u.email || "<unknown>"}</td>
         <td>{accessLevelsFlipped[u.accessLevel]}</td>
-        <td><Button variant="danger" size="sm" onClick={() => this.handleRemoveUser(u)}><i className="fas fa-trash" /></Button></td>
+        <td>{ userData.id !== u.id &&
+          <Button variant="danger" size="sm" onClick={() => this.handleRemoveUser(u)}><i className="fas fa-trash" /></Button>
+        }
+        </td>
       </tr>
     ));
 
@@ -125,7 +135,7 @@ class DocuUsers extends React.Component {
         <Card.Header>User management</Card.Header>
         <Card.Body>
           {alert}
-          <UserAdd docu={docu} />
+          <UserAdd docu={docu} callback={this.addUserCallback}/>
           <Table className="mt-3" striped bordered hover>
             <thead>
               <tr>
@@ -149,6 +159,11 @@ class DocuUsers extends React.Component {
 
 DocuUsers.propTypes = {
   docu: PropTypes.shape(Documentation.getShape()).isRequired,
+  userData: PropTypes.shape(User.getShape()),
 };
 
-export default hot(module)(DocuUsers);
+function mapStateToProps(state) {
+  return { userData: state.userData };
+}
+
+export default hot(module)(connect(mapStateToProps)(DocuUsers));

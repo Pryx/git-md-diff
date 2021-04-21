@@ -2,8 +2,8 @@ import RefreshToken from '../entities/refresh-token';
 import User from '../entities/user';
 
 export default class Auth {
-  static async findOrCreateUser(profile, accessToken, refreshToken) {
-    return User.findOrCreate(profile, accessToken, refreshToken);
+  static async findOrCreateUser(profile, accessToken, refreshToken, provider) {
+    return User.findOrCreate(profile, accessToken, refreshToken, provider);
   }
 
   static async loginUser(userId, hash, expire) {

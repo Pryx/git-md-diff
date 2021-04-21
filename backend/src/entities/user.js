@@ -45,23 +45,39 @@ export default class User {
     return null;
   }
 
-  static async findOrCreate(profile, accessToken, refreshToken) {
-    const u = await User.getByProviderId(profile.id, 'gitlab');
+  static async findOrCreate(profile, accessToken, refreshToken, provider) {
+    let u = await User.getByProviderId(profile.id, provider);
 
-    if (u === null) {
-      // Create user
-      const user = new User({
-        email: profile.emails[0].value,
-        name: profile.displayName,
-        linked: { gitlab: profile.id },
-        tokens: { gitlab: { access: accessToken, refresh: refreshToken } },
-      });
-      user.save();
-      return User.getByProviderId(profile.id, 'gitlab');
+    if (u){
+      u.updateTokens(provider, accessToken, refreshToken);
+      u.save();
+      return u;
     }
-    u.updateTokens('gitlab', accessToken, refreshToken);
-    u.save();
-    return u;
+
+  
+    //* This is needed if user is not assigned to this provider ID, but already added in the system
+    for (const email of profile.emails) {
+      u = await User.getByEmail(email);
+      if (u !== null) {
+        break;
+      }
+    }
+
+    u = u || {};// Init to empty object so that we can access it and not throw
+
+    // Create or update user
+    const linked = u.linked || {};
+    linked[provider] = profile.id;
+    const tokens = u.tokens || {};
+    tokens[provider] = { access: accessToken, refresh: refreshToken };
+    
+    const email = u.email || profile.emails[0].value;
+    const name = u.name || profile.displayName;
+
+    const user = new User({ email, name, linked, tokens });
+
+    await user.save();
+    return User.getByProviderId(profile.id, provider);   
   }
 
   updateTokens(provider, access, refresh) {

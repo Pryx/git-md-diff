@@ -24,6 +24,14 @@ export default class GitlabProvider {
     return this.gitlab.Users.search(search, { perPage: 20, maxPages: 1 });
   }
 
+  async getUser(userId) {
+    return this.gitlab.Users.show(userId);
+  }
+
+  async removeUser(docuId, userId) {
+    return this.gitlab.ProjectMembers.remove(docuId, userId);
+  }
+
   async addUser(projectId, userId, accessLevel) {
     const gitlabAccessLevel = accessLevel === accessLevels.admin ? 40 : 30;
     return this.gitlab.ProjectMembers.add(projectId, userId, gitlabAccessLevel);

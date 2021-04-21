@@ -53,7 +53,7 @@ passport.use(new GitLabStrategy({
   clientSecret: config.gitlab.secret,
   callbackURL: config.gitlab.callback,
 }, ((accessToken, refreshToken, profile, done) => {
-  Auth.findOrCreateUser(profile, accessToken, refreshToken).then((usr) => done(null, usr.id));
+  Auth.findOrCreateUser(profile, accessToken, refreshToken, 'gitlab').then((usr) => done(null, usr.id));
 })));
 
 app.get('/auth/gitlab', passport.authenticate('gitlab', { scope: ['api'] }));
@@ -204,7 +204,7 @@ app.get('/documentations/provider/:provider', passport.authenticate('jwt', { ses
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-// Get documentation versions
+// Search users in selected provider
 app.get('/documentations/provider/:provider/users/:search', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.getRemoteUserList(req.params.provider, req.params.search)
@@ -220,14 +220,22 @@ app.get('/documentations/:docu/versions', passport.authenticate('jwt', { session
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-// Get documentation versions
+// Get documentation users
 app.get('/documentations/:docu/users', passport.authenticate('jwt', { session: false }), (req, res) => {
   DocumentationService.getUsers(req.params.docu)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-// Get documentation versions
+// Remove user by uid
+app.put('/documentations/:docu/users/', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.addUser(req.params.docu, req.body)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// Remove user by uid
 app.delete('/documentations/:docu/users/:uid', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.removeUser(req.params.docu, req.params.uid)
