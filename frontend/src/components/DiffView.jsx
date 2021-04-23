@@ -7,7 +7,7 @@ import { Badge } from 'react-bootstrap';
 import Diff from '../diff/diff';
 import { store } from '../store';
 import { logOut } from '../actions';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -25,7 +25,6 @@ class DiffView extends React.Component {
   constructor(props) {
     super(props);
     this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
-
     // This is needed because for some reason encodeUriComponent doesn't encode dots
     this.link = `/documentation/${props.docuId}/edit/${encodeURIComponent(props.newFile)}`;
   }

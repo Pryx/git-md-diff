@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import DiffView from './DiffView';
 import { logOut, updateChangesList } from '../actions';
 import { store } from '../store';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 
 /**
  * The diff overview component acts as a wrapper to
@@ -35,12 +35,12 @@ class DiffOverview extends React.Component {
     let lastFrom = null;
     let lastTo = null;
 
-    if (prevProps){
+    if (prevProps) {
       lastFrom = prevProps.from;
       lastTo = prevProps.to;
     }
 
-    if (from && to && ( lastFrom !== from || lastTo !== to)) {
+    if (from && to && (lastFrom !== from || lastTo !== to)) {
       const fetchChanges = async () => {
         const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/changes/${from}/${to}`).json();
 

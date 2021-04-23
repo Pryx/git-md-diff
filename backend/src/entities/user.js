@@ -49,6 +49,10 @@ export default class User {
     let u = await User.getByProviderId(profile.id, provider);
 
     if (u){
+      if (!u.email){
+        await u.updateEmail(profile.emails[0].value)
+      }
+
       u.updateTokens(provider, accessToken, refreshToken);
       u.save();
       return u;
@@ -81,9 +85,17 @@ export default class User {
   }
 
   updateTokens(provider, access, refresh) {
+    this.tokens[provider] = this.tokens[provider] || {};
     this.tokens[provider].access = access;
     this.tokens[provider].refresh = refresh;
   }
+
+  updateEmail(email) {
+    this.email = email;
+
+    return sql`UPDATE users SET email=${this.email} WHERE id=${this.id}`;
+  }
+
 
   async save() {
     return sql`INSERT INTO users (email, name, linked, tokens) VALUES (${this.email}, ${this.name},${sql.json(this.linked)}, ${sql.json(this.tokens)}) ON CONFLICT (email) DO

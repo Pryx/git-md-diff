@@ -6,14 +6,14 @@ import {
 } from 'react-bootstrap';
 import Dialog from 'react-bootstrap-dialog';
 import { hot } from 'react-hot-loader';
+import { connect } from 'react-redux';
 import UserAdd from './UserAdd';
 import accessLevels from '../constants/access-levels';
 import { store } from '../store/index';
 import Documentation from '../entities/documentation';
 import { logOut } from '../actions';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
-import { connect } from 'react-redux';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -33,10 +33,6 @@ class DocuUsers extends React.Component {
     this.removeUser = this.removeUser.bind(this);
     this.fetchUsers = this.fetchUsers.bind(this);
     this.addUserCallback = this.addUserCallback.bind(this);
-  }
-
-  addUserCallback(){
-    this.fetchUsers();
   }
 
   componentDidMount() {
@@ -65,6 +61,10 @@ class DocuUsers extends React.Component {
         ),
       ],
     });
+  }
+
+  addUserCallback() {
+    this.fetchUsers();
   }
 
   removeUser(userId) {
@@ -111,11 +111,11 @@ class DocuUsers extends React.Component {
       <tr key={u.id}>
         <td>{u.id}</td>
         <td>{u.name}</td>
-        <td>{u.email || "<unknown>"}</td>
+        <td>{u.email || '<unknown>'}</td>
         <td>{accessLevelsFlipped[u.accessLevel]}</td>
-        <td>{ userData.id !== u.id &&
-          <Button variant="danger" size="sm" onClick={() => this.handleRemoveUser(u)}><i className="fas fa-trash" /></Button>
-        }
+        <td>
+          { userData.id !== u.id
+          && <Button variant="danger" size="sm" onClick={() => this.handleRemoveUser(u)}><i className="fas fa-trash" /></Button>}
         </td>
       </tr>
     ));
@@ -135,7 +135,7 @@ class DocuUsers extends React.Component {
         <Card.Header>User management</Card.Header>
         <Card.Body>
           {alert}
-          <UserAdd docu={docu} callback={this.addUserCallback}/>
+          <UserAdd docu={docu} callback={this.addUserCallback} />
           <Table className="mt-3" striped bordered hover>
             <thead>
               <tr>
@@ -156,6 +156,10 @@ class DocuUsers extends React.Component {
     );
   }
 }
+
+DocuUsers.defaultProps = {
+  userData: {},
+};
 
 DocuUsers.propTypes = {
   docu: PropTypes.shape(Documentation.getShape()).isRequired,

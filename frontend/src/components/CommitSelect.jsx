@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { store } from '../store';
 import { documentationEmpty, logOut, revisionSelected } from '../actions';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 
 /**
  * This is the commit selector component. This allows us to
@@ -161,6 +161,8 @@ class CommitSelect extends React.Component {
       error, isLoaded, branches, commits,
     } = this.state;
 
+    const { includeCommits } = this.props;
+
     if (error) {
       return (
         <div>
@@ -186,6 +188,30 @@ class CommitSelect extends React.Component {
       }),
     };
 
+    if (includeCommits) {
+      return (
+        <Form.Row>
+          <Col>
+            <SelectSearch
+              onChange={this.handleBranch}
+              options={branches}
+              value={branches.find((o) => o.value === this.getCurrentBranch())}
+              search
+            />
+          </Col>
+          <Col>
+            <SelectSearch
+              onChange={this.handleCommit}
+              options={commits}
+              value={commits.find((o) => o.value === this.getCurrentCommit())}
+              styles={customStyles}
+              search
+            />
+          </Col>
+        </Form.Row>
+      );
+    }
+
     return (
       <Form.Row>
         <Col>
@@ -193,15 +219,6 @@ class CommitSelect extends React.Component {
             onChange={this.handleBranch}
             options={branches}
             value={branches.find((o) => o.value === this.getCurrentBranch())}
-            search
-          />
-        </Col>
-        <Col>
-          <SelectSearch
-            onChange={this.handleCommit}
-            options={commits}
-            value={commits.find((o) => o.value === this.getCurrentCommit())}
-            styles={customStyles}
             search
           />
         </Col>
@@ -213,6 +230,7 @@ class CommitSelect extends React.Component {
 CommitSelect.defaultProps = {
   startRevision: {},
   endRevision: {},
+  includeCommits: true,
 };
 
 CommitSelect.propTypes = {
@@ -220,6 +238,7 @@ CommitSelect.propTypes = {
   startRevision: PropTypes.objectOf(PropTypes.string),
   endRevision: PropTypes.objectOf(PropTypes.string),
   from: PropTypes.bool.isRequired,
+  includeCommits: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => (

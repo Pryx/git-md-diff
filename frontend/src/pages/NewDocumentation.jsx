@@ -7,7 +7,7 @@ import { hot } from 'react-hot-loader';
 import slugify from 'slugify';
 import { Redirect } from 'wouter';
 import { logOut } from '../actions';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 
 /**
@@ -51,7 +51,7 @@ class NewDocumentation extends React.Component {
       if (json.success) {
         this.setState({ success: true });
       } else {
-        this.setState({ error: 'An error has occured: ' + json.error });
+        this.setState({ error: `An error has occured: ${json.error}` });
       }
     };
 
@@ -59,9 +59,9 @@ class NewDocumentation extends React.Component {
       if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
-
+      const errorMessage = (await error.response.json()).error;
       this.setState({
-        error: 'Error making request: ' + (await error.response.json()).error,
+        error: `Error making request: ${errorMessage}`,
       });
     });
 

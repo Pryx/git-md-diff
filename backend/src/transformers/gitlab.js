@@ -38,3 +38,10 @@ export function repositoryTransformer(repo) {
     description: repo.description,
   };
 }
+
+export function repositoryTreeTransformer(treeObj) {
+  return {
+    path: treeObj.path,
+    dir: treeObj.type === 'tree',
+  };
+}

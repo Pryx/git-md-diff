@@ -132,6 +132,13 @@ export default class DocumentationService {
     return p;
   }
 
+  async getFiles(docuId, revision) {
+    const docu = await Documentation.get(docuId);
+    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    const p = await provider.getFiles(docu.providerId, revision);
+    return p;
+  }
+
   async savePage(docuId, page) {
     const docu = await Documentation.get(docuId);
     const provider = DocumentationService.getProvider(docu.provider, this.user);

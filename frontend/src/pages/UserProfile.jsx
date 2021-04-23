@@ -7,7 +7,7 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { logOut } from '../actions';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
 import { store } from '../store/index';
 

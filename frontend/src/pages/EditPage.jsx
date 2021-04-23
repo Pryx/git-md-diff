@@ -12,7 +12,7 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { logOut } from '../actions';
 import DiffViewEditor from '../components/DiffViewEditor';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 
 /**

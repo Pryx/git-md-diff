@@ -9,6 +9,7 @@ import { connect } from 'react-redux';
 import { Link, Redirect } from 'wouter';
 import { documentationSelected } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
+import EditWrapper from '../components/EditWrapper';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
 import { store } from '../store/index';
@@ -47,9 +48,11 @@ class DocumentationPage extends React.Component {
     let settings = null;
     if (docu.accessLevel <= accessLevels.manager) {
       page = <DiffWrapper />;
-      settings = <Link href={`/documentation/${docuId}/settings`}><Button variant="primary" className="float-right"><i className="fas fa-cog" /></Button></Link>;
+      if (docu.accessLevel === accessLevels.admin) {
+        settings = <Link href={`/documentation/${docuId}/settings`}><Button variant="primary" className="float-right"><i className="fas fa-cog" /></Button></Link>;
+      }
     } else if (docu.accessLevel === accessLevels.author) {
-      page = <Alert variant="info">Todo: Display files for author access</Alert>;
+      page = <EditWrapper />;
     } else {
       return (<Redirect to="/" />);
     }

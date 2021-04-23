@@ -60,7 +60,7 @@ app.get('/auth/gitlab', passport.authenticate('gitlab', { scope: ['api'] }));
 
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute window
-  max: 5, // start blocking after 5 requests
+  max: 30, // start blocking after 5 requests
   message:
     'Too many login attempts in 1 minute. Please try again later.',
 });
@@ -266,6 +266,14 @@ app.get('/documentations/:docu/:revision/pages/:page', passport.authenticate('jw
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
+
+app.get('/documentations/:docu/:revision/files', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getFiles(req.params.docu, req.params.revision)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
 
 // Blob file
 app.get('/documentations/:docu/:revision/blobs/:blob', passport.authenticate('jwt', { session: false }), (req, res) => {

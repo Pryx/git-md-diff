@@ -30,4 +30,4 @@ export const refreshTokens = async () => {
       console.error(error);
     }
   }
-}
+};

@@ -96,3 +96,18 @@ ins{
 .editor-wrap .col-xl-6.col-md-12{
   min-height: 80vh;
 }
+
+.folder-wrap .folder-label{
+  background: #DADADA;
+  padding: 8px 16px;
+  border-radius: 4px 4px 0 0;
+}
+
+.folder-wrap .folder-children{
+  border: 1px solid #DADADA;
+  padding: 0 16px;
+}
+
+.folder-wrap .file{
+  padding: 6px 0
+}

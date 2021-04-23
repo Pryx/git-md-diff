@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import { Link } from 'wouter';
 import { logOut, updateDocumentationList } from '../actions';
 import Documentation from '../entities/documentation';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import { store } from '../store/index';
 
 /**

@@ -5,7 +5,7 @@ import Container from 'react-bootstrap/Container';
 import { hot } from 'react-hot-loader';
 import { Redirect } from 'wouter';
 import { logIn, tokensReceived } from '../actions';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import { store } from '../store/index';
 
 class Login extends React.Component {

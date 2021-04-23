@@ -1,6 +1,6 @@
 import { Gitlab } from '@gitbeaker/node';
 import {
-  versionTransformer, revisionTransformer, changesTransformer, repositoryTransformer,
+  versionTransformer, revisionTransformer, changesTransformer, repositoryTransformer, repositoryTreeTransformer
 } from '../transformers/gitlab';
 import accessLevels from '../entities/access-levels';
 
@@ -72,6 +72,16 @@ export default class GitlabProvider {
       return changes.diffs.map((diff) => changesTransformer(diff)).filter((diff) => diff != null);
     }
     return [];
+  }
+
+  async getFiles(projectId, revision){
+    let tree = await this.gitlab.Repositories.tree(projectId, {ref: revision, recursive: true});
+    if (tree.length) {
+      return tree.map((t) => repositoryTreeTransformer(t)).filter((diff) => diff != null);
+    }
+    console.log(tree);
+
+    return tree;
   }
 
   async getBlob(projectId, revision, blob) {

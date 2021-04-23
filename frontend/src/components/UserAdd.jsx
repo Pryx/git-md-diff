@@ -7,7 +7,7 @@ import AsyncSelect from 'react-select/async';
 import { logOut } from '../actions';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 
 /**
@@ -27,11 +27,11 @@ class UserAdd extends React.Component {
     this.handleAdd = this.handleAdd.bind(this);
   }
 
-  handleAdd(e){
+  handleAdd(e) {
     const { docu, callback } = this.props;
-    const {accesslvl, user} = this.state;
+    const { accesslvl, user } = this.state;
     const addUser = async () => {
-      const json = await secureKy().put(`${window.env.api.backend}/documentations/${docu.id}/users/`,  { json: {providerId: user.value, level: accesslvl.value}});
+      const json = await secureKy().put(`${window.env.api.backend}/documentations/${docu.id}/users/`, { json: { providerId: user.value, level: accesslvl.value } });
 
       if (json.success === false) {
         throw Error("Couldn't add user!");
@@ -49,9 +49,8 @@ class UserAdd extends React.Component {
         error: error.toString(),
       });
     });
-    
 
-    this.setState({accesslvl: null, user: null});
+    this.setState({ accesslvl: null, user: null });
   }
 
   async getOptionsAsync(search) {
@@ -110,7 +109,7 @@ class UserAdd extends React.Component {
 
 UserAdd.propTypes = {
   docu: PropTypes.shape(Documentation.getShape()).isRequired,
-  callback: PropTypes.func.isRequired
+  callback: PropTypes.func.isRequired,
 };
 
 export default hot(module)(UserAdd);

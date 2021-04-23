@@ -16,7 +16,7 @@ import DocumentationSettings from './pages/DocumentationSettings';
 import UserProfile from './pages/UserProfile';
 import Login from './components/Login';
 import LoginPage from './pages/LoginPage';
-import {refreshTokens} from './entities/secure-ky';
+import { refreshTokens } from './entities/secure-ky';
 
 smartlookClient.init(window.env.api.smartlook);
 
@@ -32,7 +32,6 @@ setInterval(async () => {
   }
 
   refreshTokens();
-  
 }, 30000);
 
 const App = (props) => {
@@ -59,7 +58,7 @@ const App = (props) => {
         </Route>
 
         <Route path="/profile/:id">
-          {(params) => <UserProfile id={params.id} /> }
+          {(params) => <UserProfile id={params.id} />}
         </Route>
 
         <Route path="/documentation/:docuId/settings">

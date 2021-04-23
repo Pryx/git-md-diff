@@ -15,7 +15,7 @@ import { documentationSelected, logOut } from '../actions';
 import DocuUsers from '../components/DocuUsers';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
-import {secureKy} from '../entities/secure-ky';
+import { secureKy } from '../entities/secure-ky';
 import { store } from '../store/index';
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -26,9 +26,9 @@ class DocumentationSettings extends React.Component {
   state = {
     error: '',
     deleted: false,
-    slug: '', 
-    name: '', 
-    description: ''
+    slug: '',
+    name: '',
+    description: '',
   };
 
   constructor(props) {
@@ -44,10 +44,9 @@ class DocumentationSettings extends React.Component {
     this.handleDescriptionUpdate = this.handleDescriptionUpdate.bind(this);
     this.handleDeleteDocu = this.handleDeleteDocu.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-
   }
 
-  componentDidMount(){
+  componentDidMount() {
     const { slug, name, description } = this.docu;
     this.setState({ slug, name, description });
   }
@@ -120,8 +119,9 @@ class DocumentationSettings extends React.Component {
         store.dispatch(logOut());
       }
 
+      const errorMessage = (await error.response.json()).error;
       this.setState({
-        error: 'Error making request: ' + (await error.response.json()).error,
+        error: `Error making request: ${errorMessage}`,
       });
     });
 
@@ -159,7 +159,7 @@ class DocumentationSettings extends React.Component {
     }
 
     const {
-      slug, name, description, deleted, error, success
+      slug, name, description, deleted, error, success,
     } = this.state;
 
     if (deleted) {
