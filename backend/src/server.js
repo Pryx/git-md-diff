@@ -189,14 +189,6 @@ app.get('/documentations/:docu', passport.authenticate('jwt', { session: false }
 });
 
 // Get documentation versions
-app.delete('/documentations/:docu', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.delete(req.params.docu, req.body)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// Get documentation versions
 app.get('/documentations/provider/:provider', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.getRemoteList(req.params.provider)

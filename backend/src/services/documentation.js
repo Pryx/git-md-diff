@@ -59,7 +59,7 @@ export default class DocumentationService {
 
   async get(docuId) {
     const docu = await Documentation.get(docuId);
-    docu.accessLevel = docu.getAccessLevel(this.user.id);
+    docu.accessLevel = await docu.getAccessLevel(this.user.id);
     return docu;
   }
 

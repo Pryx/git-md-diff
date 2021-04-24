@@ -14,7 +14,7 @@ import FileView from './FileView';
  * Currently it stores the info about current repository and selected commits
  * and passess it to wrapped components.
  */
-class DiffWrapper extends React.Component {
+class EditWrapper extends React.Component {
   state = {
     error: null,
   };
@@ -39,11 +39,8 @@ class DiffWrapper extends React.Component {
     }
 
     return (
-      <div className="diff">
-        <Row className="mt-3 mb-2">
-          <Col lg={12}><h2>Documentation pages</h2></Col>
-        </Row>
-        <Row className="select-diff">
+      <div className="edit">
+        <Row className="select-edit-version">
           <Col lg={12} xs={12}>
             <strong>Documentation revision:</strong>
             <CommitSelect id="to" from={false} includeCommits={false} />
@@ -59,15 +56,15 @@ class DiffWrapper extends React.Component {
   }
 }
 
-DiffWrapper.defaultProps = {
+EditWrapper.defaultProps = {
   docuEmpty: false,
 };
 
-DiffWrapper.propTypes = {
+EditWrapper.propTypes = {
   docuId: PropTypes.number.isRequired,
   docuEmpty: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({ docuId: state.docuId, docuEmpty: state.docuEmpty });
 
-export default hot(module)(connect(mapStateToProps)(DiffWrapper));
+export default hot(module)(connect(mapStateToProps)(EditWrapper));

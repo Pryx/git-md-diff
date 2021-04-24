@@ -2,7 +2,7 @@ import { hot } from 'react-hot-loader';
 import React from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/js/all';
+import '@fortawesome/fontawesome-free/css/all.css';
 import { Switch, Route, Redirect } from 'wouter';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -41,8 +41,12 @@ const App = (props) => {
     refreshTokens();
     return (
       <Switch>
-        <Route path="/documentation/:docuId/edit/:file">
-          {(params) => <EditPage docuId={params.docuId} file={params.file} />}
+        <Route path="/documentation/:docuId/edit/v/:version/f/:file+">
+          {(params) => <EditPage docuId={params.docuId} to={params.version} file={params.file} />}
+        </Route>
+
+        <Route path="/documentation/:docuId/edit/v/:from/:to/f/:file+">
+          {(params) => <EditPage docuId={params.docuId} from={params.from} to={params.to} file={params.file} />}
         </Route>
 
         <Route path="/logout">

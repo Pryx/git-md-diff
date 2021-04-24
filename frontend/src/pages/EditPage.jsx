@@ -11,12 +11,12 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { logOut } from '../actions';
-import DiffViewEditor from '../components/DiffViewEditor';
+import EditorPreview from '../components/EditorPreview';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 
 /**
- * Edit page encompasses the Editor and DiffViewEditor components.
+ * Edit page encompasses the Editor and EditorPreview components.
  * It shows the edit page to the user and allows to save the changes.
  */
 class DiffPage extends React.Component {
@@ -106,8 +106,7 @@ class DiffPage extends React.Component {
           <Row>
             <Col xl={12}>
               <h3>
-                Editing file:
-                {this.file}
+                <i className="fas fa-file-alt"></i> {this.file}
               </h3>
             </Col>
           </Row>
@@ -125,8 +124,7 @@ class DiffPage extends React.Component {
         <Row className="mt-3 mr-3 ml-3">
           <Col xl={12}>
             <h3>
-              Editing file:
-              {this.file}
+            <i className="fas fa-file-alt"></i> {this.file}
             </h3>
           </Col>
         </Row>
@@ -143,7 +141,7 @@ class DiffPage extends React.Component {
             />
           </Col>
           <Col xl={6} md={12}>
-            <DiffViewEditor from={from} docuId={docuId} to={to} file={this.file} />
+            <EditorPreview file={this.file} previewOnly={!(from && to)} />
           </Col>
         </Row>
         <Row className="mt-3 mr-3 ml-3">
@@ -166,15 +164,13 @@ class DiffPage extends React.Component {
 
 DiffPage.propTypes = {
   docuId: PropTypes.number.isRequired,
-  from: PropTypes.string.isRequired,
+  from: PropTypes.string,
   to: PropTypes.string.isRequired,
   file: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   docuId: state.docuId,
-  from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
-  to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
 });
 
 export default hot(module)(connect(mapStateToProps)(DiffPage));

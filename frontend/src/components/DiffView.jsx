@@ -26,7 +26,8 @@ class DiffView extends React.Component {
     super(props);
     this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
     // This is needed because for some reason encodeUriComponent doesn't encode dots
-    this.link = `/documentation/${props.docuId}/edit/${encodeURIComponent(props.newFile)}`;
+    //documentation/:docuId/edit/v/:from/:to/f/:file+
+    this.link = `/documentation/${props.docuId}/edit/v/${props.from}/${props.to}/f/${props.newFile}`;
   }
 
   componentDidMount() {
@@ -117,7 +118,7 @@ class DiffView extends React.Component {
     let cls = '';
     if (content.newFile) {
       cls = 'newfile';
-      badges.push(<Badge variant="success">NEW</Badge>);
+      badges.push(<Badge variant="success" key="newfile">NEW</Badge>);
     }
 
     let items = null;
@@ -129,7 +130,7 @@ class DiffView extends React.Component {
     }
 
     return (
-      <Card className={cls}>
+      <Card className={cls} key={filename}>
         <Card.Header>
           <Link href={this.link}>{filename}</Link>
         </Card.Header>

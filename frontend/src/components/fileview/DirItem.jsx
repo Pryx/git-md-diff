@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { hot } from 'react-hot-loader';
 
-const DirItem = ({ name, children }) => (
-  <div className="folder-wrap mt-2 mb-2">
-    <div className="folder-label">
-      <strong>{name}</strong>
+const DirItem = ({ name, children }) => {
+  const [isOpen, setIsOpen] = useState(true);
+
+  const toggle = e => {
+    e.preventDefault();
+    setIsOpen(!isOpen);
+  };
+
+  const state = isOpen ? "open" : "closed";
+  const icon = isOpen ? (<i className="fas fa-folder-open"></i>) : (<i className="fas fa-folder"></i>);
+
+  return (
+    <div className={`folder-wrap mt-2 mb-2 ${state}`}>
+      <div className="folder-label" onClick={toggle}>
+        {icon} <strong>{name}</strong>
+      </div>
+      <div className="folder-children">{children}</div>
     </div>
-    <div className="folder-children">{children}</div>
-  </div>
-);
+  );
+}
 
 DirItem.defaultProps = {
   children: null

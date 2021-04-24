@@ -101,6 +101,7 @@ ins{
   background: #DADADA;
   padding: 8px 16px;
   border-radius: 4px 4px 0 0;
+  cursor: pointer;
 }
 
 .folder-wrap .folder-children{
@@ -110,4 +111,12 @@ ins{
 
 .folder-wrap .file{
   padding: 6px 0
+}
+
+.folder-wrap.closed .folder-label{
+  border-radius: 4px
+}
+
+.folder-wrap.closed .folder-children{
+  display: none
 }

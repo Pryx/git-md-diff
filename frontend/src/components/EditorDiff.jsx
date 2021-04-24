@@ -11,8 +11,7 @@ import { secureKy } from '../entities/secure-ky';
 /**
  * A slightly modified DiffView for display in the editor file.
  */
-// TODO: This should probably be rewritten so that it can use same components as the DiffView.
-class DiffViewEditor extends React.Component {
+class EditorDiff extends React.Component {
   state = {
     isLoaded: false,
     content: '',
@@ -23,24 +22,18 @@ class DiffViewEditor extends React.Component {
     this.options = { hideCode: props.hideCode, returnMdx: true };
   }
 
+
   componentDidMount() {
     const {
-      docuId, from, to, changes, file,
+      docuId, from, to, file,
     } = this.props;
 
-    if (!changes.length) {
-      this.setState(
-        {
-          isLoaded: true,
-          error: "Couldn't load change data",
-        },
-      );
-      return;
-    }
+    const fetchChanges = async () => {
+      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/changes/${from}/${to}`).json();
+      const changes = json.data;
 
-    const { oldFile, newFile } = changes.find((v) => v.newFile === file);
+      const { oldFile, newFile } = changes.find((v) => v.newFile === file);
 
-    const fetchDiff = async () => {
       const original = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`).json();
       const modified = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`).json();
       const content = await Diff({ docuId, from, to }, original.data, modified.data, this.options);
@@ -53,14 +46,14 @@ class DiffViewEditor extends React.Component {
       );
     };
 
-    fetchDiff().catch((error) => {
+    fetchChanges().catch((error) => {
       if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
 
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error,
       });
     });
   }
@@ -115,23 +108,25 @@ class DiffViewEditor extends React.Component {
   }
 }
 
-DiffViewEditor.defaultProps = {
+EditorDiff.defaultProps = {
   hideCode: false,
 };
 
-DiffViewEditor.propTypes = {
+
+EditorDiff.propTypes = {
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
   docuId: PropTypes.number.isRequired,
   file: PropTypes.string.isRequired,
   hideCode: PropTypes.bool,
-  changes: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 const mapStateToProps = (state) => (
   {
-    changes: state.changes || [],
+    from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
+    to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
+    docuId: state.docuId
   }
 );
 
-export default hot(module)(connect(mapStateToProps)(DiffViewEditor));
+export default hot(module)(connect(mapStateToProps)(EditorDiff));

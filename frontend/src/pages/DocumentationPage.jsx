@@ -12,6 +12,7 @@ import DiffWrapper from '../components/DiffWrapper';
 import EditWrapper from '../components/EditWrapper';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
+import { secureKy } from '../entities/secure-ky';
 import { store } from '../store/index';
 
 /**
@@ -22,6 +23,7 @@ import { store } from '../store/index';
 class DocumentationPage extends React.Component {
   state = {
     error: '',
+    isLoaded: false
   };
 
   constructor(props) {
@@ -31,19 +33,40 @@ class DocumentationPage extends React.Component {
     store.dispatch(documentationSelected(docuId));
   }
 
+  componentDidMount() {
+    const { docuId } = this.props;
+    const fetchPage = async () => {
+      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}`).json();
+      this.setState({
+        docu: json.data,
+        isLoaded: true,
+      });
+    };
+
+    fetchPage().catch((error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error: error.toString(),
+      });
+    });
+  }
+
   render() {
-    const { docuId, docuList } = this.props;
-    const { error } = this.state;
+    const { docuId } = this.props;
+    const { error, docu, isLoaded } = this.state;
+
+    if (!isLoaded){
+      return "Loading...";
+    }
 
     if (error) {
       return <Alert variant="info">{error}</Alert>;
     }
 
-    if (!docuList) {
-      return (<Redirect to="/" />);
-    }
-
-    const docu = docuList.find((d) => d.id === docuId);
     let page = null;
     let settings = null;
     if (docu.accessLevel <= accessLevels.manager) {
@@ -76,14 +99,8 @@ class DocumentationPage extends React.Component {
 }
 
 DocumentationPage.propTypes = {
-  docuList: PropTypes.arrayOf(PropTypes.shape(Documentation.getShape())).isRequired,
   docuId: PropTypes.number.isRequired,
 };
 
-const mapStateToProps = (state) => (
-  {
-    docuList: state.docuList,
-  }
-);
 
-export default hot(module)(connect(mapStateToProps)(DocumentationPage));
+export default hot(module)(DocumentationPage);

@@ -139,7 +139,7 @@ class CommitSelect extends React.Component {
       this.setState(
         {
           isLoaded: true,
-          commits: commits.data.map((c) => ({ label: `[${c.shortId}] ${c.title} (Author: ${c.author.name})`, value: c.id })),
+          commits: commits.data.map((c) => ({ label: `[${c.shortId}] ${c.title} (Author: ${c.author.name})`, value: c.shortId })),
         },
       );
     };
