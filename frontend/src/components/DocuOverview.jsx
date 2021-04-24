@@ -1,14 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Alert, Row } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import { hot } from 'react-hot-loader';
-import { connect } from 'react-redux';
 import { Link } from 'wouter';
-import { logOut, updateDocumentationList } from '../actions';
-import Documentation from '../entities/documentation';
+import { logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';
-import { store } from '../store/index';
+import { store } from '../store';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -23,10 +20,9 @@ class DocuOverview extends React.Component {
   componentDidMount() {
     const fetchDocus = async () => {
       const json = await secureKy().get(`${window.env.api.backend}/documentations`).json();
-      store.dispatch(
-        updateDocumentationList(json.data),
-      );
+
       this.setState({
+        docuList: json.data,
         isLoaded: true,
       });
     };
@@ -49,10 +45,8 @@ class DocuOverview extends React.Component {
 
   render() {
     const {
-      error, isLoaded,
+      error, isLoaded, docuList
     } = this.state;
-
-    const { docuList } = this.props;
 
     if (error) {
       return (
@@ -113,17 +107,5 @@ class DocuOverview extends React.Component {
   }
 }
 
-DocuOverview.defaultProps = {
-};
 
-DocuOverview.propTypes = {
-  docuList: PropTypes.arrayOf(PropTypes.shape(Documentation.getShape())).isRequired,
-};
-
-const mapStateToProps = (state) => (
-  {
-    docuList: state.docuList,
-  }
-);
-
-export default hot(module)(connect(mapStateToProps)(DocuOverview));
+export default hot(module)(DocuOverview);

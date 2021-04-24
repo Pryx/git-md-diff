@@ -10,8 +10,8 @@ import { Link } from 'wouter';
 import User from './entities/user';
 
 const Navigation = (props) => {
-  const { userData, loggedIn } = props;
-  if (loggedIn) {
+  const { userData } = props;
+  if (userData) {
     return (
       <Navbar bg="primary" variant="dark" expand="lg">
         <Container>
@@ -59,11 +59,10 @@ Navigation.defaultProps = {
 
 Navigation.propTypes = {
   userData: PropTypes.shape(User.getShape()),
-  loggedIn: PropTypes.bool.isRequired,
 };
 
 function mapStateToProps(state) {
-  return { loggedIn: state.loggedIn, userData: state.userData };
+  return { userData: state.userData };
 }
 
 export default hot(module)(connect(mapStateToProps)(Navigation));

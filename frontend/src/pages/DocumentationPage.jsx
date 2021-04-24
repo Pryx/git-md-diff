@@ -1,19 +1,19 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Alert, Button } from 'react-bootstrap';
+import {
+  Alert, Button, Tab, Tabs,
+} from 'react-bootstrap';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
-import { connect } from 'react-redux';
 import { Link, Redirect } from 'wouter';
-import { documentationSelected } from '../actions';
+import { documentationSelected, logOut } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
 import EditWrapper from '../components/EditWrapper';
 import accessLevels from '../constants/access-levels';
-import Documentation from '../entities/documentation';
 import { secureKy } from '../entities/secure-ky';
-import { store } from '../store/index';
+import { store } from '../store';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -23,7 +23,7 @@ import { store } from '../store/index';
 class DocumentationPage extends React.Component {
   state = {
     error: '',
-    isLoaded: false
+    isLoaded: false,
   };
 
   constructor(props) {
@@ -59,48 +59,66 @@ class DocumentationPage extends React.Component {
     const { docuId } = this.props;
     const { error, docu, isLoaded } = this.state;
 
-    if (!isLoaded){
-      return "Loading...";
+    if (!isLoaded) {
+      return 'Loading...';
     }
 
     if (error) {
       return <Alert variant="info">{error}</Alert>;
     }
 
-    let page = null;
     let settings = null;
     if (docu.accessLevel <= accessLevels.manager) {
-      page = <DiffWrapper />;
       if (docu.accessLevel === accessLevels.admin) {
         settings = <Link href={`/documentation/${docuId}/settings`}><Button variant="primary" className="float-right"><i className="fas fa-cog" /></Button></Link>;
       }
-    } else if (docu.accessLevel === accessLevels.author) {
-      page = <EditWrapper />;
-    } else {
-      return (<Redirect to="/" />);
+
+      return (
+        <Container className="mt-5">
+          <Row>
+            <Col lg={12} xs={12}>
+              <h1>
+                {docu.name}
+                {' '}
+                {settings}
+              </h1>
+              <p>{docu.description}</p>
+            </Col>
+          </Row>
+          <Tabs defaultActiveKey="diff" id="uncontrolled-tab-example">
+            <Tab eventKey="diff" title="Diff">
+              <DiffWrapper />
+            </Tab>
+            <Tab eventKey="files" title="Files">
+              <EditWrapper />
+            </Tab>
+          </Tabs>
+        </Container>
+      );
+    } if (docu.accessLevel === accessLevels.author) {
+      return (
+        <Container className="mt-5">
+          <Row>
+            <Col lg={12} xs={12}>
+              <h1>{docu.name}</h1>
+              <p>{docu.description}</p>
+            </Col>
+          </Row>
+          <Tabs defaultActiveKey="files" id="uncontrolled-tab-example">
+            <Tab eventKey="files" title="Files">
+              <EditWrapper />
+            </Tab>
+          </Tabs>
+        </Container>
+      );
     }
 
-    return (
-      <Container className="mt-5">
-        <Row>
-          <Col lg={12} xs={12}>
-            <h1>
-              {docu.name}
-              {' '}
-              {settings}
-            </h1>
-            <p>{docu.description}</p>
-          </Col>
-        </Row>
-        {page}
-      </Container>
-    );
+    return (<Redirect to="/" />);
   }
 }
 
 DocumentationPage.propTypes = {
   docuId: PropTypes.number.isRequired,
 };
-
 
 export default hot(module)(DocumentationPage);

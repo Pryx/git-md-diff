@@ -7,12 +7,14 @@ import {
   DOCUMENTATION_EMPTY,
   CHANGES_UPDATE,
   TOKENS_RECEIVED,
+  PAGE_AUTOSAVE,
+  PAGE_AUTOSAVE_REMOVE
 } from '../constants/action-types';
 
 const initialState = {
-  loggedIn: false,
   userData: null,
   docuList: [],
+  autosaved: {}
 };
 
 function rootReducer(state = initialState, action) {
@@ -20,15 +22,12 @@ function rootReducer(state = initialState, action) {
   if (action.type === LOGIN) {
     return {
       ...state,
-      loggedIn: true,
       userData: payload,
     };
   }
 
   if (action.type === LOGOUT) {
-    return {
-      loggedIn: false,
-    };
+    return {};
   }
 
   if (action.type === REVISION_SELECTED) {
@@ -69,6 +68,33 @@ function rootReducer(state = initialState, action) {
       ...state,
       changes: payload,
     };
+  }
+
+  if (action.type === PAGE_AUTOSAVE) {
+    const { autosaved } = state;
+    const {docuId, page, content} = payload;
+    if (!autosaved[docuId]){
+      autosaved[docuId] = {};
+    }
+
+    if (!autosaved[docuId][page]){
+      autosaved[docuId][page] = {};
+    }
+
+    autosaved[docuId][page].date = new Date();
+    autosaved[docuId][page].content = content;
+    return { ...state, autosaved: {...autosaved} };
+  }
+
+  if (action.type === PAGE_AUTOSAVE_REMOVE) {
+    const { autosaved } = state;
+    const {docuId, page} = payload;
+    
+    if (autosaved[docuId] && autosaved[docuId][page]){
+      delete autosaved[docuId][page];
+    }
+
+    return { ...state, autosaved: {...autosaved} };
   }
 
   if (action.type === TOKENS_RECEIVED) {

@@ -22,7 +22,6 @@ class EditorDiff extends React.Component {
     this.options = { hideCode: props.hideCode, returnMdx: true };
   }
 
-
   componentDidMount() {
     const {
       docuId, from, to, file,
@@ -97,7 +96,7 @@ class EditorDiff extends React.Component {
     }
 
     return (
-      <div>
+      <div className="mt-4">
         <div className="editor-diff-content" dangerouslySetInnerHTML={{ __html: content.content }} />
         <hr />
         <div>
@@ -112,7 +111,6 @@ EditorDiff.defaultProps = {
   hideCode: false,
 };
 
-
 EditorDiff.propTypes = {
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
@@ -125,7 +123,7 @@ const mapStateToProps = (state) => (
   {
     from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
     to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
-    docuId: state.docuId
+    docuId: state.docuId,
   }
 );
 

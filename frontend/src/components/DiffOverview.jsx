@@ -5,7 +5,7 @@ import Row from 'react-bootstrap/Row';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DiffView from './DiffView';
-import { logOut, updateChangesList } from '../actions';
+import { logOut } from '../actions';
 import { store } from '../store';
 import { secureKy } from '../entities/secure-ky';
 
@@ -43,10 +43,6 @@ class DiffOverview extends React.Component {
     if (from && to && (lastFrom !== from || lastTo !== to)) {
       const fetchChanges = async () => {
         const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/changes/${from}/${to}`).json();
-
-        store.dispatch(
-          updateChangesList(json.data),
-        );
 
         this.setState({
           isLoaded: true,

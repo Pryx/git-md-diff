@@ -5,7 +5,7 @@ import Container from 'react-bootstrap/Container';
 import { hot } from 'react-hot-loader';
 import { Redirect } from 'wouter';
 import { logOut } from '../actions';
-import { store } from '../store/index';
+import { store } from '../store';
 
 class LoginPage extends React.Component {
   state = { error: null };

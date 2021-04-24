@@ -9,7 +9,7 @@ import { connect } from 'react-redux';
 import { logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
-import { store } from '../store/index';
+import { store } from '../store';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.

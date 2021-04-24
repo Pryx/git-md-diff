@@ -1,13 +1,10 @@
-import { hot } from 'react-hot-loader';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Tab, Tabs } from 'react-bootstrap';
+import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import Diff from '../diff/diff';
-import { store } from '../store';
-import { logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
 import EditorDiff from './EditorDiff';
+import MDXPreview from './MDXPreview';
 
 /**
  * A slightly modified DiffView for display in the editor file.
@@ -25,16 +22,15 @@ class EditorPreview extends React.Component {
 
   render() {
     const {
-      error, content
+      error,
     } = this.state;
-    const { file, previewOnly } = this.props;
+    const { file, previewOnly, content} = this.props;
 
-
-    if (previewOnly){
+    if (previewOnly) {
       return (
         <Tabs defaultActiveKey="preview" id="uncontrolled-tab-example">
           <Tab eventKey="preview" title="Preview">
-            #PREVIEW WILL BE HERE
+            <MDXPreview content={content} />
           </Tab>
         </Tabs>
       );
@@ -46,7 +42,7 @@ class EditorPreview extends React.Component {
           <EditorDiff file={file} />
         </Tab>
         <Tab eventKey="preview" title="Preview">
-          #PREVIEW WILL BE HERE
+          <MDXPreview content={content} />
         </Tab>
       </Tabs>
     );
@@ -54,7 +50,7 @@ class EditorPreview extends React.Component {
 }
 
 EditorPreview.defaultProps = {
-  hideCode: false,
+  content: ""
 };
 
 EditorPreview.propTypes = {
@@ -63,6 +59,7 @@ EditorPreview.propTypes = {
 
 const mapStateToProps = (state) => (
   {
+    docuId: state.docuId
   }
 );
 

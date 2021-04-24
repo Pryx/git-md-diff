@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { hot } from 'react-hot-loader';
 import FileItem from './FileItem';
 import DirItem from './DirItem';
-import { hot } from 'react-hot-loader';
 
 const FileTree = ({ data, path }) => {
   if (!data.children.length) {

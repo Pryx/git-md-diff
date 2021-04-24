@@ -17,6 +17,7 @@ import UserProfile from './pages/UserProfile';
 import Login from './components/Login';
 import LoginPage from './pages/LoginPage';
 import { refreshTokens } from './entities/secure-ky';
+import User from './entities/user';
 
 smartlookClient.init(window.env.api.smartlook);
 
@@ -35,18 +36,18 @@ setInterval(async () => {
 }, 30000);
 
 const App = (props) => {
-  const { loggedIn } = props;
-  if (loggedIn) {
+  const { userData } = props;
+  if (userData) {
     check = true;
     refreshTokens();
     return (
       <Switch>
         <Route path="/documentation/:docuId/edit/v/:version/f/:file+">
-          {(params) => <EditPage docuId={params.docuId} to={params.version} file={params.file} />}
+          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} to={params.version} file={params.file} />}
         </Route>
 
         <Route path="/documentation/:docuId/edit/v/:from/:to/f/:file+">
-          {(params) => <EditPage docuId={params.docuId} from={params.from} to={params.to} file={params.file} />}
+          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} from={params.from} to={params.to} file={params.file} />}
         </Route>
 
         <Route path="/logout">
@@ -106,8 +107,8 @@ const App = (props) => {
   );
 };
 
-const mapStateToProps = (state) => ({ loggedIn: state.loggedIn });
+const mapStateToProps = (state) => ({ userData: state.userData });
 App.propTypes = {
-  loggedIn: PropTypes.bool.isRequired,
+  userData: PropTypes.shape(User.getShape()),
 };
 export default hot(module)(connect(mapStateToProps)(App));

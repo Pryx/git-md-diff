@@ -59,13 +59,24 @@ class CommitSelect extends React.Component {
     );
 
     const fetchCommits = async () => {
-      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${encodeURIComponent(selectedOption.value)}/revisions`).json();
+      const commits = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${encodeURIComponent(selectedOption.value)}/revisions`).json();
 
       this.setState(
         {
           isLoaded: true,
-          commits: json.map((c) => ({ label: c.message, value: c.hash })),
+          commits: commits.data.map((c) => ({ label: `[${c.shortId}] ${c.title} (Author: ${c.author.name})`, value: c.shortId })),
         },
+      );
+
+      store.dispatch(
+        revisionSelected({
+          from,
+          revisionData: {
+            branch: selectedOption.value,
+            commit: this.getCurrentCommit()
+              || (from && commits.data.length > 1 ? commits.data[1].shortId : commits.data[0].shortId),
+          },
+        }),
       );
     };
 
@@ -131,7 +142,7 @@ class CommitSelect extends React.Component {
           revisionData: {
             branch: cb,
             commit: this.getCurrentCommit()
-              || (from && commits.data.length > 1 ? commits.data[1].id : commits.data[0].id),
+              || (from && commits.data.length > 1 ? commits.data[1].shortId : commits.data[0].shortId),
           },
         }),
       );

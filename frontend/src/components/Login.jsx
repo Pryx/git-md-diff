@@ -6,7 +6,7 @@ import { hot } from 'react-hot-loader';
 import { Redirect } from 'wouter';
 import { logIn, tokensReceived } from '../actions';
 import { secureKy } from '../entities/secure-ky';
-import { store } from '../store/index';
+import { store } from '../store';
 
 class Login extends React.Component {
   state = {

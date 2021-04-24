@@ -112,7 +112,7 @@ class FileView extends React.Component {
 
         if (!pathObject[pathName]) {
           pathObject[pathName] = { result: [] }; //eslint-disable-line
-          const entry = newEntry(last == pathName ? pathEntry.dir : true);
+          const entry = newEntry(last === pathName ? pathEntry.dir : true);
           entry.name = pathName;
           entry.children = pathObject[pathName].result;
           pathObject.result.push(entry);
@@ -124,11 +124,11 @@ class FileView extends React.Component {
       // Return the base object for suceeding paths, or for our final value
     });
 
-    let root = newEntry(true);
+    const root = newEntry(true);
     root.name = '/';
     root.children = result;
 
-    console.log("RENDERING")
+    console.log('RENDERING');
     console.log(root);
 
     return (

@@ -28,6 +28,7 @@ class UserAdd extends React.Component {
   }
 
   handleAdd(e) {
+    e.preventDefault();
     const { docu, callback } = this.props;
     const { accesslvl, user } = this.state;
     const addUser = async () => {

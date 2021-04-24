@@ -1,6 +1,7 @@
 import '@toast-ui/editor/dist/toastui-editor.css';
 import { Editor } from '@toast-ui/react-editor';
 import 'codemirror/lib/codemirror.css';
+import lodash from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
@@ -10,7 +11,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import { logOut } from '../actions';
+import { documentationSelected, logOut, pageAutosave, pageAutosaveRemove } from '../actions';
 import EditorPreview from '../components/EditorPreview';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
@@ -19,7 +20,7 @@ import { store } from '../store';
  * Edit page encompasses the Editor and EditorPreview components.
  * It shows the edit page to the user and allows to save the changes.
  */
-class DiffPage extends React.Component {
+class EditPage extends React.Component {
   file = null;
 
   editorRef = React.createRef();
@@ -31,19 +32,43 @@ class DiffPage extends React.Component {
     saveMessage: '',
   };
 
+  editorInit = false;
+  skipNotice = false;
+
   constructor(props) {
     super(props);
-    const { file } = props;
+    const { file, docuId } = props;
+
+    store.dispatch(documentationSelected(docuId));
+
     this.file = decodeURIComponent(file);
     this.handleSave = this.handleSave.bind(this);
+    
+    this.debouncedAutosave = lodash.debounce(function() {
+      if (!this.editorInit) {
+        this.editorInit = true;
+        return;
+      }
+      console.trace();
+      const {docuId} = this.props;
+      const content = this.editorRef.current.getInstance().getMarkdown();
+      this.setState({
+        previewContent: content,
+        isLoaded: true,
+      });
+      store.dispatch(pageAutosave(docuId, this.file, content))
+    }, 250);
   }
+
 
   componentDidMount() {
     const { docuId, to } = this.props;
+
     const fetchPage = async () => {
       const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${encodeURIComponent(this.file)}`).json();
       this.setState({
         content: json.data,
+        previewContent: json.data,
         isLoaded: true,
       });
     };
@@ -87,10 +112,10 @@ class DiffPage extends React.Component {
 
   render() {
     const {
-      error, isLoaded, content, saveStatus, saveMessage,
+      error, isLoaded, content, saveStatus, saveMessage, previewContent
     } = this.state;
 
-    const { from, to, docuId } = this.props;
+    const { from, to, autosaved, file, docuId } = this.props;
 
     if (error) {
       return (
@@ -106,7 +131,9 @@ class DiffPage extends React.Component {
           <Row>
             <Col xl={12}>
               <h3>
-                <i className="fas fa-file-alt"></i> {this.file}
+                <i className="fas fa-file-alt" />
+                {' '}
+                {this.file}
               </h3>
             </Col>
           </Row>
@@ -118,30 +145,69 @@ class DiffPage extends React.Component {
         </div>
       );
     }
+    
 
+    let initialContent = content;
+    let notice = null;
+
+    const docuAutosave = autosaved[docuId] || {};
+    if (docuAutosave[file] && !this.skipNotice){
+      const autosavedFile = docuAutosave[file];
+      initialContent = autosavedFile.content;
+
+      const date = new Intl.DateTimeFormat('default', {
+        hour: 'numeric',
+        minute: 'numeric',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }).format(new Date(autosavedFile.date));
+
+      const restoreHandler = (e) => {
+        e.preventDefault(); 
+        this.editorRef.current.getInstance().setMarkdown(content);
+        store.dispatch(pageAutosaveRemove(docuId, file))
+      };
+
+      const dismissHandler = (e) => {
+        store.dispatch(pageAutosaveRemove(docuId, file));
+      };
+
+      notice = (
+        <Alert variant="info" onClose={dismissHandler} dismissible>
+        An autosaved version from {date} was automatically restored. <Alert.Link onClick={restoreHandler}>Click here if you want to restore the original</Alert.Link>.
+        </Alert>
+      );
+      this.skipNotice = true;
+    }
+    
     return (
       <div className="editor-wrap">
         <Row className="mt-3 mr-3 ml-3">
           <Col xl={12}>
             <h3>
-            <i className="fas fa-file-alt"></i> {this.file}
+              <i className="fas fa-file-alt" />
+              {' '}
+              {this.file}
             </h3>
           </Col>
         </Row>
         <Row className="mt-3 mr-3 ml-3">
           <Col xl={6} md={12}>
+            {notice}
             <Editor
-              initialValue={content}
+              initialValue={initialContent}
               previewStyle="global"
               height="100%"
               initialEditType="markdown"
               useCommandShortcut
               ref={this.editorRef}
+              onChange={() => this.debouncedAutosave()}
               frontMatter
             />
           </Col>
           <Col xl={6} md={12}>
-            <EditorPreview file={this.file} previewOnly={!(from && to)} />
+            <EditorPreview file={this.file} previewOnly={!(from && to)} content={previewContent} />
           </Col>
         </Row>
         <Row className="mt-3 mr-3 ml-3">
@@ -162,7 +228,11 @@ class DiffPage extends React.Component {
   }
 }
 
-DiffPage.propTypes = {
+EditPage.defaultProps = {
+  from: null,
+};
+
+EditPage.propTypes = {
   docuId: PropTypes.number.isRequired,
   from: PropTypes.string,
   to: PropTypes.string.isRequired,
@@ -170,7 +240,7 @@ DiffPage.propTypes = {
 };
 
 const mapStateToProps = (state) => ({
-  docuId: state.docuId,
+  autosaved: state.autosaved || {},
 });
 
-export default hot(module)(connect(mapStateToProps)(DiffPage));
+export default hot(module)(connect(mapStateToProps)(EditPage));

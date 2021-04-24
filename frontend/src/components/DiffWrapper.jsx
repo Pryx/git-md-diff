@@ -34,16 +34,13 @@ class DiffWrapper extends React.Component {
 
     if (docuEmpty) {
       return (
-        <Alert variant="info">This documentation is empty!</Alert>
+        <Alert variant="info mt-4">This documentation is empty!</Alert>
       );
     }
 
     return (
       <div className="diff">
-        <Row className="mt-3 mb-2">
-          <Col lg={12}><h2>Page revision comparison</h2></Col>
-        </Row>
-        <Row className="select-diff">
+        <Row className="select-diff mt-4">
           <Col lg={6} xs={12}>
             <strong>Starting with revision:</strong>
             <CommitSelect id="from" from />

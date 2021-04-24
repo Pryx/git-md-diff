@@ -4,26 +4,32 @@ import { Link } from 'wouter';
 import { connect } from 'react-redux';
 import { hot } from 'react-hot-loader';
 
-const FileItem = ({ name, path, docuId, version }) =>{
-  if (name.endsWith(".md") || name.endsWith(".mdx")){
+const FileItem = ({
+  name, path, docuId, version,
+}) => {
+  if (name.endsWith('.md') || name.endsWith('.mdx')) {
     return (
       <div className="file">
-        <i className="fas fa-file-alt"></i> <Link href={`/documentation/${docuId}/edit/v/${version}/f/${path}`}>{name}</Link>
+        <i className="fas fa-file-alt" />
+        {' '}
+        <Link href={`/documentation/${docuId}/edit/v/${version}/f/${path}`}>{name}</Link>
       </div>
     );
   }
   return (
     <div className="file">
-      <i className="fas fa-file"></i> <span>{name}</span>
+      <i className="fas fa-file" />
+      {' '}
+      <span>{name}</span>
     </div>
   );
-}
+};
 
 FileItem.propTypes = {
   name: PropTypes.string.isRequired,
   path: PropTypes.string.isRequired,
   docuId: PropTypes.number.isRequired,
-  version: PropTypes.string.isRequired
+  version: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({

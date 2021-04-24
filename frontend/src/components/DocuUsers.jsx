@@ -9,7 +9,7 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import UserAdd from './UserAdd';
 import accessLevels from '../constants/access-levels';
-import { store } from '../store/index';
+import { store } from '../store';
 import Documentation from '../entities/documentation';
 import { logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';

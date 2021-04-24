@@ -16,7 +16,7 @@ import DocuUsers from '../components/DocuUsers';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
 import { secureKy } from '../entities/secure-ky';
-import { store } from '../store/index';
+import { store } from '../store';
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
  * Currently it stores the info about current repository and selected commits

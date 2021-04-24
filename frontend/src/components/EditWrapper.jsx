@@ -34,13 +34,13 @@ class EditWrapper extends React.Component {
 
     if (docuEmpty) {
       return (
-        <Alert variant="info">This documentation is empty!</Alert>
+        <Alert variant="info mt-4">This documentation is empty!</Alert>
       );
     }
 
     return (
       <div className="edit">
-        <Row className="select-edit-version">
+        <Row className="select-edit-version mt-4">
           <Col lg={12} xs={12}>
             <strong>Documentation revision:</strong>
             <CommitSelect id="to" from={false} includeCommits={false} />
