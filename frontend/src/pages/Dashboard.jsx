@@ -4,6 +4,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import DocuOverview from '../components/DocuOverview';
+import ProofreadingOverview from '../components/ProofreadingOverview';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -20,14 +21,10 @@ const Dashboard = () => (
     <DocuOverview />
     <Row className="mt-5">
       <Col lg={12} xs={12}>
-        <h2>Your proof reading requests</h2>
+        <h2>Your proofreading requests</h2>
       </Col>
     </Row>
-    <Row>
-      <Col lg={12} xs={12}>
-        #Proof reading requests go here
-      </Col>
-    </Row>
+    <ProofreadingOverview />
   </Container>
 );
 

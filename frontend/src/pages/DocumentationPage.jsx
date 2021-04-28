@@ -31,6 +31,12 @@ class DocumentationPage extends React.Component {
 
     const { docuId } = this.props;
     store.dispatch(documentationSelected(docuId));
+
+    this.newRequest.bind(this);
+  }
+
+  newRequest(e) {
+    console.log(click);
   }
 
   componentDidMount() {
@@ -82,29 +88,31 @@ class DocumentationPage extends React.Component {
                 {' '}
                 {settings}
               </h1>
-              <p>{docu.description}</p>
+              <p className="text-muted">{docu.description}</p>
             </Col>
           </Row>
-          <Tabs defaultActiveKey="diff" id="uncontrolled-tab-example">
-            <Tab eventKey="diff" title="Diff">
-              <DiffWrapper />
-            </Tab>
+          <Tabs defaultActiveKey="files" id="docutabs">
             <Tab eventKey="files" title="Files">
               <EditWrapper />
+            </Tab>
+            <Tab eventKey="diff" title="Differences / Create proofreading request">
+              <DiffWrapper buttonTitle="Create proofreading request" onClick={this.newRequest} />
             </Tab>
           </Tabs>
         </Container>
       );
-    } if (docu.accessLevel === accessLevels.author) {
+    } 
+    
+    if (docu.accessLevel === accessLevels.author) {
       return (
         <Container className="mt-5">
           <Row>
             <Col lg={12} xs={12}>
               <h1>{docu.name}</h1>
-              <p>{docu.description}</p>
+              <p className="text-muted">{docu.description}</p>
             </Col>
           </Row>
-          <Tabs defaultActiveKey="files" id="uncontrolled-tab-example">
+          <Tabs defaultActiveKey="files" id="docutabs">
             <Tab eventKey="files" title="Files">
               <EditWrapper />
             </Tab>

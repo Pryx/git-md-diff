@@ -95,11 +95,17 @@ class EditorDiff extends React.Component {
       ));
     }
 
+    let cls = '';
+    if (content.newFile) {
+      cls = 'newfile';
+      badges.push(<Badge variant="success" key="newfile">NEW</Badge>);
+    }
+
     return (
       <div className="mt-4">
-        <div className="editor-diff-content" dangerouslySetInnerHTML={{ __html: content.content }} />
+        <div className={`editor-diff-content ${cls}`} dangerouslySetInnerHTML={{ __html: content.content }} />
         <hr />
-        <div>
+        <div className="editor-badges">
           {badges}
         </div>
       </div>
@@ -121,8 +127,6 @@ EditorDiff.propTypes = {
 
 const mapStateToProps = (state) => (
   {
-    from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
-    to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
     docuId: state.docuId,
   }
 );

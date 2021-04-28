@@ -75,6 +75,9 @@ export default async function diff(revisionInfo, original, modified, opts) {
 
   const orig = cleanDocs.original;
   const mod = cleanDocs.modified;
+
+  console.log(orig, mod);
+
   let res;
 
   if (orig.length > 0) {

@@ -19,8 +19,13 @@ pre{
   border-radius: 4px
 }
 
-.newfile .card-body {
+.newfile .card-body,
+.newfile.editor-diff-content {
   background: #e1ffe1;
+}
+
+.newfile.editor-diff-content{
+  border-radius: 4px;
 }
 
 del img {
@@ -81,7 +86,8 @@ ins{
   color: #fc6d26
 }
 
-.card-footer .badge {
+.card-footer .badge,
+.editor-badges .badge {
   margin-right: 8px;
 }
 

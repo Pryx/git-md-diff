@@ -1,7 +1,8 @@
 import React from 'react';
-import { Alert, Row } from 'react-bootstrap';
+import { Alert, Col, Row } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import { hot } from 'react-hot-loader';
+import { connect } from 'react-redux';
 import { Link } from 'wouter';
 import { logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';
@@ -12,17 +13,17 @@ import { store } from '../store';
  * even handles the file diffing itself, this should
  * probably be offloaded to the server.
  */
-class DocuOverview extends React.Component {
+class ProofreadingOverview extends React.Component {
   state = {
     isLoaded: false,
   };
 
   componentDidMount() {
     const fetchDocus = async () => {
-      const json = await secureKy().get(`${window.env.api.backend}/documentations`).json();
+      const json = await secureKy().get(`${window.env.api.backend}/proofreading`).json();
 
       this.setState({
-        docuList: json.data,
+        proofReadingRequests: json.data,
         isLoaded: true,
       });
     };
@@ -45,12 +46,14 @@ class DocuOverview extends React.Component {
 
   render() {
     const {
-      error, isLoaded, docuList,
+      error, isLoaded, proofReadingRequests,
     } = this.state;
+
+    const { userData } = this.props;
 
     if (error) {
       return (
-        <Alert variant="danger">Error loading your documentations. Please try again later</Alert>
+        <Alert variant="danger">Error loading your proofreading requests. Please try again later</Alert>
       );
     }
 
@@ -71,40 +74,55 @@ class DocuOverview extends React.Component {
     }
 
     let items = null;
-    if (docuList.length) {
-      items = docuList.map((docu) => (
-        <Link key={docu.id} href={`/documentation/${docu.id}`}>
+    if (proofReadingRequests.length) {
+      items = proofReadingRequests.map((req) => (
+        <Link key={req.id} href={`/documentation/${req.docuId}/proofreading/${req.id}`}>
           <Card className="docu-card">
             <Card.Header>
-              {docu.name}
+              {req.title}
             </Card.Header>
             <Card.Body>
-              {docu.description}
+              {req.description}
             </Card.Body>
-            <Card.Footer className="text-right">
-              <i className={`fab fa-${docu.provider}`} />
+            <Card.Footer>
+              <small>
+                Created by:
+                {req.requester.id == userData.id ? 'You' : req.requester.name}
+              </small>
+              <br />
+              <small>
+                Proofread by:
+                {req.proofreader.id == userData.id ? 'You' : req.proofreader.name}
+              </small>
+              <br />
+              <small>
+                State:
+                {req.state}
+              </small>
             </Card.Footer>
           </Card>
         </Link>
       ));
+
+      return (
+        <Row>
+          {items}
+        </Row>
+      );
     }
 
     return (
       <Row>
-        <Link href="/documentation/new">
-          <Card className="docu-card">
-            <Card.Header>
-              Create new documentation
-            </Card.Header>
-            <Card.Body>
-              <span className="add-circle"><i className="fas fa-plus" /></span>
-            </Card.Body>
-          </Card>
-        </Link>
-        {items}
+        <Col lg={12}>
+          <Alert variant="info">You don't have any proofreading requests assigned yet</Alert>
+        </Col>
       </Row>
     );
   }
 }
 
-export default hot(module)(DocuOverview);
+function mapStateToProps(state) {
+  return { userData: state.userData };
+}
+
+export default hot(module)(connect(mapStateToProps)(ProofreadingOverview));

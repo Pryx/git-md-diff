@@ -1,9 +1,9 @@
+import lodash from 'lodash';
 import accessLevels from '../entities/access-levels';
 import Documentation from '../entities/documentation';
 import Role from '../entities/role';
-import GitlabProvider from '../providers/gitlab-provider';
-import lodash from 'lodash';
 import User from '../entities/user';
+import ProviderWrapper from '../providers/provider-wrapper';
 
 export default class DocumentationService {
   constructor(user) {
@@ -11,34 +11,33 @@ export default class DocumentationService {
   }
 
   async create(params) {
-    if (params.id){
+    if (params.id) {
       let docu = await Documentation.get(params.id);
 
       docu = lodash.merge(docu, params);
 
-      const provider = DocumentationService.getProvider(docu.provider, this.user);
+      const provider = new ProviderWrapper(docu.provider, this.user.tokens);
 
-      //? This will throw if there is any duplicity etc.
+      // ? This will throw if there is any duplicity etc.
       await provider.createDocumentation(docu);
 
       await docu.save();
-      
-      return docu;
-    }else{
-      const docu = new Documentation(params);
-      const provider = DocumentationService.getProvider(docu.provider, this.user);
 
-      //? This will throw if there is any duplicity etc.
-      const docuObj = await provider.createDocumentation(docu);
-      docu.providerId = docuObj.id;
-
-      await docu.save();
-
-      const resDocu = await Documentation.getByProviderId(docu.provider, docu.providerId);
-      const role = new Role({ docuId: resDocu.id, userId: this.user.id, level: accessLevels.admin });
-      role.save();
       return docu;
     }
+    const docu = new Documentation(params);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+
+    // ? This will throw if there is any duplicity etc.
+    const docuObj = await provider.createDocumentation(docu);
+    docu.providerId = docuObj.id;
+
+    await docu.save();
+
+    const resDocu = await Documentation.getByProviderId(docu.provider, docu.providerId);
+    const role = new Role({ docuId: resDocu.id, userId: this.user.id, level: accessLevels.admin });
+    await role.save();
+    return docu;
   }
 
   async getList() {
@@ -47,13 +46,13 @@ export default class DocumentationService {
   }
 
   async getRemoteList(providerId) {
-    const provider = DocumentationService.getProvider(providerId, this.user);
+    const provider = new ProviderWrapper(providerId, this.user.tokens);
     const ids = await Documentation.getProviderIds(this.user.id, providerId);
     return (await provider.getUserDocumentations()).filter((d) => !ids.includes(d.id));
   }
 
   async getRemoteUserList(providerId, search) {
-    const provider = DocumentationService.getProvider(providerId, this.user);
+    const provider = new ProviderWrapper(providerId, this.user.tokens);
     return provider.getUserList(search);
   }
 
@@ -69,96 +68,80 @@ export default class DocumentationService {
 
   async removeUser(docuId, userId) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     const user = await User.getById(userId);
-    provider.removeUser(docu.providerId, user.linked[docu.provider]);
+    await provider.removeUser(docu.providerId, user.linked[docu.provider]);
     await Role.remove(userId, docuId);
   }
 
   async addUser(docuId, userInfo) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
-    userInfo.providerId = userInfo.providerId.toString();
-    let found = await User.getByProviderId(userInfo.providerId, docu.provider);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+    const info = userInfo;
+    info.providerId = userInfo.providerId.toString();
+    let found = await User.getByProviderId(info.providerId, docu.provider);
 
-    if (found === null){
-      const providerUser = await provider.getUser(userInfo.providerId);
-      const {name, public_email} = providerUser;
+    if (found === null) {
+      const providerUser = await provider.getUser(info.providerId);
+      const { name, public_email } = providerUser; // eslint-disable-line
       const linked = {};
-      linked[docu.provider] = userInfo.providerId;
-      const user = new User({name, email: public_email, linked});
+      linked[docu.provider] = info.providerId;
+      const user = new User({ name, email: public_email, linked }); // eslint-disable-line
       await user.save();
-      found = await User.getByProviderId(userInfo.providerId.toString(), docu.provider);
+      found = await User.getByProviderId(info.providerId.toString(), docu.provider);
     }
 
-    provider.addUser(docu.providerId, userInfo.providerId, userInfo.level);
+    await provider.addUser(docu.providerId, info.providerId, info.level);
 
-    const role = new Role({level: userInfo.level, docuId, userId: found.id})
-    role.save();
+    const role = new Role({ level: info.level, docuId, userId: found.id });
+    await role.save();
   }
 
   async remove(docuId, deleteRepo) {
     const docu = await Documentation.get(docuId);
-    if (deleteRepo){
-      const provider = DocumentationService.getProvider(docu.provider, this.user);
-      provider.removeDocu(docu.providerId);
+    if (deleteRepo) {
+      const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+      await provider.removeDocu(docu.providerId);
     }
-    Documentation.remove(docuId);
+    await Documentation.remove(docuId);
   }
-
 
   async getVersions(docuId) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     return provider.getVersions(docu.providerId);
   }
 
   async getRevisions(docuId, version) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     return provider.getRevisions(docu.providerId, version);
   }
 
   async getChanges(docuId, from, to) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     return provider.getChanges(docu.providerId, from, to);
   }
 
   async getBlob(docuId, revision, blob) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     const p = await provider.getBlob(docu.providerId, revision, blob);
     return p;
   }
 
   async getFiles(docuId, revision) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     const p = await provider.getFiles(docu.providerId, revision);
     return p;
   }
 
-  async savePage(docuId, page) {
+  async savePage(docuId, version, page, content) {
     const docu = await Documentation.get(docuId);
-    const provider = DocumentationService.getProvider(docu.provider, this.user);
-    provider.savePage(page);
-    //! TODO: We should implement proper branching and more...
-    throw Error('Not implemented yet');
-  }
-
-  static getProvider(slug, user) {
-    switch (slug) {
-      case 'gitlab':
-        if (DocumentationService.gitlab) {
-          return DocumentationService.gitlab;
-        }
-
-        DocumentationService.gitlab = new GitlabProvider(user.tokens.gitlab.access);
-        return DocumentationService.gitlab;
-
-      default:
-        throw Error(`Unknown provider ${slug} specified!`);
-    }
+    const projectId = docu.providerId;
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+    await provider.savePage(projectId, page, version, content);
   }
 }

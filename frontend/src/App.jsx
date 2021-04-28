@@ -18,6 +18,8 @@ import Login from './components/Login';
 import LoginPage from './pages/LoginPage';
 import { refreshTokens } from './entities/secure-ky';
 import User from './entities/user';
+import ProofreadingPage from './pages/ProofreadingPage';
+import ProofreadingEditPage from './pages/ProofreadingEditPage';
 
 smartlookClient.init(window.env.api.smartlook);
 
@@ -42,12 +44,20 @@ const App = (props) => {
     refreshTokens();
     return (
       <Switch>
-        <Route path="/documentation/:docuId/edit/v/:version/f/:file+">
-          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} to={params.version} file={params.file} />}
+        <Route path="/documentation/:docuId/proofreading/:reqId/v/:version/r/:from/:to/f/:file+">
+          {(params) => <ProofreadingEditPage docuId={parseInt(params.reqId, 10)} reqId={params.reqId} version={params.version} from={params.from} to={params.to} file={params.file} />}
         </Route>
 
-        <Route path="/documentation/:docuId/edit/v/:from/:to/f/:file+">
-          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} from={params.from} to={params.to} file={params.file} />}
+        <Route path="/documentation/:docuId/proofreading/:reqId">
+          {(params) => <ProofreadingPage reqId={parseInt(params.reqId, 10)} />}
+        </Route>
+
+        <Route path="/documentation/:docuId/edit/v/:version/f/:file+">
+          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} version={params.version} to={params.version} file={params.file} />}
+        </Route>
+
+        <Route path="/documentation/:docuId/edit/v/:version/r/:from/:to/f/:file+">
+          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} version={params.version} from={params.from} to={params.to} file={params.file} />}
         </Route>
 
         <Route path="/logout">

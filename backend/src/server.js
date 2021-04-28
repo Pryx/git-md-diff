@@ -10,6 +10,7 @@ import config from './config';
 import User from './entities/user';
 import Auth from './services/auth';
 import DocumentationService from './services/documentation';
+import ProofreadingService from './services/proofreading';
 
 const app = express();
 
@@ -150,7 +151,7 @@ app.get('/users/:id', passport.authenticate('jwt', { session: false }), (req, re
 });
 // #endregion
 
-// #region GIT
+// #region Documentation endpoints
 // Clones the repository to local storage
 app.put('/documentations/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
@@ -160,15 +161,16 @@ app.put('/documentations/', passport.authenticate('jwt', { session: false }), (r
 
 app.delete('/documentations/:docu', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
-  service.remove(req.params.docu, req.body.deleteRepo).then((data) => res.send({ success: true, data }))
+  service.remove(req.params.docu, req.body.deleteRepo)
+    .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
 // Save file and commit to git
-app.put('/documentations/:docu/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
-  // TODO: Fix this
+app.put('/documentations/:docu/:version/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
-  service.savePage().then((data) => res.send({ success: true, data }))
+  service.savePage(req.params.docu, req.params.version, req.params.page, req.body.content)
+    .then(() => res.send({ success: true }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
@@ -266,7 +268,6 @@ app.get('/documentations/:docu/:revision/files', passport.authenticate('jwt', { 
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-
 // Blob file
 app.get('/documentations/:docu/:revision/blobs/:blob', passport.authenticate('jwt', { session: false }), (req, res) => {
   const type = mime.lookup(req.params.blob);
@@ -275,6 +276,43 @@ app.get('/documentations/:docu/:revision/blobs/:blob', passport.authenticate('jw
     .then((data) => res.type(type).send(data))
     .catch((error) => res.status(500).send(error));
 });
+// #endregion
+
+// #region Proofreading endpoints
+app.get('/proofreading/', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new ProofreadingService(req.user);
+  service.getUserRequests()
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+app.get('/proofreading/:reqId', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new ProofreadingService(req.user);
+  service.get(req.params.reqId)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+app.put('/proofreading/:reqId/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
+  ProofreadingService.savePage(req.params.reqId, req.params.page)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+app.put('/proofreading/:reqId/submit', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new ProofreadingService(req.user);
+  service.finished(req.params.reqId)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+app.put('/proofreading/:reqId/merge', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new ProofreadingService(req.user);
+  service.merge(req.params.reqId)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+// #endregion
 
 // Catchall
 app.get('*', (req, res) => {

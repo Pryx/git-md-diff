@@ -40,6 +40,7 @@ export function repositoryTransformer(repo) {
 }
 
 export function repositoryTreeTransformer(treeObj) {
+  if (treeObj.path.endsWith('.gitkeep')) return null; // We don't want to see .gitkeep files
   return {
     path: treeObj.path,
     dir: treeObj.type === 'tree',

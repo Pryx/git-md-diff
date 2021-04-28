@@ -24,11 +24,13 @@ class EditorPreview extends React.Component {
     const {
       error,
     } = this.state;
-    const { file, previewOnly, content} = this.props;
+    const {
+      file, previewOnly, content, from, to,
+    } = this.props;
 
     if (previewOnly) {
       return (
-        <Tabs defaultActiveKey="preview" id="uncontrolled-tab-example">
+        <Tabs defaultActiveKey="preview" id="editortabs">
           <Tab eventKey="preview" title="Preview">
             <MDXPreview content={content} />
           </Tab>
@@ -37,12 +39,12 @@ class EditorPreview extends React.Component {
     }
 
     return (
-      <Tabs defaultActiveKey="differences" id="uncontrolled-tab-example">
-        <Tab eventKey="differences" title="Differences">
-          <EditorDiff file={file} />
-        </Tab>
+      <Tabs defaultActiveKey="preview" id="editortabs">
         <Tab eventKey="preview" title="Preview">
           <MDXPreview content={content} />
+        </Tab>
+        <Tab eventKey="differences" title={`Differences between ${from} and ${to}`}>
+          <EditorDiff file={file} from={from} to={to} />
         </Tab>
       </Tabs>
     );
@@ -50,7 +52,7 @@ class EditorPreview extends React.Component {
 }
 
 EditorPreview.defaultProps = {
-  content: ""
+  content: '',
 };
 
 EditorPreview.propTypes = {
@@ -59,7 +61,7 @@ EditorPreview.propTypes = {
 
 const mapStateToProps = (state) => (
   {
-    docuId: state.docuId
+    docuId: state.docuId,
   }
 );
 

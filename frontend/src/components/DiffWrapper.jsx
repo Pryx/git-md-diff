@@ -5,7 +5,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Alert } from 'react-bootstrap';
+import { Alert, Button } from 'react-bootstrap';
 import CommitSelect from './CommitSelect';
 import DiffOverview from './DiffOverview';
 
@@ -22,7 +22,9 @@ class DiffWrapper extends React.Component {
   render() {
     const { error } = this.state;
 
-    const { docuId, docuEmpty } = this.props;
+    const {
+      docuId, docuEmpty, proofreadingReq, onClick, buttonTitle,
+    } = this.props;
 
     if (error) {
       return (
@@ -34,12 +36,13 @@ class DiffWrapper extends React.Component {
 
     if (docuEmpty) {
       return (
-        <Alert variant="info mt-4">This documentation is empty!</Alert>
+        <Alert variant="info mt-4">This documentation is empty. You should initialize this repository with your Docusaurus installation.</Alert>
       );
     }
 
     return (
       <div className="diff">
+        {!proofreadingReq && (
         <Row className="select-diff mt-4">
           <Col lg={6} xs={12}>
             <strong>Starting with revision:</strong>
@@ -50,11 +53,14 @@ class DiffWrapper extends React.Component {
             <CommitSelect id="to" from={false} />
           </Col>
         </Row>
+        )}
+        {onClick && buttonTitle && <Row className="mt-4 clearfix"><Col lg="12"><Button variant="success" onClick={onClick} className="float-right">{buttonTitle}</Button></Col></Row>}
         <Row className="results">
           <Col>
-            <DiffOverview docu={docuId} />
+            <DiffOverview docu={docuId} proofreadingReq={proofreadingReq} />
           </Col>
         </Row>
+        {onClick && buttonTitle && <Row className="mt-4 clearfix"><Col lg="12"><Button variant="success" onClick={onClick} className="float-right">{buttonTitle}</Button></Col></Row>}
       </div>
     );
   }
@@ -62,6 +68,7 @@ class DiffWrapper extends React.Component {
 
 DiffWrapper.defaultProps = {
   docuEmpty: false,
+  proofreadingReq: null,
 };
 
 DiffWrapper.propTypes = {

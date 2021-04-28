@@ -23,9 +23,9 @@ export function documentationEmpty() {
 }
 
 export function pageAutosave(docuId, page, content) {
-  return { type: 'PAGE_AUTOSAVE', payload: {docuId, page, content} };
+  return { type: 'PAGE_AUTOSAVE', payload: { docuId, page, content } };
 }
 
 export function pageAutosaveRemove(docuId, page) {
-  return { type: 'PAGE_AUTOSAVE_REMOVE', payload: {docuId, page} };
+  return { type: 'PAGE_AUTOSAVE_REMOVE', payload: { docuId, page } };
 }

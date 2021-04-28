@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'wouter';
 import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
-import { Badge } from 'react-bootstrap';
+import { Badge, Form } from 'react-bootstrap';
 import Diff from '../diff/diff';
 import { store } from '../store';
 import { logOut } from '../actions';
@@ -20,17 +20,27 @@ class DiffView extends React.Component {
   state = {
     isLoaded: false,
     content: '',
+    checked: true,
   };
 
   constructor(props) {
     super(props);
     this.options = { hideCode: props.hideCode, returnMdx: true, debug: false };
-    // This is needed because for some reason encodeUriComponent doesn't encode dots
-    // documentation/:docuId/edit/v/:from/:to/f/:file+
-    this.link = `/documentation/${props.docuId}/edit/v/${props.from}/${props.to}/f/${props.newFile}`;
+
+    if (props.proofreadingReq) {
+      this.link = `/documentation/${props.docuId}/proofreading/${props.proofreadingReq.id}/v/${props.version}/r/${props.from}/${props.to}/f/${props.newFile}`;
+    } else {
+      this.link = `/documentation/${props.docuId}/edit/v/${props.version}/r/${props.from}/${props.to}/f/${props.newFile}`;
+    }
+
+    this.checkboxCallback = this.checkboxCallback.bind(this);
   }
 
-  componentDidMount() {
+  checkboxCallback(e) {
+    this.setState({ checked: e.target.checked });
+  }
+
+  fetchNewDiff() {
     const {
       docuId, from, to, newFile, oldFile,
     } = this.props;
@@ -60,17 +70,46 @@ class DiffView extends React.Component {
     });
   }
 
+  componentDidMount() {
+    const {
+      newFile, oldFile, proofreadingReq,
+    } = this.props;
+
+    const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
+
+
+    if (proofreadingReq && proofreadingReq.excluded.indexOf(filename) !== -1) {
+      return null;
+    }
+
+    this.fetchNewDiff();
+  }
+
+  componentDidUpdate(prevProps) {
+    const { from, to } = this.props;
+    if (prevProps.from != from || prevProps.to != to) {
+      this.fetchNewDiff();
+    }
+  }
+
   static getDerivedStateFromError(error) {
     return { error };
   }
 
   render() {
     const {
-      error, isLoaded, content,
+      error, isLoaded, content, checked,
     } = this.state;
 
-    const { renamed, newFile, oldFile } = this.props;
+    const {
+      renamed, newFile, oldFile, proofreadingReq,
+    } = this.props;
     const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
+
+
+    if (proofreadingReq && proofreadingReq.excluded.indexOf(filename) !== -1) {
+      return null;
+    }
 
     let badges = [];
     if (renamed) {
@@ -129,9 +168,19 @@ class DiffView extends React.Component {
       badges = badges.concat(items);
     }
 
+    if (proofreadingReq && proofreadingReq.modified.indexOf(filename) !== -1) {
+      badges.unshift(<Badge variant="primary" key="modified">
+        <i className="fas fa-check" />
+        {' '}
+        Already reviewed &amp; modified
+      </Badge>);
+    }
+
     return (
       <Card className={cls} key={filename}>
         <Card.Header>
+          {!proofreadingReq && <Form.Check type="checkbox" inline checked={checked} onChange={this.checkboxCallback} />}
+          {' '}
           <Link href={this.link}>{filename}</Link>
         </Card.Header>
         <Card.Body dangerouslySetInnerHTML={{ __html: content.content }} />

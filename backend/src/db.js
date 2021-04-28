@@ -16,7 +16,7 @@ const sql = postgres({
 });
 
 async function setupDb() {
-  // await sql`DROP TABLE IF EXISTS documentations;`;
+  // await sql`DROP TABLE IF EXISTS proofreading_requests;`;
 
   await sql`CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY,
@@ -34,6 +34,22 @@ async function setupDb() {
     provider TEXT,
     providerId INTEGER ,
     UNIQUE (provider, providerId)
+  );`;
+
+  await sql`CREATE TABLE IF NOT EXISTS proofreading_requests(
+    id SERIAL PRIMARY KEY,
+    docuId INTEGER REFERENCES documentations(id),
+    title TEXT NOT NULL,
+    sourceBranch TEXT NOT NULL,
+    targetBranch TEXT NOT NULL,
+    description TEXT,
+    revFrom TEXT NOT NULL,
+    revTo TEXT NOT NULL,
+    requester INTEGER REFERENCES users(id),
+    proofreader INTEGER REFERENCES users(id),
+    excluded text[],
+    modified text[],
+    pullRequest TEXT
   );`;
 
   await sql`CREATE TABLE IF NOT EXISTS roles(

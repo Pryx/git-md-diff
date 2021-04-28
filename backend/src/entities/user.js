@@ -48,9 +48,9 @@ export default class User {
   static async findOrCreate(profile, accessToken, refreshToken, provider) {
     let u = await User.getByProviderId(profile.id, provider);
 
-    if (u){
-      if (!u.email){
-        await u.updateEmail(profile.emails[0].value)
+    if (u) {
+      if (!u.email) {
+        await u.updateEmail(profile.emails[0].value);
       }
 
       u.updateTokens(provider, accessToken, refreshToken);
@@ -58,7 +58,6 @@ export default class User {
       return u;
     }
 
-  
     //* This is needed if user is not assigned to this provider ID, but already added in the system
     for (const email of profile.emails) {
       u = await User.getByEmail(email);
@@ -74,14 +73,16 @@ export default class User {
     linked[provider] = profile.id;
     const tokens = u.tokens || {};
     tokens[provider] = { access: accessToken, refresh: refreshToken };
-    
+
     const email = u.email || profile.emails[0].value;
     const name = u.name || profile.displayName;
 
-    const user = new User({ email, name, linked, tokens });
+    const user = new User({
+      email, name, linked, tokens,
+    });
 
     await user.save();
-    return User.getByProviderId(profile.id, provider);   
+    return User.getByProviderId(profile.id, provider);
   }
 
   updateTokens(provider, access, refresh) {
@@ -95,7 +96,6 @@ export default class User {
 
     return sql`UPDATE users SET email=${this.email} WHERE id=${this.id}`;
   }
-
 
   async save() {
     return sql`INSERT INTO users (email, name, linked, tokens) VALUES (${this.email}, ${this.name},${sql.json(this.linked)}, ${sql.json(this.tokens)}) ON CONFLICT (email) DO

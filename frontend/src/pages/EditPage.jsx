@@ -11,7 +11,9 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import { documentationSelected, logOut, pageAutosave, pageAutosaveRemove } from '../actions';
+import {
+  documentationSelected, logOut, pageAutosave, pageAutosaveRemove, revisionSelected,
+} from '../actions';
 import EditorPreview from '../components/EditorPreview';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
@@ -30,10 +32,10 @@ class EditPage extends React.Component {
     isLoaded: false,
     saveStatus: '',
     saveMessage: '',
+    saving: false,
   };
 
   editorInit = false;
-  skipNotice = false;
 
   constructor(props) {
     super(props);
@@ -43,32 +45,43 @@ class EditPage extends React.Component {
 
     this.file = decodeURIComponent(file);
     this.handleSave = this.handleSave.bind(this);
-    
-    this.debouncedAutosave = lodash.debounce(function() {
+
+    this.debouncedAutosave = lodash.debounce(function () {
       if (!this.editorInit) {
         this.editorInit = true;
         return;
       }
-      console.trace();
-      const {docuId} = this.props;
+
+      const { docuId } = this.props;
       const content = this.editorRef.current.getInstance().getMarkdown();
+
       this.setState({
         previewContent: content,
+        autosaveDate: false,
         isLoaded: true,
       });
-      store.dispatch(pageAutosave(docuId, this.file, content))
+      store.dispatch(pageAutosave(docuId, this.file, content));
     }, 250);
   }
 
-
   componentDidMount() {
-    const { docuId, to } = this.props;
+    const { docuId, version, autosaved } = this.props;
 
     const fetchPage = async () => {
-      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${encodeURIComponent(this.file)}`).json();
+      const docuAutosave = autosaved[docuId] || {};
+      const fileAutosave = docuAutosave[this.file] || {};
+
+      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${version}/pages/${encodeURIComponent(this.file)}`).json();
+
+      if (fileAutosave.content && fileAutosave.content === json.data) {
+        store.dispatch(pageAutosaveRemove(docuId, this.file));
+        fileAutosave.date = null;
+      }
+
       this.setState({
         content: json.data,
-        previewContent: json.data,
+        previewContent: fileAutosave.content || json.data,
+        autosaveDate: fileAutosave.date,
         isLoaded: true,
       });
     };
@@ -86,36 +99,40 @@ class EditPage extends React.Component {
   }
 
   handleSave(e) { // eslint-disable-line no-unused-vars
-    // TODO: Rewrite
-    console.error('Still needs updated implementation...');
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        file: this.file,
-        repo: this.repo,
-        commit: this.endRevision,
-        content: this.editorRef.current.getInstance().getMarkdown(),
-      }),
+    const { docuId, version, onSave } = this.props;
+
+    this.setState({
+      saving: true,
+    });
+
+    const savePage = async () => {
+      const response = await secureKy().put(`${window.env.api.backend}/documentations/${docuId}/${version}/pages/${encodeURIComponent(this.file)}`,
+        {
+          json: { content: this.editorRef.current.getInstance().getMarkdown() },
+        }).json();
+
+      if (response.success) {
+        if (typeof onSave === 'function') {
+          onSave();
+        }
+        store.dispatch(pageAutosaveRemove(docuId, this.file));
+        this.setState({ saving: false, saveStatus: 'success', saveMessage: 'Successfully saved!' });
+      } else {
+        this.setState({ saving: false, saveStatus: 'danger', saveMessage: response.error });
+      }
     };
 
-    fetch(`${window.env.api.backend}/save`, requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          this.setState({ saveStatus: 'success', saveMessage: 'Successfully saved!' });
-        } else {
-          this.setState({ saveStatus: 'danger', saveMessage: data.error });
-        }
-      });
+    savePage();
   }
 
   render() {
     const {
-      error, isLoaded, content, saveStatus, saveMessage, previewContent
+      error, isLoaded, content, saveStatus, saveMessage, previewContent, autosaveDate, saving,
     } = this.state;
 
-    const { from, to, autosaved, file, docuId } = this.props;
+    const {
+      from, to, file, docuId,
+    } = this.props;
 
     if (error) {
       return (
@@ -145,42 +162,50 @@ class EditPage extends React.Component {
         </div>
       );
     }
-    
 
-    let initialContent = content;
     let notice = null;
 
-    const docuAutosave = autosaved[docuId] || {};
-    if (docuAutosave[file] && !this.skipNotice){
-      const autosavedFile = docuAutosave[file];
-      initialContent = autosavedFile.content;
-
+    if (saveStatus.length) {
+      notice = (
+        <Alert variant={saveStatus}>
+          {saveMessage}
+        </Alert>
+      );
+    } else if (autosaveDate) {
       const date = new Intl.DateTimeFormat('default', {
         hour: 'numeric',
         minute: 'numeric',
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
-      }).format(new Date(autosavedFile.date));
+        day: 'numeric',
+      }).format(new Date(autosaveDate));
 
       const restoreHandler = (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
         this.editorRef.current.getInstance().setMarkdown(content);
-        store.dispatch(pageAutosaveRemove(docuId, file))
+        store.dispatch(pageAutosaveRemove(docuId, file));
+        this.setState({ previewContent: content, autosaveDate: false });
       };
 
       const dismissHandler = (e) => {
         store.dispatch(pageAutosaveRemove(docuId, file));
+        this.setState({ autosaveDate: false });
       };
 
       notice = (
         <Alert variant="info" onClose={dismissHandler} dismissible>
-        An autosaved version from {date} was automatically restored. <Alert.Link onClick={restoreHandler}>Click here if you want to restore the original</Alert.Link>.
+          An autosaved version from
+          {' '}
+          <strong>{date}</strong>
+          {' '}
+          was automatically restored.
+          {' '}
+          <Alert.Link onClick={restoreHandler}>Click here if you want to edit the original instead</Alert.Link>
+          .
         </Alert>
       );
-      this.skipNotice = true;
     }
-    
+
     return (
       <div className="editor-wrap">
         <Row className="mt-3 mr-3 ml-3">
@@ -196,7 +221,7 @@ class EditPage extends React.Component {
           <Col xl={6} md={12}>
             {notice}
             <Editor
-              initialValue={initialContent}
+              initialValue={previewContent}
               previewStyle="global"
               height="100%"
               initialEditType="markdown"
@@ -205,22 +230,13 @@ class EditPage extends React.Component {
               onChange={() => this.debouncedAutosave()}
               frontMatter
             />
-          </Col>
-          <Col xl={6} md={12}>
-            <EditorPreview file={this.file} previewOnly={!(from && to)} content={previewContent} />
-          </Col>
-        </Row>
-        <Row className="mt-3 mr-3 ml-3">
-          <Col xl={6} md={12}>
-            <div className="clearfix mb-2">
-              <Button variant="success" className="float-right" onClick={this.handleSave}>Save</Button>
+
+            <div className="mt-2">
+              <Button variant="success" className="float-right" onClick={this.handleSave} disabled={saving ? 'disabled' : ''}>Save</Button>
             </div>
-            {saveStatus.length > 0
-              && (
-                <Alert variant={saveStatus}>
-                  {saveMessage}
-                </Alert>
-              )}
+          </Col>
+          <Col xl={6} md={12}>
+            <EditorPreview file={this.file} previewOnly={!(from && to)} content={previewContent} from={from} to={to} />
           </Col>
         </Row>
       </div>
@@ -230,6 +246,7 @@ class EditPage extends React.Component {
 
 EditPage.defaultProps = {
   from: null,
+  onSave: null,
 };
 
 EditPage.propTypes = {
@@ -237,6 +254,7 @@ EditPage.propTypes = {
   from: PropTypes.string,
   to: PropTypes.string.isRequired,
   file: PropTypes.string.isRequired,
+  onSave: PropTypes.func,
 };
 
 const mapStateToProps = (state) => ({

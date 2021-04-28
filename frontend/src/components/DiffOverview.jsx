@@ -68,7 +68,9 @@ class DiffOverview extends React.Component {
       error, isLoaded, ready, changes,
     } = this.state;
 
-    const { from, docuId, to } = this.props;
+    const {
+      from, docuId, to, version, proofreadingReq,
+    } = this.props;
 
     if (error) {
       return (
@@ -117,7 +119,9 @@ class DiffOverview extends React.Component {
                 renamed={change.renamed}
                 from={from}
                 to={to}
+                version={version}
                 docuId={docuId}
+                proofreadingReq={proofreadingReq}
               />
             </Col>
           </Row>
@@ -140,6 +144,7 @@ const mapStateToProps = (state) => ({
   docuId: state.docuId,
   from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
   to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
+  version: state.endRevision ? state.endRevision.branch : '',
 });
 
 export default hot(module)(connect(mapStateToProps)(DiffOverview));

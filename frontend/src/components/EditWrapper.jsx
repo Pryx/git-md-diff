@@ -34,7 +34,7 @@ class EditWrapper extends React.Component {
 
     if (docuEmpty) {
       return (
-        <Alert variant="info mt-4">This documentation is empty!</Alert>
+        <Alert variant="info mt-4">This documentation is empty. You should initialize this repository with your Docusaurus installation.</Alert>
       );
     }
 

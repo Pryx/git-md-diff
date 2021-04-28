@@ -1,6 +1,6 @@
 import { Gitlab } from '@gitbeaker/node';
 import {
-  versionTransformer, revisionTransformer, changesTransformer, repositoryTransformer, repositoryTreeTransformer
+  versionTransformer, revisionTransformer, changesTransformer, repositoryTransformer, repositoryTreeTransformer,
 } from '../transformers/gitlab';
 import accessLevels from '../entities/access-levels';
 
@@ -38,8 +38,10 @@ export default class GitlabProvider {
   }
 
   async createDocumentation(docuObj) {
-    const { name, slug, description, providerId } = docuObj;
-    if (providerId != -1){
+    const {
+      name, slug, description, providerId,
+    } = docuObj;
+    if (providerId != -1) {
       return this.gitlab.Projects.edit(providerId, { name, path: slug, description });
     }
 
@@ -74,8 +76,8 @@ export default class GitlabProvider {
     return [];
   }
 
-  async getFiles(projectId, revision){
-    let tree = await this.gitlab.Repositories.tree(projectId, {ref: revision, recursive: true});
+  async getFiles(projectId, revision) {
+    const tree = await this.gitlab.Repositories.tree(projectId, { ref: revision, recursive: true });
     if (tree.length) {
       return tree.map((t) => repositoryTreeTransformer(t)).filter((diff) => diff != null);
     }
@@ -93,9 +95,15 @@ export default class GitlabProvider {
     }
   }
 
-  /*
-  async savePage(projectId, page) {
-    throw Error('Not implemented yet');
+  async savePage(projectId, page, branch, content) {
+    return this.gitlab.RepositoryFiles.edit(projectId, page, branch, content, `Edited ${page} via Git-md-diff`);
   }
-  */
+
+  async createPR(projectId, source, target, title) {
+    return this.gitlab.MergeRequests.create(projectId, source, target, title);
+  }
+
+  async merge(projectId, iid) {
+    return this.gitlab.MergeRequests.accept(projectId, iid, {squash: true, should_remove_source_branch: true});
+  }
 }

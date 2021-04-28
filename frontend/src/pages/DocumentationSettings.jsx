@@ -29,26 +29,44 @@ class DocumentationSettings extends React.Component {
     slug: '',
     name: '',
     description: '',
+    isLoaded: false,
   };
 
   constructor(props) {
     super(props);
-
-    const { docuId, docuList } = this.props;
-    store.dispatch(documentationSelected(docuId));
-    this.docu = docuList.find((d) => d.id === docuId);
 
     this.handleSlugUpdate = this.handleSlugUpdate.bind(this);
     this.handleNameUpdate = this.handleNameUpdate.bind(this);
     this.slugControl = React.createRef();
     this.handleDescriptionUpdate = this.handleDescriptionUpdate.bind(this);
     this.handleDeleteDocu = this.handleDeleteDocu.bind(this);
+    this.deleteDocu = this.deleteDocu.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   componentDidMount() {
-    const { slug, name, description } = this.docu;
-    this.setState({ slug, name, description });
+    const { docuId } = this.props;
+    const fetchPage = async () => {
+      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}`).json();
+      this.setState({
+        docu: json.data,
+        slug: json.data.slug, 
+        name: json.data.name, 
+        description: json.data.description,
+        isLoaded: true,
+      });
+    };
+
+    fetchPage().catch((error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error: error.toString(),
+      });
+    });
   }
 
   handleDeleteDocu() {
@@ -129,7 +147,7 @@ class DocumentationSettings extends React.Component {
   }
 
   deleteDocu(deleteRepo) {
-    const docuId = this.docu.id;
+    const { docuId } = this.props;
     const deleteDocu = async () => {
       await secureKy().delete(`${window.env.api.backend}/documentations/${docuId}`, { json: { deleteRepo } }).json();
 
@@ -152,15 +170,20 @@ class DocumentationSettings extends React.Component {
   }
 
   render() {
-    const { docu } = this;
+    const {
+      slug, name, description, deleted, error, success, docu, isLoaded
+    } = this.state;
+
+    if (!isLoaded){
+      return "Loading...";
+    }
+
 
     if (docu.accessLevel > accessLevels.admin) {
       return <Redirect to="/" />;
     }
 
-    const {
-      slug, name, description, deleted, error, success,
-    } = this.state;
+    
 
     if (deleted) {
       return <Redirect to="/" />;
