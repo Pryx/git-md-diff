@@ -60,7 +60,6 @@ class MDXPreview extends React.Component {
 }
 
 MDXPreview.defaultProps = {
-  hideCode: false,
 };
 
 MDXPreview.propTypes = {

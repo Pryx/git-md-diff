@@ -12,7 +12,7 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import {
-  documentationSelected, logOut, pageAutosave, pageAutosaveRemove, revisionSelected,
+  documentationSelected, logOut, pageAutosave, pageAutosaveRemove,
 } from '../actions';
 import EditorPreview from '../components/EditorPreview';
 import { secureKy } from '../entities/secure-ky';
@@ -52,7 +52,6 @@ class EditPage extends React.Component {
         return;
       }
 
-      const { docuId } = this.props;
       const content = this.editorRef.current.getInstance().getMarkdown();
 
       this.setState({
@@ -188,6 +187,7 @@ class EditPage extends React.Component {
       };
 
       const dismissHandler = (e) => {
+        e.preventDefault();
         store.dispatch(pageAutosaveRemove(docuId, file));
         this.setState({ autosaveDate: false });
       };
@@ -247,6 +247,7 @@ class EditPage extends React.Component {
 EditPage.defaultProps = {
   from: null,
   onSave: null,
+  version: '',
 };
 
 EditPage.propTypes = {
@@ -254,6 +255,7 @@ EditPage.propTypes = {
   from: PropTypes.string,
   to: PropTypes.string.isRequired,
   file: PropTypes.string.isRequired,
+  version: PropTypes.string,
   onSave: PropTypes.func,
 };
 

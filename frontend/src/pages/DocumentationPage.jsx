@@ -36,7 +36,8 @@ class DocumentationPage extends React.Component {
   }
 
   newRequest(e) {
-    console.log(click);
+    e.preventDefault();
+    console.log('click');
   }
 
   componentDidMount() {
@@ -101,8 +102,8 @@ class DocumentationPage extends React.Component {
           </Tabs>
         </Container>
       );
-    } 
-    
+    }
+
     if (docu.accessLevel === accessLevels.author) {
       return (
         <Container className="mt-5">

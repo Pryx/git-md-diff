@@ -9,7 +9,12 @@ export default class ProofreadingService {
 
   async create(params) {
     const req = new ProofreadingRequest(params);
+
+    const docu = await Documentation.get(req.docuId);
+
     // TODO: Probably create branch or something...
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens); //eslint-disable-line
+
     return req.save();
   }
 
@@ -31,19 +36,17 @@ export default class ProofreadingService {
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
 
     const response = await provider.finishProofreading(
-      docu.providerId, 
-      req.sourceBranch, 
-      req.targetBranch, 
-      `Finished proofreading request nr. ${req.id}`
+      docu.providerId,
+      req.sourceBranch,
+      req.targetBranch,
+      `Finished proofreading request nr. ${req.id}`,
     );
-
 
     req.pullRequest = response.iid;
     req.save();
 
     return response;
   }
-
 
   async merge(reqId) {
     const req = await ProofreadingRequest.get(reqId);
@@ -53,10 +56,9 @@ export default class ProofreadingService {
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
 
     const response = await provider.merge(
-      docu.providerId, 
-      req.pullRequest
+      docu.providerId,
+      req.pullRequest,
     );
-
 
     req.pullRequest = -1;
     req.save();

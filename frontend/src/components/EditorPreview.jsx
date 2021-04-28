@@ -57,6 +57,10 @@ EditorPreview.defaultProps = {
 
 EditorPreview.propTypes = {
   file: PropTypes.string.isRequired,
+  content: PropTypes.string,
+  from: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+  file: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => (

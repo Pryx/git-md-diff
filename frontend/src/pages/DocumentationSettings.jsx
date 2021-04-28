@@ -11,10 +11,9 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import slugify from 'slugify';
 import { Redirect } from 'wouter';
-import { documentationSelected, logOut } from '../actions';
+import { logOut } from '../actions';
 import DocuUsers from '../components/DocuUsers';
 import accessLevels from '../constants/access-levels';
-import Documentation from '../entities/documentation';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 /**
@@ -50,8 +49,8 @@ class DocumentationSettings extends React.Component {
       const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}`).json();
       this.setState({
         docu: json.data,
-        slug: json.data.slug, 
-        name: json.data.name, 
+        slug: json.data.slug,
+        name: json.data.name,
         description: json.data.description,
         isLoaded: true,
       });
@@ -171,19 +170,16 @@ class DocumentationSettings extends React.Component {
 
   render() {
     const {
-      slug, name, description, deleted, error, success, docu, isLoaded
+      slug, name, description, deleted, error, success, docu, isLoaded,
     } = this.state;
 
-    if (!isLoaded){
-      return "Loading...";
+    if (!isLoaded) {
+      return 'Loading...';
     }
-
 
     if (docu.accessLevel > accessLevels.admin) {
       return <Redirect to="/" />;
     }
-
-    
 
     if (deleted) {
       return <Redirect to="/" />;
@@ -296,7 +292,6 @@ class DocumentationSettings extends React.Component {
 }
 
 DocumentationSettings.propTypes = {
-  docuList: PropTypes.arrayOf(PropTypes.shape(Documentation.getShape())).isRequired,
   docuId: PropTypes.number.isRequired,
 };
 

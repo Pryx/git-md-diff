@@ -77,7 +77,6 @@ class DiffView extends React.Component {
 
     const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
 
-
     if (proofreadingReq && proofreadingReq.excluded.indexOf(filename) !== -1) {
       return null;
     }
@@ -87,7 +86,7 @@ class DiffView extends React.Component {
 
   componentDidUpdate(prevProps) {
     const { from, to } = this.props;
-    if (prevProps.from != from || prevProps.to != to) {
+    if (prevProps.from !== from || prevProps.to !== to) {
       this.fetchNewDiff();
     }
   }
@@ -105,7 +104,6 @@ class DiffView extends React.Component {
       renamed, newFile, oldFile, proofreadingReq,
     } = this.props;
     const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
-
 
     if (proofreadingReq && proofreadingReq.excluded.indexOf(filename) !== -1) {
       return null;

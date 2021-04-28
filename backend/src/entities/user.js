@@ -59,12 +59,11 @@ export default class User {
     }
 
     //* This is needed if user is not assigned to this provider ID, but already added in the system
-    for (const email of profile.emails) {
-      u = await User.getByEmail(email);
-      if (u !== null) {
-        break;
-      }
-    }
+    const users = profile.emails.map((email) => User.getByEmail(email));
+
+    await Promise.all(users);
+
+    u = users.find((el) => el !== undefined && el !== null);
 
     u = u || {};// Init to empty object so that we can access it and not throw
 

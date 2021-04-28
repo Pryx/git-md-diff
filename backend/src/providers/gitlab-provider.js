@@ -1,6 +1,7 @@
 import { Gitlab } from '@gitbeaker/node';
 import {
-  versionTransformer, revisionTransformer, changesTransformer, repositoryTransformer, repositoryTreeTransformer,
+  versionTransformer, revisionTransformer, changesTransformer,
+  repositoryTransformer, repositoryTreeTransformer,
 } from '../transformers/gitlab';
 import accessLevels from '../entities/access-levels';
 
@@ -41,7 +42,7 @@ export default class GitlabProvider {
     const {
       name, slug, description, providerId,
     } = docuObj;
-    if (providerId != -1) {
+    if (providerId !== -1) {
       return this.gitlab.Projects.edit(providerId, { name, path: slug, description });
     }
 
@@ -104,6 +105,10 @@ export default class GitlabProvider {
   }
 
   async merge(projectId, iid) {
-    return this.gitlab.MergeRequests.accept(projectId, iid, {squash: true, should_remove_source_branch: true});
+    return this.gitlab.MergeRequests.accept(
+      projectId,
+      iid,
+      { squash: true, should_remove_source_branch: true },
+    );
   }
 }

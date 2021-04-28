@@ -138,6 +138,7 @@ DiffOverview.propTypes = {
   docuId: PropTypes.number.isRequired,
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
+  version: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({

@@ -4,8 +4,10 @@ import Card from 'react-bootstrap/Card';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { Link } from 'wouter';
+import PropTypes from 'prop-types';
 import { logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';
+import User from '../entities/user';
 import { store } from '../store';
 
 /**
@@ -87,12 +89,12 @@ class ProofreadingOverview extends React.Component {
             <Card.Footer>
               <small>
                 Created by:
-                {req.requester.id == userData.id ? 'You' : req.requester.name}
+                {req.requester.id === userData.id ? 'You' : req.requester.name}
               </small>
               <br />
               <small>
                 Proofread by:
-                {req.proofreader.id == userData.id ? 'You' : req.proofreader.name}
+                {req.proofreader.id === userData.id ? 'You' : req.proofreader.name}
               </small>
               <br />
               <small>
@@ -114,12 +116,16 @@ class ProofreadingOverview extends React.Component {
     return (
       <Row>
         <Col lg={12}>
-          <Alert variant="info">You don't have any proofreading requests assigned yet</Alert>
+          <Alert variant="info">You don&apos;t have any pending proofreading requests</Alert>
         </Col>
       </Row>
     );
   }
 }
+
+ProofreadingOverview.propTypes = {
+  userData: PropTypes.shape(User.getShape()).isRequired,
+};
 
 function mapStateToProps(state) {
   return { userData: state.userData };

@@ -118,6 +118,11 @@ const App = (props) => {
 };
 
 const mapStateToProps = (state) => ({ userData: state.userData });
+
+App.defaultProps = {
+  userData: null,
+};
+
 App.propTypes = {
   userData: PropTypes.shape(User.getShape()),
 };

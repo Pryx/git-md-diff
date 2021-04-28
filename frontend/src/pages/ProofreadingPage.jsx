@@ -1,14 +1,13 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {
-  Alert, Button, Tab, Tabs,
+  Alert,
 } from 'react-bootstrap';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import { Link, Redirect } from 'wouter';
 import { documentationSelected, logOut, revisionSelected } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
 import { secureKy } from '../entities/secure-ky';
@@ -33,55 +32,6 @@ class ProofreadingPage extends React.Component {
     this.merge = this.merge.bind(this);
   }
 
-  submitProofread(e) {
-    e.preventDefault();
-    const { reqId, userData } = this.props;
-    const resolveReq = async () => {
-      const json = await secureKy().put(`${window.env.api.backend}/proofreading/${reqId}/submit`).json();
-
-      this.setState({
-        success: "Successfully submitted your changes",
-        isLoaded: true,
-      });
-    };
-
-    resolveReq().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
-      }
-
-      this.setState({
-        isLoaded: true,
-        error: error.toString(),
-      });
-    });
-  }
-
-
-  merge(e) {
-    e.preventDefault();
-    const { reqId, userData } = this.props;
-    const mergeReq = async () => {
-      const json = await secureKy().put(`${window.env.api.backend}/proofreading/${reqId}/merge`).json();
-
-      this.setState({
-        success: "Successfully merged proofread version!",
-        isLoaded: true,
-      });
-    };
-
-    mergeReq().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
-      }
-
-      this.setState({
-        isLoaded: true,
-        error: error.toString(),
-      });
-    });
-  }
-
   componentDidMount() {
     const { reqId, userData } = this.props;
     const fetchPage = async () => {
@@ -90,17 +40,17 @@ class ProofreadingPage extends React.Component {
       store.dispatch(revisionSelected({
         from: true,
         revisionData: {
-          commit: userData.id == json.data.requester.id ? json.data.revTo : json.data.revFrom,
+          commit: userData.id === json.data.requester.id ? json.data.revTo : json.data.revFrom,
         },
-      })),
+      }));
 
       store.dispatch(revisionSelected({
         from: false,
         revisionData: {
           branch: json.data.sourceBranch,
-          commit: userData.id == json.data.requester.id ? json.data.sourceBranch : json.data.revTo,
+          commit: userData.id === json.data.requester.id ? json.data.sourceBranch : json.data.revTo,
         },
-      })),
+      }));
 
       this.setState({
         req: json.data,
@@ -120,8 +70,58 @@ class ProofreadingPage extends React.Component {
     });
   }
 
+  submitProofread(e) {
+    e.preventDefault();
+    const { reqId } = this.props;
+    const resolveReq = async () => {
+      await secureKy().put(`${window.env.api.backend}/proofreading/${reqId}/submit`).json();
+
+      this.setState({
+        success: 'Successfully submitted your changes',
+        isLoaded: true,
+      });
+    };
+
+    resolveReq().catch((error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error: error.toString(),
+      });
+    });
+  }
+
+  merge(e) {
+    e.preventDefault();
+    const { reqId } = this.props;
+    const mergeReq = async () => {
+      await secureKy().put(`${window.env.api.backend}/proofreading/${reqId}/merge`).json();
+
+      this.setState({
+        success: 'Successfully merged proofread version!',
+        isLoaded: true,
+      });
+    };
+
+    mergeReq().catch((error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error: error.toString(),
+      });
+    });
+  }
+
   render() {
-    const { error, req, isLoaded, success } = this.state;
+    const {
+      error, req, isLoaded, success,
+    } = this.state;
     const { userData } = this.props;
 
     if (!isLoaded) {
@@ -137,13 +137,13 @@ class ProofreadingPage extends React.Component {
       alert = <Alert variant="success">{success}</Alert>;
     }
 
-    if (userData.id == req.requester.id){
+    if (userData.id === req.requester.id) {
       let content = <DiffWrapper proofreadingReq={req} buttonTitle="Merge" onClick={this.merge} />;
-     
-      if (!req.pullRequest){
+
+      if (!req.pullRequest) {
         content = [
-          <Alert variant="warning" key="alert">You can't merge this yet, because the proofreader has not marked the request as completed.</Alert>,
-          <DiffWrapper key="diff" proofreadingReq={req} />
+          <Alert variant="warning" key="alert">You can&apos;t merge this yet, because the proofreader has not marked the request as completed.</Alert>,
+          <DiffWrapper key="diff" proofreadingReq={req} />,
         ];
       }
 
@@ -160,7 +160,8 @@ class ProofreadingPage extends React.Component {
           <Alert variant="info" key="info">You are seeing changes made by the proofreader.</Alert>
           {alert}
           {content}
-        </Container>);
+        </Container>
+      );
     }
 
     return (
@@ -180,13 +181,17 @@ class ProofreadingPage extends React.Component {
   }
 }
 
+ProofreadingPage.defaultProps = {
+  userData: null,
+};
+
 ProofreadingPage.propTypes = {
   userData: PropTypes.shape(User.getShape()),
+  reqId: PropTypes.number.isRequired,
 };
 
 function mapStateToProps(state) {
   return { userData: state.userData };
 }
-
 
 export default hot(module)(connect(mapStateToProps)(ProofreadingPage));

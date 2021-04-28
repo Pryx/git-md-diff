@@ -1,5 +1,4 @@
 import sql from '../db';
-import Role from './role';
 import User from './user';
 
 const defaults = {
@@ -32,7 +31,7 @@ export default class ProofreadingRequest {
     this.proofreader = params.proofreader || defaults.proofreader;
     this.excluded = params.excluded || defaults.excluded;
     this.modified = params.modified || defaults.modified;
-    this.pullRequest = params.pullRequest || params.pullrequest || defaults.pullRequest; params.docuId;
+    this.pullRequest = params.pullRequest || params.pullrequest || defaults.pullRequest;
   }
 
   static async get(id) {
@@ -46,7 +45,7 @@ export default class ProofreadingRequest {
   }
 
   static async getUserRequests(userId) {
-    const results = await sql`SELECT * FROM proofreading_requests WHERE requester=${userId} OR proofreader=${userId} AND pullrequest != '-1'`;
+    const results = await sql`SELECT * FROM proofreading_requests WHERE (requester=${userId} OR proofreader=${userId}) AND pullrequest!='-1'`;
 
     if (results.count) {
       const reqs = await Promise.all(
