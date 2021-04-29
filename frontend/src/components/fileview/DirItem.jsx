@@ -15,7 +15,7 @@ const DirItem = ({ name, children }) => {
 
   return (
     <div className={`folder-wrap mt-2 mb-2 ${state}`}>
-      <div className="folder-label" onClick={toggle} role="button">
+      <div className="folder-label" onClick={toggle} role="button" tabIndex="0" onKeyDown={toggle}>
         {icon}
         {' '}
         <strong>{name}</strong>

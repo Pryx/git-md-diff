@@ -41,7 +41,6 @@ class FileView extends React.Component {
     if (version && lastVersion !== version) {
       const fetchFiles = async () => {
         const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${version}/files`).json();
-        console.log(json);
         this.setState({
           isLoaded: true,
           files: json.data,
@@ -49,8 +48,6 @@ class FileView extends React.Component {
       };
 
       fetchFiles().catch((error) => {
-        console.log(error);
-
         if (error.response && error.response.status === 403) {
           store.dispatch(logOut());
         }
@@ -127,9 +124,6 @@ class FileView extends React.Component {
     const root = newEntry(true);
     root.name = '/';
     root.children = result;
-
-    console.log('RENDERING');
-    console.log(root);
 
     return (
       <Row className="mt-3">

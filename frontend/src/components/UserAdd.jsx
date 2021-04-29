@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Button, Col, Row } from 'react-bootstrap';
+import {
+  Alert, Button, Col, Row,
+} from 'react-bootstrap';
 import { hot } from 'react-hot-loader';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
@@ -66,8 +68,17 @@ class UserAdd extends React.Component {
   }
 
   render() {
-    const { user, accesslvl } = this.state;
+    const { user, accesslvl, error } = this.state;
     const access = Object.entries(accessLevels).map((v) => ({ label: v[0], value: v[1] }));
+
+    if (error) {
+      return (
+        <Alert variant="danger">
+          Error:
+          {error}
+        </Alert>
+      );
+    }
 
     return (
       <div>
@@ -75,8 +86,8 @@ class UserAdd extends React.Component {
           <Col>
             <AsyncSelect
               value={user}
-              loadOptions={(val) => this.getOptionsAsync(val).catch((error) => {
-                if (error.response && error.response.status === 403) {
+              loadOptions={(val) => this.getOptionsAsync(val).catch((err) => {
+                if (err.response && err.response.status === 403) {
                   store.dispatch(logOut());
                 }
                 return [];

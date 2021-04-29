@@ -46,7 +46,7 @@ class EditPage extends React.Component {
     this.file = decodeURIComponent(file);
     this.handleSave = this.handleSave.bind(this);
 
-    this.debouncedAutosave = lodash.debounce(function () {
+    this.debouncedAutosave = lodash.debounce(() => {
       if (!this.editorInit) {
         this.editorInit = true;
         return;
@@ -200,7 +200,9 @@ class EditPage extends React.Component {
           {' '}
           was automatically restored.
           {' '}
-          <Alert.Link onClick={restoreHandler}>Click here if you want to edit the original instead</Alert.Link>
+          <Alert.Link onClick={restoreHandler}>
+            Click here if you want to edit the original instead
+          </Alert.Link>
           .
         </Alert>
       );
@@ -236,7 +238,13 @@ class EditPage extends React.Component {
             </div>
           </Col>
           <Col xl={6} md={12}>
-            <EditorPreview file={this.file} previewOnly={!(from && to)} content={previewContent} from={from} to={to} />
+            <EditorPreview
+              file={this.file}
+              previewOnly={!(from && to)}
+              content={previewContent}
+              from={from}
+              to={to}
+            />
           </Col>
         </Row>
       </div>
@@ -248,6 +256,7 @@ EditPage.defaultProps = {
   from: null,
   onSave: null,
   version: '',
+  autosaved: {},
 };
 
 EditPage.propTypes = {
@@ -257,6 +266,7 @@ EditPage.propTypes = {
   file: PropTypes.string.isRequired,
   version: PropTypes.string,
   onSave: PropTypes.func,
+  autosaved: PropTypes.objectOf(PropTypes.objectOf(PropTypes.string)),
 };
 
 const mapStateToProps = (state) => ({

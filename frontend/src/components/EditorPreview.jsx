@@ -5,62 +5,64 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import EditorDiff from './EditorDiff';
 import MDXPreview from './MDXPreview';
+import { docusaurusBaseImages, htmlImages } from '../diff/diff'
+const matter = require('front-matter');
 
 /**
  * A slightly modified DiffView for display in the editor file.
  */
-class EditorPreview extends React.Component {
-  state = {
-    isLoaded: false,
-    content: '',
-  };
+const EditorPreview = ({
+  file, previewOnly, content, from, to, docuId
+}) => {
 
-  constructor(props) {
-    super(props);
-    this.options = { hideCode: props.hideCode, returnMdx: true };
+  const contentMatter = matter(content);
+
+  let c = content.replace(/---.*---/s, '');
+
+  c = c.replace(/\s*import.*docusaurus.*;/, '');
+
+  c = docusaurusBaseImages(c);
+
+  c = htmlImages(docuId, from, to, c);
+
+  if (contentMatter.attributes.title) {
+    c = `# Title: ${contentMatter.attributes.title}\n${c}`;
   }
 
-  render() {
-    const {
-      error,
-    } = this.state;
-    const {
-      file, previewOnly, content, from, to,
-    } = this.props;
-
-    if (previewOnly) {
-      return (
-        <Tabs defaultActiveKey="preview" id="editortabs">
-          <Tab eventKey="preview" title="Preview">
-            <MDXPreview content={content} />
-          </Tab>
-        </Tabs>
-      );
-    }
-
+  if (previewOnly) {
     return (
       <Tabs defaultActiveKey="preview" id="editortabs">
         <Tab eventKey="preview" title="Preview">
-          <MDXPreview content={content} />
-        </Tab>
-        <Tab eventKey="differences" title={`Differences between ${from} and ${to}`}>
-          <EditorDiff file={file} from={from} to={to} />
+          <MDXPreview content={c} />
         </Tab>
       </Tabs>
     );
   }
-}
+
+  return (
+    <Tabs defaultActiveKey="preview" id="editortabs">
+      <Tab eventKey="preview" title="Preview">
+        <MDXPreview content={c} />
+      </Tab>
+      <Tab eventKey="differences" title={`Differences between ${from} and ${to}`}>
+        <EditorDiff file={file} from={from} to={to} />
+      </Tab>
+    </Tabs>
+  );
+};
 
 EditorPreview.defaultProps = {
   content: '',
+  previewOnly: false,
 };
 
 EditorPreview.propTypes = {
   file: PropTypes.string.isRequired,
   content: PropTypes.string,
-  from: PropTypes.string.isRequired,
-  to: PropTypes.string.isRequired,
-  file: PropTypes.string.isRequired,
+  from: PropTypes.string,
+  to: PropTypes.string,
+  previewOnly: PropTypes.bool,
+  docuId: PropTypes.number
 };
 
 const mapStateToProps = (state) => (

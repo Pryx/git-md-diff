@@ -8,6 +8,7 @@ import DiffView from './DiffView';
 import { logOut } from '../actions';
 import { store } from '../store';
 import { secureKy } from '../entities/secure-ky';
+import ProofreadingRequest from '../entities/proofreading-request';
 
 /**
  * The diff overview component acts as a wrapper to
@@ -132,6 +133,7 @@ class DiffOverview extends React.Component {
 }
 
 DiffOverview.defaultProps = {
+  proofreadingReq: null,
 };
 
 DiffOverview.propTypes = {
@@ -139,6 +141,7 @@ DiffOverview.propTypes = {
   from: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
   version: PropTypes.string.isRequired,
+  proofreadingReq: PropTypes.shape(ProofreadingRequest.getShape()),
 };
 
 const mapStateToProps = (state) => ({

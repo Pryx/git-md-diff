@@ -269,12 +269,29 @@ app.get('/documentations/:docu/:revision/files', passport.authenticate('jwt', { 
 });
 
 // Blob file
-app.get('/documentations/:docu/:revision/blobs/:blob', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const type = mime.lookup(req.params.blob);
-  const service = new DocumentationService(req.user);
-  service.getBlob(req.params.docu, req.params.revision, req.params.blob)
-    .then((data) => res.type(type).send(data))
-    .catch((error) => res.status(500).send(error));
+app.get('/documentations/:docu/:revision/:token/blobs/:blob(*)', (req, res) => {
+  let user = null;
+  jwt.verify(req.params.token, config.app.jwtSecret, (err, data) => {
+    if (err){
+      res.status(500).send({error: "Unauthorized"});
+    }
+    
+    user = User.getById(data.id);
+
+    if (!user){
+      res.status(500).send({error: "Unauthorized"});
+    }
+  });
+
+  user.then(u => {
+    console.log(u)
+    const type = mime.lookup(req.params.blob);
+    const service = new DocumentationService(u);
+    service.getBlob(req.params.docu, req.params.revision, req.params.blob)
+      .then((data) => {res.type(type).send(data)})
+      .catch((error) => res.status(500).send({error: error}));
+  }).catch((error) => res.status(500).send({error: error}));
+
 });
 // #endregion
 

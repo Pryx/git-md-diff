@@ -74,7 +74,9 @@ class CommitSelect extends React.Component {
           revisionData: {
             branch: selectedOption.value,
             commit: this.getCurrentCommit()
-              || (from && commits.data.length > 1 ? commits.data[1].shortId : commits.data[0].shortId),
+              || (from && commits.data.length > 1
+                ? commits.data[1].shortId
+                : commits.data[0].shortId),
           },
         }),
       );
@@ -142,7 +144,10 @@ class CommitSelect extends React.Component {
           revisionData: {
             branch: cb,
             commit: this.getCurrentCommit()
-              || (from && commits.data.length > 1 ? commits.data[1].shortId : commits.data[0].shortId),
+              || (from && commits.data.length > 1
+                ? commits.data[1].shortId
+                : commits.data[0].shortId
+              ),
           },
         }),
       );

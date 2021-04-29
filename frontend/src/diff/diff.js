@@ -1,18 +1,23 @@
 import { markdownDiff } from 'markdown-diff';
 import lodash from 'lodash';
 import ky from 'ky';
+import { store } from '../store';
 
 const matter = require('front-matter');
 
-function docusaurusBaseImages(markdown) {
+export function docusaurusBaseImages(markdown) {
   // Replace useBaseUrl; base = static
   return markdown.replace(/\{[\s]*useBaseUrl\([\s]*["'](.*?)["'][\s]*\)[\s]*\}/gimu, '"/static/$1"');
 }
 
-function htmlImages(repository, from, to, markdown) {
+export function htmlImages(repository, from, to, markdown) {
+  const state = store.getState();
+
+  const { token } = state;
+
   // Replace url with our API url; if not relative to domain, keep it
-  const url = `src="/api/documentations/${repository}/${to}/blobs/`;
-  let clean = markdown.replace(/(<img.*?)src=["'](?!http|\/\/)(.*?["'])/gimu, `$1${url}$2`);
+  const url = `src="${window.env.api.backend}/documentations/${repository}/${to}/${token}/blobs/`;
+  let clean = markdown.replace(/(<img.*?)src=["'](?!http|\/\/)[\/]?(.*?["'])/gimu, `$1${url}$2`);
 
   // Replace old version with old version links
   const reg = new RegExp(`(<del.*?src=["'].*?)/${to}/(.*?["'].*?/del>)`, 'gimu');
@@ -75,8 +80,6 @@ export default async function diff(revisionInfo, original, modified, opts) {
 
   const orig = cleanDocs.original;
   const mod = cleanDocs.modified;
-
-  console.log(orig, mod);
 
   let res;
 

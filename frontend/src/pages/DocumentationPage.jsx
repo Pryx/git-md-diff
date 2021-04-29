@@ -35,15 +35,33 @@ class DocumentationPage extends React.Component {
     this.newRequest.bind(this);
   }
 
-  newRequest(e) {
-    e.preventDefault();
-    console.log('click');
-  }
-
   componentDidMount() {
     const { docuId } = this.props;
     const fetchPage = async () => {
       const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}`).json();
+      this.setState({
+        docu: json.data,
+        isLoaded: true,
+      });
+    };
+
+    fetchPage().catch((error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error: error.toString(),
+      });
+    });
+  }
+
+  newRequest(e) {
+    e.preventDefault();
+    const { docuId } = this.props;
+    const fetchPage = async () => {
+      const json = await secureKy().put(`${window.env.api.backend}/proofreading/${docuId}`).json();
       this.setState({
         docu: json.data,
         isLoaded: true,

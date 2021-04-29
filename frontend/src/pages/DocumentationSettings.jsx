@@ -263,7 +263,8 @@ class DocumentationSettings extends React.Component {
                       onChange={this.handleDescriptionUpdate}
                     />
                     <Form.Text className="text-muted">
-                      This is primarily for your convenience, so that you know what each documentation contains.
+                      This is primarily for your convenience,
+                      so that you know what each documentation contains.
                       Can be left empty.
                     </Form.Text>
                   </Form.Group>

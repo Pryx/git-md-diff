@@ -11,7 +11,16 @@ const ProofreadingEditPage = ({
   const markAsModified = () => {
     secureKy().put(`${window.env.api.backend}/proofreading/${reqId}/pages/${encodeURIComponent(file)}`).json();
   };
-  return <EditPage docuId={docuId} version={version} from={from} to={to} file={file} onSave={markAsModified} />;
+  return (
+    <EditPage
+      docuId={docuId}
+      version={version}
+      from={from}
+      to={to}
+      file={file}
+      onSave={markAsModified}
+    />
+  );
 };
 
 ProofreadingEditPage.propTypes = {

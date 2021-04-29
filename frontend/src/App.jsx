@@ -45,7 +45,16 @@ const App = (props) => {
     return (
       <Switch>
         <Route path="/documentation/:docuId/proofreading/:reqId/v/:version/r/:from/:to/f/:file+">
-          {(params) => <ProofreadingEditPage docuId={parseInt(params.reqId, 10)} reqId={params.reqId} version={params.version} from={params.from} to={params.to} file={params.file} />}
+          {(params) => (
+            <ProofreadingEditPage
+              docuId={parseInt(params.reqId, 10)}
+              reqId={params.reqId}
+              version={params.version}
+              from={params.from}
+              to={params.to}
+              file={params.file}
+            />
+          )}
         </Route>
 
         <Route path="/documentation/:docuId/proofreading/:reqId">
@@ -53,11 +62,26 @@ const App = (props) => {
         </Route>
 
         <Route path="/documentation/:docuId/edit/v/:version/f/:file+">
-          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} version={params.version} to={params.version} file={params.file} />}
+          {(params) => (
+            <EditPage
+              docuId={parseInt(params.docuId, 10)}
+              version={params.version}
+              to={params.version}
+              file={params.file}
+            />
+          )}
         </Route>
 
         <Route path="/documentation/:docuId/edit/v/:version/r/:from/:to/f/:file+">
-          {(params) => <EditPage docuId={parseInt(params.docuId, 10)} version={params.version} from={params.from} to={params.to} file={params.file} />}
+          {(params) => (
+            <EditPage
+              docuId={parseInt(params.docuId, 10)}
+              version={params.version}
+              from={params.from}
+              to={params.to}
+              file={params.file}
+            />
+          )}
         </Route>
 
         <Route path="/logout">

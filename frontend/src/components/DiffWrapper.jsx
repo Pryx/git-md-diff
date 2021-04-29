@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 import { Alert, Button } from 'react-bootstrap';
 import CommitSelect from './CommitSelect';
 import DiffOverview from './DiffOverview';
+import ProofreadingRequest from '../entities/proofreading-request';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -69,11 +70,16 @@ class DiffWrapper extends React.Component {
 DiffWrapper.defaultProps = {
   docuEmpty: false,
   proofreadingReq: null,
+  buttonTitle: '',
+  onClick: null,
 };
 
 DiffWrapper.propTypes = {
   docuId: PropTypes.number.isRequired,
   docuEmpty: PropTypes.bool,
+  buttonTitle: PropTypes.string,
+  onClick: PropTypes.func,
+  proofreadingReq: PropTypes.shape(ProofreadingRequest.getShape()),
 };
 
 const mapStateToProps = (state) => ({ docuId: state.docuId, docuEmpty: state.docuEmpty });

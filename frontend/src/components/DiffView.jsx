@@ -8,6 +8,7 @@ import Diff from '../diff/diff';
 import { store } from '../store';
 import { logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';
+import ProofreadingRequest from '../entities/proofreading-request';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -34,6 +35,31 @@ class DiffView extends React.Component {
     }
 
     this.checkboxCallback = this.checkboxCallback.bind(this);
+  }
+
+  componentDidMount() {
+    const {
+      newFile, oldFile, proofreadingReq,
+    } = this.props;
+
+    const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
+
+    if (proofreadingReq && proofreadingReq.excluded.indexOf(filename) !== -1) {
+      return;
+    }
+
+    this.fetchNewDiff();
+  }
+
+  componentDidUpdate(prevProps) {
+    const { from, to } = this.props;
+    if (prevProps.from !== from || prevProps.to !== to) {
+      this.fetchNewDiff();
+    }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
   }
 
   checkboxCallback(e) {
@@ -68,31 +94,6 @@ class DiffView extends React.Component {
         error: error.toString(),
       });
     });
-  }
-
-  componentDidMount() {
-    const {
-      newFile, oldFile, proofreadingReq,
-    } = this.props;
-
-    const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
-
-    if (proofreadingReq && proofreadingReq.excluded.indexOf(filename) !== -1) {
-      return null;
-    }
-
-    this.fetchNewDiff();
-  }
-
-  componentDidUpdate(prevProps) {
-    const { from, to } = this.props;
-    if (prevProps.from !== from || prevProps.to !== to) {
-      this.fetchNewDiff();
-    }
-  }
-
-  static getDerivedStateFromError(error) {
-    return { error };
   }
 
   render() {
@@ -167,11 +168,13 @@ class DiffView extends React.Component {
     }
 
     if (proofreadingReq && proofreadingReq.modified.indexOf(filename) !== -1) {
-      badges.unshift(<Badge variant="primary" key="modified">
-        <i className="fas fa-check" />
-        {' '}
-        Already reviewed &amp; modified
-      </Badge>);
+      badges.unshift(
+        <Badge variant="primary" key="modified">
+          <i className="fas fa-check" />
+          {' '}
+          Already reviewed &amp; modified
+        </Badge>,
+      );
     }
 
     return (
@@ -192,6 +195,8 @@ class DiffView extends React.Component {
 
 DiffView.defaultProps = {
   hideCode: true,
+  version: '',
+  proofreadingReq: null,
 };
 
 DiffView.propTypes = {
@@ -200,8 +205,10 @@ DiffView.propTypes = {
   docuId: PropTypes.number.isRequired,
   newFile: PropTypes.string.isRequired,
   oldFile: PropTypes.string.isRequired,
+  version: PropTypes.string,
   hideCode: PropTypes.bool,
   renamed: PropTypes.bool.isRequired,
+  proofreadingReq: PropTypes.shape(ProofreadingRequest.getShape()),
 };
 
 export default hot(module)(DiffView);
