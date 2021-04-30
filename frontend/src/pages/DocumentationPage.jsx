@@ -11,6 +11,7 @@ import { Link, Redirect } from 'wouter';
 import { documentationSelected, logOut } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
 import EditWrapper from '../components/EditWrapper';
+import NewProofreadingRequest from '../components/NewProofreadingRequest';
 import accessLevels from '../constants/access-levels';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
@@ -24,6 +25,7 @@ class DocumentationPage extends React.Component {
   state = {
     error: '',
     isLoaded: false,
+    newRequest: false,
   };
 
   constructor(props) {
@@ -82,7 +84,9 @@ class DocumentationPage extends React.Component {
 
   render() {
     const { docuId } = this.props;
-    const { error, docu, isLoaded } = this.state;
+    const {
+      error, docu, isLoaded, newRequest,
+    } = this.state;
 
     if (!isLoaded) {
       return 'Loading...';
@@ -95,7 +99,11 @@ class DocumentationPage extends React.Component {
     let settings = null;
     if (docu.accessLevel <= accessLevels.manager) {
       if (docu.accessLevel === accessLevels.admin) {
-        settings = <Link href={`/documentation/${docuId}/settings`}><Button variant="primary" className="float-right"><i className="fas fa-cog" /></Button></Link>;
+        settings = (
+          <Link href={`/documentation/${docuId}/settings`}>
+            <Button variant="primary" className="float-right"><i className="fas fa-cog" /></Button>
+          </Link>
+        );
       }
 
       return (
@@ -115,7 +123,17 @@ class DocumentationPage extends React.Component {
               <EditWrapper />
             </Tab>
             <Tab eventKey="diff" title="Differences / Create proofreading request">
-              <DiffWrapper buttonTitle="Create proofreading request" onClick={this.newRequest} />
+              {newRequest && (
+              <NewProofreadingRequest
+                onCancel={() => this.setState({ newRequest: false })}
+              />
+              )}
+              {!newRequest && (
+              <DiffWrapper
+                buttonTitle="Create proofreading request"
+                onClick={() => this.setState({ newRequest: true })}
+              />
+              )}
             </Tab>
           </Tabs>
         </Container>

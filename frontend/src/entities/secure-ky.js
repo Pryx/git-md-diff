@@ -27,7 +27,7 @@ export const refreshTokens = async () => {
     if (error.response && error.response.status === 403) {
       store.dispatch(logOut());
     } else {
-      console.error(error);
+      console.error('Error refreshing tokens:', error);
     }
   }
 };

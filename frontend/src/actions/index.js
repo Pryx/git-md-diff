@@ -29,3 +29,15 @@ export function pageAutosave(docuId, page, content) {
 export function pageAutosaveRemove(docuId, page) {
   return { type: 'PAGE_AUTOSAVE_REMOVE', payload: { docuId, page } };
 }
+
+export function updateChangesList(payload) {
+  return { type: 'CHANGES_UPDATE', payload };
+}
+
+export function excludeChange(payload) {
+  return { type: 'CHANGE_EXCLUDE', payload };
+}
+
+export function includeChange(payload) {
+  return { type: 'CHANGE_INCLUDE', payload };
+}

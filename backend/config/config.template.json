@@ -16,6 +16,7 @@
     "appid": "---",
     "secret": "---",
     "callback": "http://localhost:3000/auth/gitlab/callback",
-    "authRedirect": "http://localhost:5000"
+    "authRedirect": "http://localhost:5000",
+    "baseUrl": "https://gitlab.com"
   }
 }

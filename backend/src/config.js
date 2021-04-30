@@ -23,6 +23,7 @@ const config = {
     secret: staticConfig.gitlab.secret,
     callback: staticConfig.gitlab.callback,
     authRedirect: staticConfig.gitlab.authRedirect,
+    baseUrl: staticConfig.gitlab.baseUrl,
   },
 };
 

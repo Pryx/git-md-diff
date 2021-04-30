@@ -128,7 +128,7 @@ class FileView extends React.Component {
     return (
       <Row className="mt-3">
         <Col lg={12}>
-          <DirItem name="/">
+          <DirItem name="/" openState>
             <FileTree data={root} />
           </DirItem>
         </Col>

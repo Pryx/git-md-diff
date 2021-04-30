@@ -9,6 +9,7 @@ import { logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
 import { store } from '../store';
+import { proofreadingStatesString } from '../constants/proofreading-states';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -81,6 +82,10 @@ class ProofreadingOverview extends React.Component {
         <Link key={req.id} href={`/documentation/${req.docuId}/proofreading/${req.id}`}>
           <Card className="docu-card">
             <Card.Header>
+              [
+              <strong>{proofreadingStatesString[req.state]}</strong>
+              ]
+              {' '}
               {req.title}
             </Card.Header>
             <Card.Body>
@@ -89,17 +94,12 @@ class ProofreadingOverview extends React.Component {
             <Card.Footer>
               <small>
                 Created by:
-                {req.requester.id === userData.id ? 'You' : req.requester.name}
+                {req.requester.id === userData.id ? <strong>You</strong> : req.requester.name}
               </small>
               <br />
               <small>
                 Proofread by:
-                {req.proofreader.id === userData.id ? 'You' : req.proofreader.name}
-              </small>
-              <br />
-              <small>
-                State:
-                {req.state}
+                {req.proofreader.id === userData.id ? <strong>You</strong> : req.proofreader.name}
               </small>
             </Card.Footer>
           </Card>
@@ -116,7 +116,7 @@ class ProofreadingOverview extends React.Component {
     return (
       <Row>
         <Col lg={12}>
-          <Alert variant="info">You don&apos;t have any pending proofreading requests</Alert>
+          <Alert variant="info">You don&apos;t have any pending proofreading requests yet</Alert>
         </Col>
       </Row>
     );

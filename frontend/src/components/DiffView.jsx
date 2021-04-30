@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import { Badge, Form } from 'react-bootstrap';
 import Diff from '../diff/diff';
 import { store } from '../store';
-import { logOut } from '../actions';
+import { excludeChange, includeChange, logOut } from '../actions';
 import { secureKy } from '../entities/secure-ky';
 import ProofreadingRequest from '../entities/proofreading-request';
 
@@ -39,12 +39,10 @@ class DiffView extends React.Component {
 
   componentDidMount() {
     const {
-      newFile, oldFile, proofreadingReq,
+      newFile, proofreadingReq,
     } = this.props;
 
-    const filename = newFile === oldFile ? newFile : `${oldFile} => ${newFile}`;
-
-    if (proofreadingReq && proofreadingReq.excluded.indexOf(filename) !== -1) {
+    if (proofreadingReq && proofreadingReq.excluded.indexOf(newFile) !== -1) {
       return;
     }
 
@@ -64,6 +62,15 @@ class DiffView extends React.Component {
 
   checkboxCallback(e) {
     this.setState({ checked: e.target.checked });
+    const {
+      newFile,
+    } = this.props;
+
+    if (e.target.checked) {
+      store.dispatch(includeChange(newFile));
+    } else {
+      store.dispatch(excludeChange(newFile));
+    }
   }
 
   fetchNewDiff() {

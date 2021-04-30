@@ -53,6 +53,7 @@ passport.use(new GitLabStrategy({
   clientID: config.gitlab.appid,
   clientSecret: config.gitlab.secret,
   callbackURL: config.gitlab.callback,
+  baseURL: config.gitlab.baseUrl,
 }, ((accessToken, refreshToken, profile, done) => {
   Auth.findOrCreateUser(profile, accessToken, refreshToken, 'gitlab').then((usr) => done(null, usr.id));
 })));
@@ -169,7 +170,8 @@ app.delete('/documentations/:docu', passport.authenticate('jwt', { session: fals
 // Save file and commit to git
 app.put('/documentations/:docu/:version/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
-  service.savePage(req.params.docu, req.params.version, req.params.page, req.body.content)
+  service.savePage(req.params.docu, req.params.version,
+    req.params.page, req.body.content, req.body.commitMessage)
     .then(() => res.send({ success: true }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
@@ -254,7 +256,7 @@ app.get('/documentations/:docu/changes/:from/:to', passport.authenticate('jwt', 
 });
 
 // Text file
-app.get('/documentations/:docu/:revision/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
+app.get('/documentations/:docu/:revision/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.getBlob(req.params.docu, req.params.revision, req.params.page)
     .then((data) => res.send({ success: true, data }))
@@ -272,26 +274,24 @@ app.get('/documentations/:docu/:revision/files', passport.authenticate('jwt', { 
 app.get('/documentations/:docu/:revision/:token/blobs/:blob(*)', (req, res) => {
   let user = null;
   jwt.verify(req.params.token, config.app.jwtSecret, (err, data) => {
-    if (err){
-      res.status(500).send({error: "Unauthorized"});
+    if (err) {
+      res.status(500).send({ error: 'Unauthorized' });
     }
-    
+
     user = User.getById(data.id);
 
-    if (!user){
-      res.status(500).send({error: "Unauthorized"});
+    if (!user) {
+      res.status(500).send({ error: 'Unauthorized' });
     }
   });
 
-  user.then(u => {
-    console.log(u)
+  user.then((u) => {
     const type = mime.lookup(req.params.blob);
     const service = new DocumentationService(u);
     service.getBlob(req.params.docu, req.params.revision, req.params.blob)
-      .then((data) => {res.type(type).send(data)})
-      .catch((error) => res.status(500).send({error: error}));
-  }).catch((error) => res.status(500).send({error: error}));
-
+      .then((data) => { res.type(type).send(data); })
+      .catch((error) => res.status(500).send({ error }));
+  }).catch((error) => res.status(500).send({ error }));
 });
 // #endregion
 
@@ -299,6 +299,13 @@ app.get('/documentations/:docu/:revision/:token/blobs/:blob(*)', (req, res) => {
 app.get('/proofreading/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.getUserRequests()
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+app.put('/proofreading/', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new ProofreadingService(req.user);
+  service.create(req.body)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });

@@ -4,6 +4,7 @@ import 'codemirror/lib/codemirror.css';
 import lodash from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { Form } from 'react-bootstrap';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
@@ -33,6 +34,7 @@ class EditPage extends React.Component {
     saveStatus: '',
     saveMessage: '',
     saving: false,
+    commitMessage: '',
   };
 
   editorInit = false;
@@ -45,6 +47,7 @@ class EditPage extends React.Component {
 
     this.file = decodeURIComponent(file);
     this.handleSave = this.handleSave.bind(this);
+    this.commitMessageChange = this.commitMessageChange.bind(this);
 
     this.debouncedAutosave = lodash.debounce(() => {
       if (!this.editorInit) {
@@ -97,8 +100,9 @@ class EditPage extends React.Component {
     });
   }
 
-  handleSave(e) { // eslint-disable-line no-unused-vars
+  handleSave() {
     const { docuId, version, onSave } = this.props;
+    const { commitMessage } = this.state;
 
     this.setState({
       saving: true,
@@ -107,7 +111,7 @@ class EditPage extends React.Component {
     const savePage = async () => {
       const response = await secureKy().put(`${window.env.api.backend}/documentations/${docuId}/${version}/pages/${encodeURIComponent(this.file)}`,
         {
-          json: { content: this.editorRef.current.getInstance().getMarkdown() },
+          json: { content: this.editorRef.current.getInstance().getMarkdown(), commitMessage },
         }).json();
 
       if (response.success) {
@@ -115,18 +119,27 @@ class EditPage extends React.Component {
           onSave();
         }
         store.dispatch(pageAutosaveRemove(docuId, this.file));
-        this.setState({ saving: false, saveStatus: 'success', saveMessage: 'Successfully saved!' });
+        this.setState({
+          saving: false, saveStatus: 'success', commitMessage: '', saveMessage: 'Successfully saved!',
+        });
       } else {
-        this.setState({ saving: false, saveStatus: 'danger', saveMessage: response.error });
+        this.setState({
+          saving: false, saveStatus: 'danger', commitMessage: '', saveMessage: response.error,
+        });
       }
     };
 
     savePage();
   }
 
+  commitMessageChange(e) {
+    this.setState({ commitMessage: e.target.value });
+  }
+
   render() {
     const {
-      error, isLoaded, content, saveStatus, saveMessage, previewContent, autosaveDate, saving,
+      error, isLoaded, content, saveStatus, saveMessage,
+      previewContent, autosaveDate, saving, commitMessage,
     } = this.state;
 
     const {
@@ -163,6 +176,7 @@ class EditPage extends React.Component {
     }
 
     let notice = null;
+    let noticeBottom = null;
 
     if (saveStatus.length) {
       notice = (
@@ -170,6 +184,7 @@ class EditPage extends React.Component {
           {saveMessage}
         </Alert>
       );
+      noticeBottom = notice;
     } else if (autosaveDate) {
       const date = new Intl.DateTimeFormat('default', {
         hour: 'numeric',
@@ -233,8 +248,23 @@ class EditPage extends React.Component {
               frontMatter
             />
 
-            <div className="mt-2">
-              <Button variant="success" className="float-right" onClick={this.handleSave} disabled={saving ? 'disabled' : ''}>Save</Button>
+            <div className="mt-2 mb-5 clearfix">
+              {noticeBottom}
+              <Form.Row id="edit-submit">
+                <Form.Group as={Col} className="flex-grow-1">
+                  <Form.Control
+                    type="text"
+                    placeholder="Write quick summary of your changes..."
+                    onChange={this.commitMessageChange}
+                    value={commitMessage}
+                  />
+                </Form.Group>
+                <Form.Group as={Col} className="submit-btn-wrap">
+                  <Button variant="success" onClick={this.handleSave} disabled={saving ? 'disabled' : ''}>
+                    Save (commit)
+                  </Button>
+                </Form.Group>
+              </Form.Row>
             </div>
           </Col>
           <Col xl={6} md={12}>

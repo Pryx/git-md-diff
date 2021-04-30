@@ -5,16 +5,16 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import EditorDiff from './EditorDiff';
 import MDXPreview from './MDXPreview';
-import { docusaurusBaseImages, htmlImages } from '../diff/diff'
+import { docusaurusBaseImages, htmlImages } from '../diff/diff';
+
 const matter = require('front-matter');
 
 /**
  * A slightly modified DiffView for display in the editor file.
  */
 const EditorPreview = ({
-  file, previewOnly, content, from, to, docuId
+  file, previewOnly, content, from, to, docuId,
 }) => {
-
   const contentMatter = matter(content);
 
   let c = content.replace(/---.*---/s, '');
@@ -59,10 +59,10 @@ EditorPreview.defaultProps = {
 EditorPreview.propTypes = {
   file: PropTypes.string.isRequired,
   content: PropTypes.string,
-  from: PropTypes.string,
-  to: PropTypes.string,
+  from: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
   previewOnly: PropTypes.bool,
-  docuId: PropTypes.number
+  docuId: PropTypes.number.isRequired,
 };
 
 const mapStateToProps = (state) => (

@@ -16,6 +16,7 @@ const defaults = {
   pullRequest: '',
   modified: [],
   excluded: [],
+  state: 1
 };
 
 export default class ProofreadingRequest {
@@ -51,6 +52,7 @@ export default class ProofreadingRequest {
       pullRequest: PropTypes.string,
       modified: PropTypes.arrayOf(PropTypes.string),
       excluded: PropTypes.arrayOf(PropTypes.string),
+      state: PropTypes.number
     };
   }
 

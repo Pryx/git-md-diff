@@ -5,7 +5,7 @@ import Row from 'react-bootstrap/Row';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DiffView from './DiffView';
-import { logOut } from '../actions';
+import { logOut, updateChangesList } from '../actions';
 import { store } from '../store';
 import { secureKy } from '../entities/secure-ky';
 import ProofreadingRequest from '../entities/proofreading-request';
@@ -45,6 +45,8 @@ class DiffOverview extends React.Component {
       const fetchChanges = async () => {
         const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/changes/${from}/${to}`).json();
 
+        store.dispatch(updateChangesList(json.data));
+
         this.setState({
           isLoaded: true,
           changes: json.data,
@@ -70,7 +72,7 @@ class DiffOverview extends React.Component {
     } = this.state;
 
     const {
-      from, docuId, to, version, proofreadingReq,
+      from, docuId, to, version, proofreadingReq, noChangesMessage,
     } = this.props;
 
     if (error) {
@@ -103,7 +105,7 @@ class DiffOverview extends React.Component {
       return (
         <Row className="mt-4">
           <Col>
-            No changes in Markdown files for the selected revision range
+            {noChangesMessage}
           </Col>
         </Row>
       );
@@ -134,6 +136,7 @@ class DiffOverview extends React.Component {
 
 DiffOverview.defaultProps = {
   proofreadingReq: null,
+  noChangesMessage: 'No changes in Markdown files for the selected revision range',
 };
 
 DiffOverview.propTypes = {
@@ -142,6 +145,7 @@ DiffOverview.propTypes = {
   to: PropTypes.string.isRequired,
   version: PropTypes.string.isRequired,
   proofreadingReq: PropTypes.shape(ProofreadingRequest.getShape()),
+  noChangesMessage: PropTypes.string,
 };
 
 const mapStateToProps = (state) => ({

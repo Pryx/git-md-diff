@@ -29,6 +29,6 @@ export default class Role {
 
   async save() {
     return sql`INSERT INTO roles (userId, docuId, level) VALUES (${this.userId}, ${this.docuId},${this.level}) ON CONFLICT (userId, docuId) DO
-    UPDATE SET level=${this.level}`;
+    UPDATE SET level=${this.level} RETURNING *`;
   }
 }

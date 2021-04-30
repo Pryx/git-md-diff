@@ -117,6 +117,15 @@ class CommitSelect extends React.Component {
     return endRevision ? endRevision.commit : null;
   }
 
+  getCounterpartCommit() {
+    const { from, startRevision, endRevision } = this.props;
+    if (!from) {
+      return startRevision ? startRevision.commit : null;
+    }
+
+    return endRevision ? endRevision.commit : null;
+  }
+
   reloadData() {
     const { from, docuId } = this.props;
 
@@ -177,7 +186,11 @@ class CommitSelect extends React.Component {
       error, isLoaded, branches, commits,
     } = this.state;
 
-    const { includeCommits } = this.props;
+    const { includeCommits, from } = this.props;
+
+    const counterpartCommit = this.getCounterpartCommit();
+    const counterpartIdx = commits.findIndex((c) => c.value === counterpartCommit);
+    const slicedCommits = from ? commits : commits.slice(0, counterpartIdx);
 
     if (error) {
       return (
@@ -218,7 +231,7 @@ class CommitSelect extends React.Component {
           <Col>
             <SelectSearch
               onChange={this.handleCommit}
-              options={commits}
+              options={slicedCommits}
               value={commits.find((o) => o.value === this.getCurrentCommit())}
               styles={customStyles}
               search

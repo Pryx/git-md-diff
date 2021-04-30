@@ -126,3 +126,14 @@ ins{
 .folder-wrap.closed .folder-children{
   display: none
 }
+
+#editor-diff img,
+#editor-preview img{
+  max-width: 100%;
+}
+
+body #edit-submit .submit-btn-wrap{
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 140px;
+}

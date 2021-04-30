@@ -102,7 +102,7 @@ class EditorDiff extends React.Component {
     }
 
     return (
-      <div className="mt-4">
+      <div className="mt-4" id="editor-diff">
         <div className={`editor-diff-content ${cls}`} dangerouslySetInnerHTML={{ __html: content.content }} />
         <hr />
         <div className="editor-badges">

@@ -68,8 +68,8 @@ export default class ProviderWrapper {
     return this.provider.getBlob(projectId, revision, blob);
   }
 
-  async savePage(projectId, page, branch, content) {
-    return this.provider.savePage(projectId, page, branch, content);
+  async savePage(projectId, page, branch, content, commitMessage) {
+    return this.provider.savePage(projectId, page, branch, content, commitMessage);
   }
 
   async finishProofreading(projectId, source, target, title) {
@@ -78,5 +78,13 @@ export default class ProviderWrapper {
 
   async merge(projectId, prId) {
     return this.provider.merge(projectId, prId);
+  }
+
+  async checkMergeConflicts(projectId, prId) {
+    return this.provider.checkMergeConflicts(projectId, prId);
+  }
+
+  async createBranch(projectId, branch, ref) {
+    return this.provider.createBranch(projectId, branch, ref);
   }
 }

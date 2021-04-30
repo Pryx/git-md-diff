@@ -1,3 +1,4 @@
+import lodash from 'lodash';
 import {
   LOGIN,
   LOGOUT,
@@ -9,16 +10,20 @@ import {
   TOKENS_RECEIVED,
   PAGE_AUTOSAVE,
   PAGE_AUTOSAVE_REMOVE,
+  CHANGE_INCLUDE,
+  CHANGE_EXCLUDE,
 } from '../constants/action-types';
 
 const initialState = {
   userData: null,
   docuList: [],
   autosaved: {},
+  excludedChanges: [],
 };
 
 function rootReducer(state = initialState, action) {
   const { payload } = action;
+
   if (action.type === LOGIN) {
     return {
       ...state,
@@ -67,6 +72,25 @@ function rootReducer(state = initialState, action) {
     return {
       ...state,
       changes: payload,
+    };
+  }
+
+  if (action.type === CHANGE_INCLUDE) {
+    const { excludedChanges } = state;
+
+    lodash.remove(excludedChanges, (e) => e === payload);
+
+    return {
+      ...state,
+      excludedChanges: [...excludedChanges],
+    };
+  }
+
+  if (action.type === CHANGE_EXCLUDE) {
+    const { excludedChanges } = state;
+    return {
+      ...state,
+      excludedChanges: [...excludedChanges, payload],
     };
   }
 

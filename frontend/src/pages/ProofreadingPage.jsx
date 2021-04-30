@@ -10,6 +10,7 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { documentationSelected, logOut, revisionSelected } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
+import { proofreadingStates } from '../constants/proofreading-states';
 import { secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
 import { store } from '../store';
@@ -106,14 +107,16 @@ class ProofreadingPage extends React.Component {
       });
     };
 
-    mergeReq().catch((error) => {
+    mergeReq().catch(async (error) => {
       if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
 
+      const err = await error.response.json();
+
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error: err.error ? err.error : error.toString(),
       });
     });
   }
@@ -128,12 +131,10 @@ class ProofreadingPage extends React.Component {
       return 'Loading...';
     }
 
-    if (error) {
-      return <Alert variant="info">{error}</Alert>;
-    }
-
     let alert = null;
-    if (success) {
+    if (error) {
+      alert = <Alert variant="danger">{error}</Alert>;
+    } else if (success) {
       alert = <Alert variant="success">{success}</Alert>;
     }
 
@@ -143,7 +144,7 @@ class ProofreadingPage extends React.Component {
       if (!req.pullRequest) {
         content = [
           <Alert variant="warning" key="alert">You can&apos;t merge this yet, because the proofreader has not marked the request as completed.</Alert>,
-          <DiffWrapper key="diff" proofreadingReq={req} />,
+          <DiffWrapper key="diff" proofreadingReq={req} noChangesMessage="The proofreader has made no changes yet." />,
         ];
       }
 
@@ -164,6 +165,12 @@ class ProofreadingPage extends React.Component {
       );
     }
 
+    let btnTitle = null;
+
+    if (req.state === proofreadingStates.new || req.state === proofreadingStates.rejected) {
+      btnTitle = 'Submit';
+    }
+
     return (
       <Container className="mt-5">
         <Row>
@@ -175,7 +182,7 @@ class ProofreadingPage extends React.Component {
           </Col>
         </Row>
         {alert}
-        <DiffWrapper proofreadingReq={req} buttonTitle="Submit" onClick={this.submitProofread} />
+        <DiffWrapper proofreadingReq={req} buttonTitle={btnTitle} onClick={this.submitProofread} />
       </Container>
     );
   }

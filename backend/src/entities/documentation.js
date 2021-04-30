@@ -88,6 +88,6 @@ export default class Documentation {
   async save() {
     return sql`INSERT INTO documentations (provider, providerId, name, slug, description) 
       VALUES (${this.provider}, ${this.providerId}, ${this.name}, ${this.slug}, ${this.description})  
-      ON CONFLICT (provider, providerId) DO UPDATE SET name=${this.name}, slug=${this.slug}, description=${this.description};`;
+      ON CONFLICT (provider, providerId) DO UPDATE SET name=${this.name}, slug=${this.slug}, description=${this.description} RETURNING *;`;
   }
 }

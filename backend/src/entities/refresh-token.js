@@ -24,6 +24,6 @@ export default class RefreshToken {
   }
 
   async save() {
-    return sql`INSERT INTO tokens (userId, hash, expire) VALUES (${this.userId}, ${this.hash},${this.expire})`;
+    return sql`INSERT INTO tokens (userId, hash, expire) VALUES (${this.userId}, ${this.hash},${this.expire}) RETURNING *`;
   }
 }

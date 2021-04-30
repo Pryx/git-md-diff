@@ -1,4 +1,5 @@
 import sql from '../db';
+import proofreadingStates from './proofreading-states';
 import User from './user';
 
 const defaults = {
@@ -15,6 +16,7 @@ const defaults = {
   pullRequest: '',
   modified: [],
   excluded: [],
+  state: proofreadingStates.new,
 };
 
 export default class ProofreadingRequest {
@@ -32,6 +34,7 @@ export default class ProofreadingRequest {
     this.excluded = params.excluded || defaults.excluded;
     this.modified = params.modified || defaults.modified;
     this.pullRequest = params.pullRequest || params.pullrequest || defaults.pullRequest;
+    this.state = params.state || params.state || defaults.state;
   }
 
   static async get(id) {
@@ -45,7 +48,7 @@ export default class ProofreadingRequest {
   }
 
   static async getUserRequests(userId) {
-    const results = await sql`SELECT * FROM proofreading_requests WHERE (requester=${userId} OR proofreader=${userId}) AND pullrequest!='-1'`;
+    const results = await sql`SELECT * FROM proofreading_requests WHERE (requester=${userId} OR proofreader=${userId}) AND state!=${proofreadingStates.merged} ORDER BY id DESC`;
 
     if (results.count) {
       const reqs = await Promise.all(
@@ -74,16 +77,16 @@ export default class ProofreadingRequest {
       return sql`UPDATE proofreading_requests SET 
       docuId=${this.docuId}, title=${this.title}, sourceBranch=${this.sourceBranch}, targetBranch=${this.targetBranch}, description=${this.description}, 
       revFrom=${this.revFrom}, revTo=${this.revTo}, proofreader=${proofreader}, excluded=${sql.array(this.excluded)},
-      modified=${sql.array(this.modified)}, pullRequest=${this.pullRequest} WHERE id=${this.id};`;
+      modified=${sql.array(this.modified)}, pullRequest=${this.pullRequest}, state=${this.state} WHERE id=${this.id};`;
     }
 
     return sql`INSERT INTO proofreading_requests (
       docuId, title, sourceBranch, targetBranch, description, revFrom, revTo, 
-      requester, proofreader, excluded, modified, pullRequest
+      requester, proofreader, excluded, modified, pullRequest, state
       ) VALUES (
         ${this.docuId}, ${this.title}, ${this.sourceBranch}, ${this.targetBranch}, ${this.description}, 
         ${this.revFrom}, ${this.revTo}, ${requester}, ${proofreader}, 
-        ${sql.array(this.excluded)}, ${sql.array(this.modified)}, ${this.pullRequest}
-      );`;
+        ${sql.array(this.excluded)}, ${sql.array(this.modified)}, ${this.pullRequest}, ${this.state}
+      ) RETURNING *;`;
   }
 }

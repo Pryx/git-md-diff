@@ -17,7 +17,7 @@ export function htmlImages(repository, from, to, markdown) {
 
   // Replace url with our API url; if not relative to domain, keep it
   const url = `src="${window.env.api.backend}/documentations/${repository}/${to}/${token}/blobs/`;
-  let clean = markdown.replace(/(<img.*?)src=["'](?!http|\/\/)[\/]?(.*?["'])/gimu, `$1${url}$2`);
+  let clean = markdown.replace(/(<img.*?)src=["'](?!http|\/\/)[/]?(.*?["'])/gimu, `$1${url}$2`);
 
   // Replace old version with old version links
   const reg = new RegExp(`(<del.*?src=["'].*?)/${to}/(.*?["'].*?/del>)`, 'gimu');

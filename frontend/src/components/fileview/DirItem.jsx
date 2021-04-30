@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { hot } from 'react-hot-loader';
 
-const DirItem = ({ name, children }) => {
-  const [isOpen, setIsOpen] = useState(true);
+const DirItem = ({ name, children, openState }) => {
+  const [isOpen, setIsOpen] = useState(openState);
 
   const toggle = (e) => {
     e.preventDefault();
@@ -27,11 +27,13 @@ const DirItem = ({ name, children }) => {
 
 DirItem.defaultProps = {
   children: null,
+  openState: false,
 };
 
 DirItem.propTypes = {
   name: PropTypes.string.isRequired,
   children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)]),
+  openState: PropTypes.bool,
 };
 
 export default hot(module)(DirItem);

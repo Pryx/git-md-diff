@@ -1,5 +1,6 @@
 import Documentation from '../entities/documentation';
 import ProofreadingRequest from '../entities/proofreading-request';
+import proofreadingStates from '../entities/proofreading-states';
 import ProviderWrapper from '../providers/provider-wrapper';
 
 export default class ProofreadingService {
@@ -14,8 +15,12 @@ export default class ProofreadingService {
 
     // TODO: Probably create branch or something...
     const provider = new ProviderWrapper(docu.provider, this.user.tokens); //eslint-disable-line
+    const savedReq = new ProofreadingRequest(...await req.save());
 
-    return req.save();
+    await provider.createBranch(docu.providerId, `git-md-proofreading-${savedReq.id}`, savedReq.revTo);
+    savedReq.sourceBranch = `git-md-proofreading-${savedReq.id}`;
+    await savedReq.save();
+    return savedReq;
   }
 
   async get(reqId) {
@@ -39,10 +44,11 @@ export default class ProofreadingService {
       docu.providerId,
       req.sourceBranch,
       req.targetBranch,
-      `Finished proofreading request nr. ${req.id}`,
+      `Completed proofreading nr. ${req.id}`,
     );
 
     req.pullRequest = response.iid;
+    req.state = proofreadingStates.submitted;
     req.save();
 
     return response;
@@ -54,13 +60,21 @@ export default class ProofreadingService {
     const docu = await Documentation.get(req.docuId);
 
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+    const hasConflicts = await provider.checkMergeConflicts(
+      docu.providerId,
+      req.pullRequest,
+    );
+
+    if (hasConflicts) {
+      throw Error('This branch cannot be merged due to conflicts. Please resolve them manually.');
+    }
 
     const response = await provider.merge(
       docu.providerId,
       req.pullRequest,
     );
 
-    req.pullRequest = -1;
+    req.state = proofreadingStates.merged;
     req.save();
 
     return response;
@@ -71,7 +85,9 @@ export default class ProofreadingService {
     if (req.modified.indexOf(page) === -1) {
       req.modified.push(page);
     }
-    return req.save();
+    req.state = proofreadingStates.inprogress;
+    await req.save();
+    return req;
   }
 
   async getUserRequests() {

@@ -4,7 +4,6 @@ import React from 'react';
 import { Alert } from 'react-bootstrap';
 import { hot } from 'react-hot-loader';
 
-
 /**
  * A slightly modified DiffView for display in the editor file.
  */
@@ -27,9 +26,7 @@ class MDXPreview extends React.Component {
   }
 
   async getRenderedContent(content) {
-    this.setState({ isLoaded: false });
-
-    const response = await ky.post(`${window.env.api.render}/render`, { json: { content: content } });
+    const response = await ky.post(`${window.env.api.render}/render`, { json: { content } });
     const ajax = await response.json();
 
     this.setState({ isLoaded: true, rendered: ajax.rendered });
@@ -56,7 +53,7 @@ class MDXPreview extends React.Component {
     }
 
     return (
-      <div className="mt-4" dangerouslySetInnerHTML={{ __html: rendered }} />
+      <div className="mt-4" id="editor-preview" dangerouslySetInnerHTML={{ __html: rendered }} />
     );
   }
 }

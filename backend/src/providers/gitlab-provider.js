@@ -96,8 +96,8 @@ export default class GitlabProvider {
     }
   }
 
-  async savePage(projectId, page, branch, content) {
-    return this.gitlab.RepositoryFiles.edit(projectId, page, branch, content, `Edited ${page} via Git-md-diff`);
+  async savePage(projectId, page, branch, content, commitMessage) {
+    return this.gitlab.RepositoryFiles.edit(projectId, page, branch, content, commitMessage || `Edited ${page} via Git-md-diff`);
   }
 
   async createPR(projectId, source, target, title) {
@@ -109,6 +109,21 @@ export default class GitlabProvider {
       projectId,
       iid,
       { squash: true, should_remove_source_branch: true },
+    );
+  }
+
+  async checkMergeConflicts(projectId, iid) {
+    return (await this.gitlab.MergeRequests.show(
+      projectId,
+      iid,
+    )).has_conflicts;
+  }
+
+  async createBranch(projectId, branch, ref) {
+    return this.gitlab.Branches.create(
+      projectId,
+      branch,
+      ref,
     );
   }
 }

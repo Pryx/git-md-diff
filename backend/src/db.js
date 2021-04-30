@@ -52,6 +52,8 @@ async function setupDb() {
     pullRequest TEXT
   );`;
 
+  await sql`ALTER TABLE proofreading_requests ADD COLUMN IF NOT EXISTS state INTEGER;`;
+
   await sql`CREATE TABLE IF NOT EXISTS roles(
     userId INTEGER REFERENCES users(id),
     docuId INTEGER REFERENCES documentations(id),

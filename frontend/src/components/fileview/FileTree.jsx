@@ -24,6 +24,7 @@ const FileTree = ({ data, path }) => {
 
 FileTree.defaultProps = {
   path: '',
+  openState: false,
 };
 
 // https://stackoverflow.com/a/58556318

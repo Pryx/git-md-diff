@@ -138,10 +138,10 @@ export default class DocumentationService {
     return p;
   }
 
-  async savePage(docuId, version, page, content) {
+  async savePage(docuId, version, page, content, commitMessage) {
     const docu = await Documentation.get(docuId);
     const projectId = docu.providerId;
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
-    await provider.savePage(projectId, page, version, content);
+    await provider.savePage(projectId, page, version, content, commitMessage);
   }
 }
