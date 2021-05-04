@@ -1,7 +1,7 @@
 import { Gitlab } from '@gitbeaker/node';
 import {
   versionTransformer, revisionTransformer, changesTransformer,
-  repositoryTransformer, repositoryTreeTransformer,
+  repositoryTransformer, repositoryTreeTransformer, mergeRequestTransformer
 } from '../transformers/gitlab';
 import accessLevels from '../entities/access-levels';
 
@@ -112,11 +112,19 @@ export default class GitlabProvider {
     );
   }
 
-  async checkMergeConflicts(projectId, iid) {
-    return (await this.gitlab.MergeRequests.show(
+  async getMergeRequest(projectId, iid) {
+    return mergeRequestTransformer(await this.gitlab.MergeRequests.show(
       projectId,
       iid,
-    )).has_conflicts;
+    ));
+  }
+
+  async closeMergeRequest(projectId, iid) {
+    return this.gitlab.MergeRequests.edit(
+      projectId,
+      iid,
+      {stateEvent: 'close'}
+    );
   }
 
   async createBranch(projectId, branch, ref) {

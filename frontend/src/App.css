@@ -53,10 +53,12 @@ ins{
 }
 
 .docu-card.card {
-  width: calc(25% - 8px);
+  width: calc(25% - 16px);
+  margin-left: 8px;
   margin-right: 8px;
   margin-bottom: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  cursor: pointer;
 }
 
 .docu-card.card .card-header{
@@ -137,3 +139,28 @@ body #edit-submit .submit-btn-wrap{
   flex-shrink: 0;
   flex-basis: 140px;
 }
+
+*:disabled {
+  cursor: not-allowed;
+} 
+
+@media (max-width: 1024px)  {
+  .docu-card.card{
+    width: calc(33% - 16px);
+  }
+}
+
+@media (max-width: 768px)  {
+  .docu-card.card{
+    width: calc(50% - 16px);
+  }
+}
+/*
+.file-card .card-body{
+  max-height: 150px;
+  overflow: hidden;
+}
+
+.file-card.expanded .card-body{
+  max-height: none;
+}*/

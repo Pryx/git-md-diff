@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {
-  Alert, Button, Card, Form,
+  Alert, Breadcrumb, Button, Card, Form,
 } from 'react-bootstrap';
 import Dialog from 'react-bootstrap-dialog';
 import Col from 'react-bootstrap/Col';
@@ -10,7 +10,7 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import slugify from 'slugify';
-import { Redirect } from 'wouter';
+import { Link, Redirect } from 'wouter';
 import { logOut } from '../actions';
 import DocuUsers from '../components/DocuUsers';
 import accessLevels from '../constants/access-levels';
@@ -173,8 +173,37 @@ class DocumentationSettings extends React.Component {
       slug, name, description, deleted, error, success, docu, isLoaded,
     } = this.state;
 
+    const {docuId} = this.props;
+    const breadcrumbs = (
+      <Row>
+          <Col>
+            <Breadcrumb>
+              <Link href="/">
+                <Breadcrumb.Item>Home</Breadcrumb.Item>
+              </Link>
+              <Link href={`/documentation/${docuId}`}>
+                <Breadcrumb.Item>
+                  Documentation {docuId}
+                </Breadcrumb.Item>
+              </Link>
+              <Breadcrumb.Item active>Settings</Breadcrumb.Item>
+            </Breadcrumb>
+          </Col>
+        </Row>
+    );
+
+
     if (!isLoaded) {
-      return 'Loading...';
+      return (
+        <Container className="mt-3">
+          {breadcrumbs}
+          <Row>
+            <Col>
+              Loading...
+            </Col>
+          </Row>
+        </Container>
+      );
     }
 
     if (docu.accessLevel > accessLevels.admin) {
@@ -204,9 +233,10 @@ class DocumentationSettings extends React.Component {
     }
 
     return (
-      <Container className="mt-5">
+      <Container className="mt-3">
+        {breadcrumbs}
         <Row>
-          <Col lg={12} xs={12}>
+          <Col>
             <h1>
               {docu.name}
               {' '}
@@ -215,7 +245,7 @@ class DocumentationSettings extends React.Component {
           </Col>
         </Row>
         <Row>
-          <Col lg={12} xs={12}>
+          <Col>
             <Card>
               <Card.Header>Documentation settings</Card.Header>
               <Card.Body>
@@ -281,7 +311,7 @@ class DocumentationSettings extends React.Component {
         </Row>
 
         <Row className="mt-5">
-          <Col lg={12} xs={12}>
+          <Col>
             <DocuUsers docu={docu} />
           </Col>
         </Row>

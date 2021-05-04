@@ -79,8 +79,8 @@ class DiffView extends React.Component {
     } = this.props;
 
     const fetchDiff = async () => {
-      const original = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`).json();
-      const modified = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`).json();
+      const original = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${from}/pages/${oldFile}`).json();
+      const modified = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${newFile}`).json();
       const content = await Diff({ docuId, from, to }, original.data, modified.data, this.options);
 
       this.setState(
@@ -160,9 +160,9 @@ class DiffView extends React.Component {
       );
     }
 
-    let cls = '';
+    let cls = 'file-card';
     if (content.newFile) {
-      cls = 'newfile';
+      cls += ' newfile';
       badges.push(<Badge variant="success" key="newfile">NEW</Badge>);
     }
 

@@ -310,6 +310,13 @@ app.put('/proofreading/', passport.authenticate('jwt', { session: false }), (req
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+app.get('/proofreading/documentation/:docuId', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new ProofreadingService(req.user);
+  service.getDocuRequests(req.params.docuId)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
 app.get('/proofreading/:reqId', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.get(req.params.reqId)

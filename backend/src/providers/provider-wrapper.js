@@ -80,8 +80,12 @@ export default class ProviderWrapper {
     return this.provider.merge(projectId, prId);
   }
 
-  async checkMergeConflicts(projectId, prId) {
-    return this.provider.checkMergeConflicts(projectId, prId);
+  async getMergeRequest(projectId, prId) {
+    return this.provider.getMergeRequest(projectId, prId);
+  }
+
+  async closeMergeRequest(projectId, prId) {
+    return this.provider.closeMergeRequest(projectId, prId);
   }
 
   async createBranch(projectId, branch, ref) {

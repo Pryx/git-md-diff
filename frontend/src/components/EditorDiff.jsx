@@ -33,8 +33,8 @@ class EditorDiff extends React.Component {
 
       const { oldFile, newFile } = changes.find((v) => v.newFile === file);
 
-      const original = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${from}/pages/${encodeURIComponent(oldFile)}`).json();
-      const modified = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${encodeURIComponent(newFile)}`).json();
+      const original = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${from}/pages/${oldFile}`).json();
+      const modified = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${to}/pages/${newFile}`).json();
       const content = await Diff({ docuId, from, to }, original.data, modified.data, this.options);
 
       this.setState(

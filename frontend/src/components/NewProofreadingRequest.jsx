@@ -148,6 +148,9 @@ class NewProofreadingRequest extends React.Component {
                 this.setState({ title: e.target.value });
               }}
             />
+            <Form.Text className="text-muted">
+              The title should be informative and easily distinguishable.
+            </Form.Text>
           </Form.Group>
         </Row>
         <Row className="mt-2">
@@ -161,6 +164,10 @@ class NewProofreadingRequest extends React.Component {
                 this.setState({ description: e.target.value });
               }}
             />
+            <Form.Text className="text-muted">
+              Are there any specific areas the proofreader should focus on?
+              This will be displayed on the request page.
+            </Form.Text>
           </Form.Group>
         </Row>
         <Row className="mt-2">

@@ -60,7 +60,7 @@ class UserProfile extends React.Component {
       return (
         <Container className="mt-5">
           <Row>
-            <Col lg={12} xs={12}>
+            <Col>
               <Alert variant="info">{error}</Alert>
             </Col>
           </Row>
@@ -76,7 +76,7 @@ class UserProfile extends React.Component {
       return (
         <Container className="mt-5">
           <Row>
-            <Col lg={12} xs={12}>
+            <Col>
               <Card>
                 <Card.Header>
                   User:

@@ -4,7 +4,7 @@ import 'codemirror/lib/codemirror.css';
 import lodash from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Form } from 'react-bootstrap';
+import { Breadcrumb, Form } from 'react-bootstrap';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
@@ -12,10 +12,12 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
+import { Link } from 'wouter';
 import {
   documentationSelected, logOut, pageAutosave, pageAutosaveRemove,
 } from '../actions';
 import EditorPreview from '../components/EditorPreview';
+import EditorWrapper from '../components/EditorWrapper';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 
@@ -46,237 +48,49 @@ class EditPage extends React.Component {
     store.dispatch(documentationSelected(docuId));
 
     this.file = decodeURIComponent(file);
-    this.handleSave = this.handleSave.bind(this);
-    this.commitMessageChange = this.commitMessageChange.bind(this);
-
-    this.debouncedAutosave = lodash.debounce(() => {
-      if (!this.editorInit) {
-        this.editorInit = true;
-        return;
-      }
-
-      const content = this.editorRef.current.getInstance().getMarkdown();
-
-      this.setState({
-        previewContent: content,
-        autosaveDate: false,
-        isLoaded: true,
-      });
-      store.dispatch(pageAutosave(docuId, this.file, content));
-    }, 250);
   }
 
-  componentDidMount() {
-    const { docuId, version, autosaved } = this.props;
-
-    const fetchPage = async () => {
-      const docuAutosave = autosaved[docuId] || {};
-      const fileAutosave = docuAutosave[this.file] || {};
-
-      const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${version}/pages/${encodeURIComponent(this.file)}`).json();
-
-      if (fileAutosave.content && fileAutosave.content === json.data) {
-        store.dispatch(pageAutosaveRemove(docuId, this.file));
-        fileAutosave.date = null;
-      }
-
-      this.setState({
-        content: json.data,
-        previewContent: fileAutosave.content || json.data,
-        autosaveDate: fileAutosave.date,
-        isLoaded: true,
-      });
-    };
-
-    fetchPage().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
-      }
-
-      this.setState({
-        isLoaded: true,
-        error: error.toString(),
-      });
-    });
-  }
-
-  handleSave() {
-    const { docuId, version, onSave } = this.props;
-    const { commitMessage } = this.state;
-
-    this.setState({
-      saving: true,
-    });
-
-    const savePage = async () => {
-      const response = await secureKy().put(`${window.env.api.backend}/documentations/${docuId}/${version}/pages/${encodeURIComponent(this.file)}`,
-        {
-          json: { content: this.editorRef.current.getInstance().getMarkdown(), commitMessage },
-        }).json();
-
-      if (response.success) {
-        if (typeof onSave === 'function') {
-          onSave();
-        }
-        store.dispatch(pageAutosaveRemove(docuId, this.file));
-        this.setState({
-          saving: false, saveStatus: 'success', commitMessage: '', saveMessage: 'Successfully saved!',
-        });
-      } else {
-        this.setState({
-          saving: false, saveStatus: 'danger', commitMessage: '', saveMessage: response.error,
-        });
-      }
-    };
-
-    savePage();
-  }
-
-  commitMessageChange(e) {
-    this.setState({ commitMessage: e.target.value });
-  }
 
   render() {
     const {
-      error, isLoaded, content, saveStatus, saveMessage,
-      previewContent, autosaveDate, saving, commitMessage,
+      error
     } = this.state;
 
     const {
-      from, to, file, docuId,
+      docuId, version, from, to, file,
     } = this.props;
 
     if (error) {
       return (
-        <Container className="mt-5">
+        <Container className="editor-wrap">
           <Alert variant="danger">{error}</Alert>
         </Container>
-      );
-    }
-
-    if (!isLoaded) {
-      return (
-        <div className="p-5">
-          <Row>
-            <Col xl={12}>
-              <h3>
-                <i className="fas fa-file-alt" />
-                {' '}
-                {this.file}
-              </h3>
-            </Col>
-          </Row>
-          <Row>
-            <Col xl={12}>
-              Loading...
-            </Col>
-          </Row>
-        </div>
-      );
-    }
-
-    let notice = null;
-    let noticeBottom = null;
-
-    if (saveStatus.length) {
-      notice = (
-        <Alert variant={saveStatus}>
-          {saveMessage}
-        </Alert>
-      );
-      noticeBottom = notice;
-    } else if (autosaveDate) {
-      const date = new Intl.DateTimeFormat('default', {
-        hour: 'numeric',
-        minute: 'numeric',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }).format(new Date(autosaveDate));
-
-      const restoreHandler = (e) => {
-        e.preventDefault();
-        this.editorRef.current.getInstance().setMarkdown(content);
-        store.dispatch(pageAutosaveRemove(docuId, file));
-        this.setState({ previewContent: content, autosaveDate: false });
-      };
-
-      const dismissHandler = (e) => {
-        e.preventDefault();
-        store.dispatch(pageAutosaveRemove(docuId, file));
-        this.setState({ autosaveDate: false });
-      };
-
-      notice = (
-        <Alert variant="info" onClose={dismissHandler} dismissible>
-          An autosaved version from
-          {' '}
-          <strong>{date}</strong>
-          {' '}
-          was automatically restored.
-          {' '}
-          <Alert.Link onClick={restoreHandler}>
-            Click here if you want to edit the original instead
-          </Alert.Link>
-          .
-        </Alert>
       );
     }
 
     return (
       <div className="editor-wrap">
         <Row className="mt-3 mr-3 ml-3">
-          <Col xl={12}>
-            <h3>
-              <i className="fas fa-file-alt" />
-              {' '}
-              {this.file}
-            </h3>
+          <Col>
+            <Breadcrumb>
+              <Link href="/">
+                <Breadcrumb.Item>Home</Breadcrumb.Item>
+              </Link>
+              <Link href={`/documentation/${docuId}`}>
+                <Breadcrumb.Item>
+                  Documentation {docuId}
+                </Breadcrumb.Item>
+              </Link>
+              <Breadcrumb.Item active><strong>Edit file</strong> {this.file}</Breadcrumb.Item>
+            </Breadcrumb>
           </Col>
         </Row>
-        <Row className="mt-3 mr-3 ml-3">
-          <Col xl={6} md={12}>
-            {notice}
-            <Editor
-              initialValue={previewContent}
-              previewStyle="global"
-              height="100%"
-              initialEditType="markdown"
-              useCommandShortcut
-              ref={this.editorRef}
-              onChange={() => this.debouncedAutosave()}
-              frontMatter
-            />
-
-            <div className="mt-2 mb-5 clearfix">
-              {noticeBottom}
-              <Form.Row id="edit-submit">
-                <Form.Group as={Col} className="flex-grow-1">
-                  <Form.Control
-                    type="text"
-                    placeholder="Write quick summary of your changes..."
-                    onChange={this.commitMessageChange}
-                    value={commitMessage}
-                  />
-                </Form.Group>
-                <Form.Group as={Col} className="submit-btn-wrap">
-                  <Button variant="success" onClick={this.handleSave} disabled={saving ? 'disabled' : ''}>
-                    Save (commit)
-                  </Button>
-                </Form.Group>
-              </Form.Row>
-            </div>
-          </Col>
-          <Col xl={6} md={12}>
-            <EditorPreview
-              file={this.file}
-              previewOnly={!(from && to)}
-              content={previewContent}
-              from={from}
-              to={to}
-            />
-          </Col>
-        </Row>
+        <EditorWrapper
+          docuId={docuId}
+          version={version}
+          from={from}
+          to={to}
+          file={file} />
       </div>
     );
   }

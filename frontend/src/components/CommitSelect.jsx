@@ -164,7 +164,17 @@ class CommitSelect extends React.Component {
       this.setState(
         {
           isLoaded: true,
-          commits: commits.data.map((c) => ({ label: `[${c.shortId}] ${c.title} (Author: ${c.author.name})`, value: c.shortId })),
+          commits: commits.data.map((c) => {
+            const date = new Date(c.created);
+            const format = new Intl.DateTimeFormat('default', {
+              year: 'numeric',
+              month: 'numeric',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+            }).format(date);
+            return { label: `[${format}] ${c.title} (Author: ${c.author.name})`, value: c.shortId };
+          }),
         },
       );
     };

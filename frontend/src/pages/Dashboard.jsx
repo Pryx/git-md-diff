@@ -14,13 +14,13 @@ import ProofreadingOverview from '../components/ProofreadingOverview';
 const Dashboard = () => (
   <Container className="mt-5">
     <Row>
-      <Col lg={12} xs={12}>
+      <Col>
         <h2>Your documentations</h2>
       </Col>
     </Row>
     <DocuOverview />
     <Row className="mt-5">
-      <Col lg={12} xs={12}>
+      <Col>
         <h2>Your proofreading requests</h2>
       </Col>
     </Row>

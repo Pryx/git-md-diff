@@ -14,7 +14,7 @@ import FileView from './FileView';
  * Currently it stores the info about current repository and selected commits
  * and passess it to wrapped components.
  */
-class EditWrapper extends React.Component {
+class FileViewWrapper extends React.Component {
   state = {
     error: null,
   };
@@ -41,7 +41,7 @@ class EditWrapper extends React.Component {
     return (
       <div className="edit">
         <Row className="select-edit-version mt-4">
-          <Col lg={12} xs={12}>
+          <Col>
             <strong>Documentation revision:</strong>
             <CommitSelect id="to" from={false} includeCommits={false} />
           </Col>
@@ -56,15 +56,15 @@ class EditWrapper extends React.Component {
   }
 }
 
-EditWrapper.defaultProps = {
+FileViewWrapper.defaultProps = {
   docuEmpty: false,
 };
 
-EditWrapper.propTypes = {
+FileViewWrapper.propTypes = {
   docuId: PropTypes.number.isRequired,
   docuEmpty: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({ docuId: state.docuId, docuEmpty: state.docuEmpty });
 
-export default hot(module)(connect(mapStateToProps)(EditWrapper));
+export default hot(module)(connect(mapStateToProps)(FileViewWrapper));

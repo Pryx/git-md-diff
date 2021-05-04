@@ -46,3 +46,19 @@ export function repositoryTreeTransformer(treeObj) {
     dir: treeObj.type === 'tree',
   };
 }
+
+
+export function mergeRequestTransformer(mergeReq) {
+  return {
+    id: mergeReq.id,
+    iid: mergeReq.iid,
+    projectId: mergeReq.project_id,
+    title: mergeReq.title,
+    description: mergeReq.description,
+    state: mergeReq.state,
+    targetBranch: mergeReq.target_branch,
+    sourceBranch: mergeReq.source_branch,
+    hasConflicts: mergeReq.has_conflicts,
+    changesCount: mergeReq.changes_count,
+  };
+}

@@ -1,6 +1,8 @@
+import accessLevels from '../entities/access-levels';
 import Documentation from '../entities/documentation';
 import ProofreadingRequest from '../entities/proofreading-request';
 import proofreadingStates from '../entities/proofreading-states';
+import Role from '../entities/role';
 import ProviderWrapper from '../providers/provider-wrapper';
 
 export default class ProofreadingService {
@@ -60,24 +62,32 @@ export default class ProofreadingService {
     const docu = await Documentation.get(req.docuId);
 
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
-    const hasConflicts = await provider.checkMergeConflicts(
+    const mergeReq = await provider.getMergeRequest(
       docu.providerId,
       req.pullRequest,
     );
 
-    if (hasConflicts) {
-      throw Error('This branch cannot be merged due to conflicts. Please resolve them manually.');
+    if (mergeReq.changesCount === null){
+      await provider.closeMergeRequest(
+        docu.providerId,
+        req.pullRequest,
+      );
+    } else {
+      if (mergeReq.hasConflicts) {
+        throw Error('This branch cannot be merged due to conflicts. Please resolve them manually.');
+      }
+
+      await provider.merge(
+        docu.providerId,
+        req.pullRequest,
+      );
     }
-
-    const response = await provider.merge(
-      docu.providerId,
-      req.pullRequest,
-    );
+    
 
     req.state = proofreadingStates.merged;
     req.save();
 
-    return response;
+    return req;
   }
 
   static async savePage(reqId, page) {
@@ -92,5 +102,15 @@ export default class ProofreadingService {
 
   async getUserRequests() {
     return ProofreadingRequest.getUserRequests(this.user.id);
+  }
+
+  async getDocuRequests(docuId) {
+    const perm = Role.get(this.user.id, docuId);
+
+    if (perm.level === accessLevels.manager || perm.level === accessLevels.admin){
+      return ProofreadingRequest.getDocuRequests(docuId);
+    }
+
+    return ProofreadingRequest.getDocuRequests(docuId, this.user.id);
   }
 }

@@ -69,11 +69,7 @@ class NewDocumentation extends React.Component {
   }
 
   handleNameUpdate(e) {
-    const { origSlug } = this.state;
     this.setState({ name: e.target.value });
-    if (this.slugChanged && !origSlug.length) {
-      this.slugChanged = false;
-    }
 
     if (!this.slugChanged) {
       const slug = slugify(e.target.value, { lower: true });
@@ -86,8 +82,16 @@ class NewDocumentation extends React.Component {
   }
 
   handleSlugUpdate(e) {
+    const { name } = this.state;
     this.setState({ slug: e.target.value });
-    this.slugChanged = true;
+
+    const slug = slugify(name, { lower: true });
+
+    if (e.target.value.length === 0 || e.target.value === slug) {
+      this.slugChanged = false;
+    } else {
+      this.slugChanged = true;
+    }
   }
 
   render() {
@@ -110,12 +114,12 @@ class NewDocumentation extends React.Component {
     return (
       <Container className="mt-5">
         <Row>
-          <Col lg={12} xs={12}>
+          <Col>
             <h2>New documentation</h2>
           </Col>
         </Row>
         <Row>
-          <Col lg={12} xs={12}>
+          <Col>
             {alert}
             <Form onSubmit={this.handleSubmit}>
               <Form.Row>

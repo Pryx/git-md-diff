@@ -1,15 +1,16 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {
-  Alert,
+  Alert, Breadcrumb,
 } from 'react-bootstrap';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
+import { Link } from 'wouter';
 import { documentationSelected, logOut, revisionSelected } from '../actions';
-import DiffWrapper from '../components/DiffWrapper';
+import ProofreadingDiffWrapper from '../components/ProofreadingDiffWrapper';
 import { proofreadingStates } from '../constants/proofreading-states';
 import { secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
@@ -125,10 +126,36 @@ class ProofreadingPage extends React.Component {
     const {
       error, req, isLoaded, success,
     } = this.state;
-    const { userData } = this.props;
+    const { userData, docuId, reqId } = this.props;
+
+    const breadcrumbs = (
+      <Row>
+        <Col>
+          <Breadcrumb>
+            <Link href="/">
+              <Breadcrumb.Item>Home</Breadcrumb.Item>
+            </Link>
+            <Link href={`/documentation/${docuId}`}>
+              <Breadcrumb.Item>
+                Documentation {docuId}
+              </Breadcrumb.Item>
+            </Link>
+            <Breadcrumb.Item active>Proofreading request {reqId}</Breadcrumb.Item>
+          </Breadcrumb>
+        </Col>
+      </Row>
+    );
 
     if (!isLoaded) {
-      return 'Loading...';
+      return (
+        <Container className="mt-3">
+          {breadcrumbs}
+          <Row>
+            <Col>
+              Loading...
+            </Col>
+          </Row>
+        </Container>);
     }
 
     let alert = null;
@@ -139,19 +166,12 @@ class ProofreadingPage extends React.Component {
     }
 
     if (userData.id === req.requester.id) {
-      let content = <DiffWrapper proofreadingReq={req} buttonTitle="Merge" onClick={this.merge} />;
-
-      if (!req.pullRequest) {
-        content = [
-          <Alert variant="warning" key="alert">You can&apos;t merge this yet, because the proofreader has not marked the request as completed.</Alert>,
-          <DiffWrapper key="diff" proofreadingReq={req} noChangesMessage="The proofreader has made no changes yet." />,
-        ];
-      }
-
+      const btnTitle = !success ? "Merge" : '';
       return (
-        <Container className="mt-5">
+        <Container className="mt-3">
+          {breadcrumbs}
           <Row>
-            <Col lg={12} xs={12}>
+            <Col>
               <h1>
                 {req.title}
               </h1>
@@ -160,21 +180,30 @@ class ProofreadingPage extends React.Component {
           </Row>
           <Alert variant="info" key="info">You are seeing changes made by the proofreader.</Alert>
           {alert}
-          {content}
+          <ProofreadingDiffWrapper
+            proofreadingReq={req}
+            buttonTitle={btnTitle}
+            onClick={this.merge}
+            noChangesMessage="The proofreader has made no changes."
+            proofreader={false}
+            disabledText="You can&apos;t merge this yet, because the proofreader has not marked the request as completed."
+          />
         </Container>
       );
     }
 
-    let btnTitle = null;
+    let btnTitle = '';
 
-    if (req.state === proofreadingStates.new || req.state === proofreadingStates.rejected) {
-      btnTitle = 'Submit';
+    if ((req.state === proofreadingStates.new
+      || req.state === proofreadingStates.inprogress
+      || req.state === proofreadingStates.rejected) && !success) {
+      btnTitle = 'Mark as complete';
     }
 
     return (
       <Container className="mt-5">
         <Row>
-          <Col lg={12} xs={12}>
+          <Col>
             <h1>
               {req.title}
             </h1>
@@ -182,7 +211,11 @@ class ProofreadingPage extends React.Component {
           </Col>
         </Row>
         {alert}
-        <DiffWrapper proofreadingReq={req} buttonTitle={btnTitle} onClick={this.submitProofread} />
+        <ProofreadingDiffWrapper
+          proofreadingReq={req}
+          buttonTitle={btnTitle}
+          onClick={this.submitProofread}
+        />
       </Container>
     );
   }
@@ -195,6 +228,7 @@ ProofreadingPage.defaultProps = {
 ProofreadingPage.propTypes = {
   userData: PropTypes.shape(User.getShape()),
   reqId: PropTypes.number.isRequired,
+  docuId: PropTypes.number.isRequired,
 };
 
 function mapStateToProps(state) {

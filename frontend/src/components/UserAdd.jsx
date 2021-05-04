@@ -33,6 +33,7 @@ class UserAdd extends React.Component {
     e.preventDefault();
     const { docu, callback } = this.props;
     const { accesslvl, user } = this.state;
+
     const addUser = async () => {
       const json = await secureKy().put(`${window.env.api.backend}/documentations/${docu.id}/users/`, { json: { providerId: user.value, level: accesslvl.value } });
 
@@ -40,8 +41,19 @@ class UserAdd extends React.Component {
         throw Error("Couldn't add user!");
       }
 
+      this.setState({ accesslvl: null, user: null });
       callback();
     };
+
+    if (!user) {
+      this.setState({ error: 'You need to select a valid user' });
+      return;
+    }
+
+    if (!accesslvl) {
+      this.setState({ error: 'You need to select a valid access level' });
+      return;
+    }
 
     addUser().catch((error) => {
       if (error.response && error.response.status === 403) {
@@ -52,8 +64,6 @@ class UserAdd extends React.Component {
         error: error.toString(),
       });
     });
-
-    this.setState({ accesslvl: null, user: null });
   }
 
   async getOptionsAsync(search) {
@@ -71,8 +81,9 @@ class UserAdd extends React.Component {
     const { user, accesslvl, error } = this.state;
     const access = Object.entries(accessLevels).map((v) => ({ label: v[0], value: v[1] }));
 
+    let alert = '';
     if (error) {
-      return (
+      alert = (
         <Alert variant="danger">
           Error:
           {error}
@@ -82,6 +93,7 @@ class UserAdd extends React.Component {
 
     return (
       <div>
+        {alert}
         <Row>
           <Col>
             <AsyncSelect

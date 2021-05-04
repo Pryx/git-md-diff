@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {
-  Alert, Button, Tab, Tabs,
+  Alert, Breadcrumb, Button, Tab, Tabs,
 } from 'react-bootstrap';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
@@ -10,8 +10,9 @@ import { hot } from 'react-hot-loader';
 import { Link, Redirect } from 'wouter';
 import { documentationSelected, logOut } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
-import EditWrapper from '../components/EditWrapper';
+import FileViewWrapper from '../components/FileViewWrapper';
 import NewProofreadingRequest from '../components/NewProofreadingRequest';
+import ProofreadingOverview from '../components/ProofreadingOverview';
 import accessLevels from '../constants/access-levels';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
@@ -88,12 +89,46 @@ class DocumentationPage extends React.Component {
       error, docu, isLoaded, newRequest,
     } = this.state;
 
+    const breadcrumbs = (
+      <Row>
+        <Col>
+          <Breadcrumb>
+            <Link href="/">
+              <Breadcrumb.Item>Home</Breadcrumb.Item>
+            </Link>
+            <Breadcrumb.Item active>
+              Documentation {docuId}
+            </Breadcrumb.Item>
+          </Breadcrumb>
+        </Col>
+      </Row>
+    );
+
+
     if (!isLoaded) {
-      return 'Loading...';
+      return (
+        <Container className="mt-3">
+          {breadcrumbs}
+          <Row>
+            <Col>
+              Loading...
+            </Col>
+          </Row>
+        </Container>
+      );
     }
 
     if (error) {
-      return <Alert variant="info">{error}</Alert>;
+      return (
+        <Container className="mt-3">
+          {breadcrumbs}
+          <Row>
+            <Col>
+              <Alert variant="danger">Error while rendering documentation data: {error}</Alert>
+            </Col>
+          </Row>
+        </Container>
+      );
     }
 
     let settings = null;
@@ -107,9 +142,10 @@ class DocumentationPage extends React.Component {
       }
 
       return (
-        <Container className="mt-5">
+        <Container className="mt-3">
+          {breadcrumbs}
           <Row>
-            <Col lg={12} xs={12}>
+            <Col>
               <h1>
                 {docu.name}
                 {' '}
@@ -120,20 +156,26 @@ class DocumentationPage extends React.Component {
           </Row>
           <Tabs defaultActiveKey="files" id="docutabs">
             <Tab eventKey="files" title="Files">
-              <EditWrapper />
+              <FileViewWrapper />
             </Tab>
             <Tab eventKey="diff" title="Differences / Create proofreading request">
               {newRequest && (
-              <NewProofreadingRequest
-                onCancel={() => this.setState({ newRequest: false })}
-              />
+                <NewProofreadingRequest
+                  onCancel={() => this.setState({ newRequest: false })}
+                />
               )}
               {!newRequest && (
-              <DiffWrapper
-                buttonTitle="Create proofreading request"
-                onClick={() => this.setState({ newRequest: true })}
-              />
+                <DiffWrapper
+                  onClick={() => this.setState({ newRequest: true })}
+                />
               )}
+            </Tab>
+            <Tab eventKey="requests" title="Pending proofreading requests">
+              <Row className="mt-4">
+                <Col>
+                  <ProofreadingOverview docuId={docuId} />
+                </Col>
+              </Row>
             </Tab>
           </Tabs>
         </Container>
@@ -142,23 +184,48 @@ class DocumentationPage extends React.Component {
 
     if (docu.accessLevel === accessLevels.author) {
       return (
-        <Container className="mt-5">
+        <Container className="mt-3">
+          {breadcrumbs}
           <Row>
-            <Col lg={12} xs={12}>
+            <Col>
               <h1>{docu.name}</h1>
               <p className="text-muted">{docu.description}</p>
             </Col>
           </Row>
           <Tabs defaultActiveKey="files" id="docutabs">
             <Tab eventKey="files" title="Files">
-              <EditWrapper />
+              <FileViewWrapper />
+            </Tab>
+            <Tab eventKey="requests" title="Your proofreading requests">
+              <Row className="mt-4">
+                <Col>
+                  <ProofreadingOverview docuId={docuId} />
+                </Col>
+              </Row>
             </Tab>
           </Tabs>
         </Container>
       );
     }
 
-    return (<Redirect to="/" />);
+    return (<Container className="mt-3">
+      {breadcrumbs}
+      <Row>
+        <Col>
+          <h1>{docu.name}</h1>
+          <p className="text-muted">{docu.description}</p>
+        </Col>
+      </Row>
+      <Tabs defaultActiveKey="requests" id="docutabs">
+        <Tab eventKey="requests" title="Your proofreading requests">
+          <Row className="mt-4">
+            <Col>
+              <ProofreadingOverview docuId={docuId} />
+            </Col>
+          </Row>
+        </Tab>
+      </Tabs>
+    </Container>);
   }
 }
 

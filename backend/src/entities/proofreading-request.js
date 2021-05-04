@@ -47,6 +47,36 @@ export default class ProofreadingRequest {
     return r;
   }
 
+
+  static async getDocuRequests(docuId, userId = null) {
+    let results
+    if (userId) {
+      results = await sql`SELECT * FROM proofreading_requests WHERE 
+        docuId=${docuId} AND 
+        (requester=${userId} OR proofreader=${userId}) AND 
+        state!=${proofreadingStates.merged} 
+        ORDER BY id DESC`;
+    } else {
+      results = await sql`SELECT * FROM proofreading_requests 
+        WHERE docuId=${docuId} AND state!=${proofreadingStates.merged} 
+        ORDER BY id DESC`;
+    }
+
+    if (results.count) {
+      const reqs = await Promise.all(
+        results.map(async (req) => {
+          const r = new ProofreadingRequest(req);
+          r.proofreader = (await User.getById(r.proofreader)).getPublic();
+          r.requester = (await User.getById(r.requester)).getPublic();
+          return r;
+        }),
+      );
+      return reqs;
+    }
+
+    return [];
+  }
+
   static async getUserRequests(userId) {
     const results = await sql`SELECT * FROM proofreading_requests WHERE (requester=${userId} OR proofreader=${userId}) AND state!=${proofreadingStates.merged} ORDER BY id DESC`;
 

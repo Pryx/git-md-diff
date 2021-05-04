@@ -4,6 +4,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { Alert } from 'react-bootstrap';
 import DiffView from './DiffView';
 import { logOut, updateChangesList } from '../actions';
 import { store } from '../store';
@@ -101,11 +102,21 @@ class DiffOverview extends React.Component {
       );
     }
 
+    if (!changes){
+      return (
+        <Row className="mt-4">
+          <Col>
+            <Alert variant="warning">Couldn't get changes. Maybe branch was deleted?</Alert>
+          </Col>
+        </Row>
+      );
+    }
+
     if (!changes.length) {
       return (
         <Row className="mt-4">
           <Col>
-            {noChangesMessage}
+            <Alert variant="secondary">{noChangesMessage}</Alert>
           </Col>
         </Row>
       );
