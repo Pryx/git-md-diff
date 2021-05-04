@@ -4,7 +4,7 @@ import 'codemirror/lib/codemirror.css';
 import lodash from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Breadcrumb, Form } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
@@ -12,13 +12,12 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import { Link } from 'wouter';
 import {
   documentationSelected, logOut, pageAutosave, pageAutosaveRemove,
 } from '../actions';
-import EditorPreview from './EditorPreview';
 import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
+import EditorPreview from './EditorPreview';
 
 /**
  * Edit page encompasses the Editor and EditorPreview components.
@@ -241,7 +240,7 @@ class EditPage extends React.Component {
             <Editor
               initialValue={previewContent}
               previewStyle="global"
-              height="100%"
+              height="80vh"
               initialEditType="markdown"
               useCommandShortcut
               ref={this.editorRef}
@@ -249,7 +248,7 @@ class EditPage extends React.Component {
               frontMatter
             />
 
-            <div className="mt-2 mb-5 clearfix">
+            <div className="pt-2 pb-5">
               {noticeBottom}
               <Form.Row id="edit-submit">
                 <Form.Group as={Col} className="flex-grow-1">

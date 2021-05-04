@@ -131,10 +131,10 @@ export default class DocumentationService {
     return p;
   }
 
-  async getFiles(docuId, revision) {
+  async getFiles(docuId, revision, path) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
-    const p = await provider.getFiles(docu.providerId, revision);
+    const p = await provider.getFiles(docu.providerId, revision, path);
     return p;
   }
 

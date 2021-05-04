@@ -58,9 +58,12 @@ const App = (props) => {
         </Route>
 
         <Route path="/documentation/:docuId/proofreading/:reqId">
-          {(params) => <ProofreadingPage
-            reqId={parseInt(params.reqId, 10)}
-            docuId={parseInt(params.docuId, 10)} />}
+          {(params) => (
+            <ProofreadingPage
+              reqId={parseInt(params.reqId, 10)}
+              docuId={parseInt(params.docuId, 10)}
+            />
+          )}
         </Route>
 
         <Route path="/documentation/:docuId/edit/v/:version/f/:file+">

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Alert, Badge, Col, Row } from 'react-bootstrap';
+import {
+  Alert, Badge, Col, Row,
+} from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
@@ -23,9 +25,9 @@ class ProofreadingOverview extends React.Component {
 
   componentDidMount() {
     const { docuId } = this.props;
-    const url = docuId === -1 ? 
-      `${window.env.api.backend}/proofreading` :
-      `${window.env.api.backend}/proofreading/documentation/${docuId}`;
+    const url = docuId === -1
+      ? `${window.env.api.backend}/proofreading`
+      : `${window.env.api.backend}/proofreading/documentation/${docuId}`;
 
     const fetchDocus = async () => {
       const json = await secureKy().get(url).json();
@@ -84,7 +86,6 @@ class ProofreadingOverview extends React.Component {
     let items = null;
     if (proofReadingRequests.length) {
       items = proofReadingRequests.map((req) => {
-
         let badgeVar;
 
         switch (req.state) {
@@ -123,17 +124,17 @@ class ProofreadingOverview extends React.Component {
               <Card.Footer>
                 <small>
                   Created by:
-                {req.requester.id === userData.id ? <strong>You</strong> : req.requester.name}
+                  {req.requester.id === userData.id ? <strong>You</strong> : req.requester.name}
                 </small>
                 <br />
                 <small>
                   Proofread by:
-                {req.proofreader.id === userData.id ? <strong>You</strong> : req.proofreader.name}
+                  {req.proofreader.id === userData.id ? <strong>You</strong> : req.proofreader.name}
                 </small>
               </Card.Footer>
             </Card>
           </Link>
-        )
+        );
       });
 
       return (
@@ -154,12 +155,12 @@ class ProofreadingOverview extends React.Component {
 }
 
 ProofreadingOverview.defaultProps = {
-  docuId: -1
-}
+  docuId: -1,
+};
 
 ProofreadingOverview.propTypes = {
   userData: PropTypes.shape(User.getShape()).isRequired,
-  docuId: PropTypes.number
+  docuId: PropTypes.number,
 };
 
 function mapStateToProps(state) {

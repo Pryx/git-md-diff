@@ -60,8 +60,8 @@ export default class ProviderWrapper {
     return this.provider.getChanges(projectId, from, to);
   }
 
-  async getFiles(projectId, revision) {
-    return this.provider.getFiles(projectId, revision);
+  async getFiles(projectId, revision, path) {
+    return this.provider.getFiles(projectId, revision, path);
   }
 
   async getBlob(projectId, revision, blob) {

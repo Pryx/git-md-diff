@@ -77,8 +77,8 @@ export default class GitlabProvider {
     return [];
   }
 
-  async getFiles(projectId, revision) {
-    const tree = await this.gitlab.Repositories.tree(projectId, { ref: revision, recursive: true });
+  async getFiles(projectId, revision, path) {
+    const tree = await this.gitlab.Repositories.tree(projectId, { ref: revision, recursive: false, path, per_page: 100 });
     if (tree.length) {
       return tree.map((t) => repositoryTreeTransformer(t)).filter((diff) => diff != null);
     }

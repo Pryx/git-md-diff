@@ -54,13 +54,15 @@ const EditorPreview = ({
 EditorPreview.defaultProps = {
   content: '',
   previewOnly: false,
+  from: null,
+  to: null
 };
 
 EditorPreview.propTypes = {
   file: PropTypes.string.isRequired,
   content: PropTypes.string,
-  from: PropTypes.string.isRequired,
-  to: PropTypes.string.isRequired,
+  from: PropTypes.string,
+  to: PropTypes.string,
   previewOnly: PropTypes.bool,
   docuId: PropTypes.number.isRequired,
 };

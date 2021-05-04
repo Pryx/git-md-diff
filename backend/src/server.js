@@ -263,9 +263,16 @@ app.get('/documentations/:docu/:revision/pages/:page(*)', passport.authenticate(
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-app.get('/documentations/:docu/:revision/files', passport.authenticate('jwt', { session: false }), (req, res) => {
+// File list
+app.get('/documentations/:docu/:revision/files/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
-  service.getFiles(req.params.docu, req.params.revision)
+  service.getFiles(req.params.docu, req.params.revision, '/')
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+app.get('/documentations/:docu/:revision/files/:path(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getFiles(req.params.docu, req.params.revision, `${req.params.path}`)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });

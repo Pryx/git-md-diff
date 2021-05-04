@@ -22,7 +22,7 @@ class FileViewWrapper extends React.Component {
   render() {
     const { error } = this.state;
 
-    const { docuId, docuEmpty } = this.props;
+    const { docuId, docuEmpty, version } = this.props;
 
     if (error) {
       return (
@@ -48,7 +48,7 @@ class FileViewWrapper extends React.Component {
         </Row>
         <Row className="results">
           <Col>
-            <FileView docu={docuId} />
+            <FileView docuId={docuId} version={version} />
           </Col>
         </Row>
       </div>
@@ -63,8 +63,13 @@ FileViewWrapper.defaultProps = {
 FileViewWrapper.propTypes = {
   docuId: PropTypes.number.isRequired,
   docuEmpty: PropTypes.bool,
+  version: PropTypes.string.isRequired,
 };
 
-const mapStateToProps = (state) => ({ docuId: state.docuId, docuEmpty: state.docuEmpty });
+const mapStateToProps = (state) => ({
+  docuId: state.docuId,
+  docuEmpty: state.docuEmpty,
+  version: state.endRevision ? state.endRevision.branch : '',
+});
 
 export default hot(module)(connect(mapStateToProps)(FileViewWrapper));

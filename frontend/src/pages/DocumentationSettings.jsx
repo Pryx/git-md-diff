@@ -173,25 +173,26 @@ class DocumentationSettings extends React.Component {
       slug, name, description, deleted, error, success, docu, isLoaded,
     } = this.state;
 
-    const {docuId} = this.props;
+    const { docuId } = this.props;
     const breadcrumbs = (
       <Row>
-          <Col>
-            <Breadcrumb>
-              <Link href="/">
-                <Breadcrumb.Item>Home</Breadcrumb.Item>
-              </Link>
-              <Link href={`/documentation/${docuId}`}>
-                <Breadcrumb.Item>
-                  Documentation {docuId}
-                </Breadcrumb.Item>
-              </Link>
-              <Breadcrumb.Item active>Settings</Breadcrumb.Item>
-            </Breadcrumb>
-          </Col>
-        </Row>
+        <Col>
+          <Breadcrumb>
+            <Link href="/">
+              <Breadcrumb.Item>Home</Breadcrumb.Item>
+            </Link>
+            <Link href={`/documentation/${docuId}`}>
+              <Breadcrumb.Item>
+                Documentation
+                {' '}
+                {docuId}
+              </Breadcrumb.Item>
+            </Link>
+            <Breadcrumb.Item active>Settings</Breadcrumb.Item>
+          </Breadcrumb>
+        </Col>
+      </Row>
     );
-
 
     if (!isLoaded) {
       return (

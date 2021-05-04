@@ -49,20 +49,25 @@ class ProofreadingDiffWrapper extends React.Component {
       && !proofreader;
 
     let button = null;
-    console.log(disable, disabledText);
+
     if (showBtns) {
       if (disable && disabledText) {
         button = (
           <Row className="mt-4 clearfix">
             <Col lg="12">
               <OverlayTrigger overlay={<Tooltip id="tooltip-disabled">{disabledText}</Tooltip>}>
-                <Button variant="success" onClick={onClick} className="float-right disabled"
-                  disabled={disable}>
+                <Button
+                  variant="success"
+                  onClick={onClick}
+                  className="float-right disabled"
+                  disabled={disable}
+                >
                   {buttonTitle}
                 </Button>
               </OverlayTrigger>
             </Col>
-          </Row>);
+          </Row>
+        );
       } else {
         button = (
           <Row className="mt-4 clearfix">
@@ -71,7 +76,8 @@ class ProofreadingDiffWrapper extends React.Component {
                 {buttonTitle}
               </Button>
             </Col>
-          </Row>);
+          </Row>
+        );
       }
     }
 
@@ -106,7 +112,7 @@ ProofreadingDiffWrapper.defaultProps = {
   changes: [],
   excludedChanges: [],
   proofreader: true,
-  disabledText: ''
+  disabledText: '',
 };
 
 ProofreadingDiffWrapper.propTypes = {
@@ -118,7 +124,7 @@ ProofreadingDiffWrapper.propTypes = {
   changes: PropTypes.arrayOf(PropTypes.shape(Change.getShape())),
   excludedChanges: PropTypes.arrayOf(PropTypes.string),
   proofreader: PropTypes.bool,
-  disabledText: PropTypes.string
+  disabledText: PropTypes.string,
 };
 
 const mapStateToProps = (state) => ({

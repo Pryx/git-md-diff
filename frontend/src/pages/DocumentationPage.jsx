@@ -7,7 +7,7 @@ import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
-import { Link, Redirect } from 'wouter';
+import { Link } from 'wouter';
 import { documentationSelected, logOut } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
 import FileViewWrapper from '../components/FileViewWrapper';
@@ -97,13 +97,14 @@ class DocumentationPage extends React.Component {
               <Breadcrumb.Item>Home</Breadcrumb.Item>
             </Link>
             <Breadcrumb.Item active>
-              Documentation {docuId}
+              Documentation
+              {' '}
+              {docuId}
             </Breadcrumb.Item>
           </Breadcrumb>
         </Col>
       </Row>
     );
-
 
     if (!isLoaded) {
       return (
@@ -124,7 +125,10 @@ class DocumentationPage extends React.Component {
           {breadcrumbs}
           <Row>
             <Col>
-              <Alert variant="danger">Error while rendering documentation data: {error}</Alert>
+              <Alert variant="danger">
+                Error while rendering documentation data:
+                {error}
+              </Alert>
             </Col>
           </Row>
         </Container>
@@ -208,24 +212,26 @@ class DocumentationPage extends React.Component {
       );
     }
 
-    return (<Container className="mt-3">
-      {breadcrumbs}
-      <Row>
-        <Col>
-          <h1>{docu.name}</h1>
-          <p className="text-muted">{docu.description}</p>
-        </Col>
-      </Row>
-      <Tabs defaultActiveKey="requests" id="docutabs">
-        <Tab eventKey="requests" title="Your proofreading requests">
-          <Row className="mt-4">
-            <Col>
-              <ProofreadingOverview docuId={docuId} />
-            </Col>
-          </Row>
-        </Tab>
-      </Tabs>
-    </Container>);
+    return (
+      <Container className="mt-3">
+        {breadcrumbs}
+        <Row>
+          <Col>
+            <h1>{docu.name}</h1>
+            <p className="text-muted">{docu.description}</p>
+          </Col>
+        </Row>
+        <Tabs defaultActiveKey="requests" id="docutabs">
+          <Tab eventKey="requests" title="Your proofreading requests">
+            <Row className="mt-4">
+              <Col>
+                <ProofreadingOverview docuId={docuId} />
+              </Col>
+            </Row>
+          </Tab>
+        </Tabs>
+      </Container>
+    );
   }
 }
 

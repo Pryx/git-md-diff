@@ -137,10 +137,15 @@ class ProofreadingPage extends React.Component {
             </Link>
             <Link href={`/documentation/${docuId}`}>
               <Breadcrumb.Item>
-                Documentation {docuId}
+                Documentation
+                {' '}
+                {docuId}
               </Breadcrumb.Item>
             </Link>
-            <Breadcrumb.Item active>Proofreading request {reqId}</Breadcrumb.Item>
+            <Breadcrumb.Item active>
+              Proofreading request
+              {reqId}
+            </Breadcrumb.Item>
           </Breadcrumb>
         </Col>
       </Row>
@@ -155,7 +160,8 @@ class ProofreadingPage extends React.Component {
               Loading...
             </Col>
           </Row>
-        </Container>);
+        </Container>
+      );
     }
 
     let alert = null;
@@ -166,7 +172,7 @@ class ProofreadingPage extends React.Component {
     }
 
     if (userData.id === req.requester.id) {
-      const btnTitle = !success ? "Merge" : '';
+      const btnTitle = !success ? 'Merge' : '';
       return (
         <Container className="mt-3">
           {breadcrumbs}

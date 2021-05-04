@@ -1,24 +1,18 @@
 import '@toast-ui/editor/dist/toastui-editor.css';
-import { Editor } from '@toast-ui/react-editor';
 import 'codemirror/lib/codemirror.css';
-import lodash from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Breadcrumb, Form } from 'react-bootstrap';
+import { Breadcrumb } from 'react-bootstrap';
 import Alert from 'react-bootstrap/Alert';
-import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
-import { connect } from 'react-redux';
 import { Link } from 'wouter';
 import {
-  documentationSelected, logOut, pageAutosave, pageAutosaveRemove,
+  documentationSelected,
 } from '../actions';
-import EditorPreview from '../components/EditorPreview';
 import EditorWrapper from '../components/EditorWrapper';
-import { secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 
 /**
@@ -28,18 +22,7 @@ import { store } from '../store';
 class EditPage extends React.Component {
   file = null;
 
-  editorRef = React.createRef();
-
-  state = {
-    content: null,
-    isLoaded: false,
-    saveStatus: '',
-    saveMessage: '',
-    saving: false,
-    commitMessage: '',
-  };
-
-  editorInit = false;
+  state = {error: null};
 
   constructor(props) {
     super(props);
@@ -50,10 +33,9 @@ class EditPage extends React.Component {
     this.file = decodeURIComponent(file);
   }
 
-
   render() {
     const {
-      error
+      error,
     } = this.state;
 
     const {
@@ -78,10 +60,16 @@ class EditPage extends React.Component {
               </Link>
               <Link href={`/documentation/${docuId}`}>
                 <Breadcrumb.Item>
-                  Documentation {docuId}
+                  Documentation
+                  {' '}
+                  {docuId}
                 </Breadcrumb.Item>
               </Link>
-              <Breadcrumb.Item active><strong>Edit file</strong> {this.file}</Breadcrumb.Item>
+              <Breadcrumb.Item active>
+                <strong>Edit file</strong>
+                {' '}
+                {this.file}
+              </Breadcrumb.Item>
             </Breadcrumb>
           </Col>
         </Row>
@@ -90,7 +78,8 @@ class EditPage extends React.Component {
           version={version}
           from={from}
           to={to}
-          file={file} />
+          file={file}
+        />
       </div>
     );
   }
@@ -98,9 +87,7 @@ class EditPage extends React.Component {
 
 EditPage.defaultProps = {
   from: null,
-  onSave: null,
   version: '',
-  autosaved: {},
 };
 
 EditPage.propTypes = {
@@ -109,12 +96,6 @@ EditPage.propTypes = {
   to: PropTypes.string.isRequired,
   file: PropTypes.string.isRequired,
   version: PropTypes.string,
-  onSave: PropTypes.func,
-  autosaved: PropTypes.objectOf(PropTypes.objectOf(PropTypes.string)),
 };
 
-const mapStateToProps = (state) => ({
-  autosaved: state.autosaved || {},
-});
-
-export default hot(module)(connect(mapStateToProps)(EditPage));
+export default hot(module)(EditPage);

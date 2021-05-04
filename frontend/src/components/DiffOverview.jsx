@@ -102,11 +102,11 @@ class DiffOverview extends React.Component {
       );
     }
 
-    if (!changes){
+    if (!changes) {
       return (
         <Row className="mt-4">
           <Col>
-            <Alert variant="warning">Couldn't get changes. Maybe branch was deleted?</Alert>
+            <Alert variant="warning">Couldn&apos;t get changes. Maybe branch was deleted?</Alert>
           </Col>
         </Row>
       );
