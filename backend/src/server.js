@@ -168,10 +168,19 @@ app.delete('/documentations/:docu', passport.authenticate('jwt', { session: fals
 });
 
 // Save file and commit to git
-app.put('/documentations/:docu/:version/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
+app.put('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.savePage(req.params.docu, req.params.version,
     req.params.page, req.body.content, req.body.commitMessage)
+    .then(() => res.send({ success: true }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// Delete file
+app.delete('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.deleteFile(req.params.docu, req.params.version,
+    req.params.page, req.body.commitMessage)
     .then(() => res.send({ success: true }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
@@ -331,7 +340,7 @@ app.get('/proofreading/:reqId', passport.authenticate('jwt', { session: false })
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-app.put('/proofreading/:reqId/pages/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
+app.put('/proofreading/:reqId/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
   ProofreadingService.savePage(req.params.reqId, req.params.page)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));

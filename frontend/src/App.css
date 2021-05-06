@@ -110,6 +110,7 @@ ins{
   padding: 8px 16px;
   border-radius: 4px 4px 0 0;
   cursor: pointer;
+  line-height: 32px
 }
 
 .folder-wrap .folder-children{
@@ -118,7 +119,14 @@ ins{
 }
 
 .folder-wrap .file{
-  padding: 6px 0
+  padding: 6px 0;
+  line-height: 32px;
+  border-bottom: 1px solid #cecece;
+
+}
+
+.folder-wrap .file:last-child{
+  border-bottom: none;
 }
 
 .folder-wrap.closed .folder-label{

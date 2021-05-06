@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.4.1",
+  "version": "0.7.0",
   "description": "",
   "main": "build/index.js",
   "scripts": {
@@ -36,7 +36,7 @@
     "lodash": "^4.17.21",
     "mime-types": "^2.1.29",
     "passport": "^0.4.1",
-    "passport-gitlab2": "^5.0.0",
+    "passport-gitlab2": "github:Pryx/passport-gitlab2",
     "passport-jwt": "^4.0.0",
     "postgres": "^1.0.2"
   }

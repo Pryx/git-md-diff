@@ -47,9 +47,8 @@ export default class ProofreadingRequest {
     return r;
   }
 
-
   static async getDocuRequests(docuId, userId = null) {
-    let results
+    let results;
     if (userId) {
       results = await sql`SELECT * FROM proofreading_requests WHERE 
         docuId=${docuId} AND 

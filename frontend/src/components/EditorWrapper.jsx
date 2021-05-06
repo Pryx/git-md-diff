@@ -122,14 +122,19 @@ class EditPage extends React.Component {
         this.setState({
           saving: false, saveStatus: 'success', commitMessage: '', saveMessage: 'Successfully saved!',
         });
-      } else {
-        this.setState({
-          saving: false, saveStatus: 'danger', commitMessage: '', saveMessage: response.error,
-        });
       }
     };
 
-    savePage();
+    savePage().catch((error) => {
+      if (error.response && error.response.status === 403) {
+        store.dispatch(logOut());
+      }
+
+      this.setState({
+        isLoaded: true,
+        error: error.message,
+      });
+    });;
   }
 
   commitMessageChange(e) {
@@ -146,13 +151,7 @@ class EditPage extends React.Component {
       from, to, file, docuId,
     } = this.props;
 
-    if (error) {
-      return (
-        <Container>
-          <Alert variant="danger">{error}</Alert>
-        </Container>
-      );
-    }
+    
 
     if (!isLoaded) {
       return (
@@ -178,7 +177,9 @@ class EditPage extends React.Component {
     let notice = null;
     let noticeBottom = null;
 
-    if (saveStatus.length) {
+    if (error) {
+      notice = (<Alert variant="danger">{error}</Alert>);
+    } else if (saveStatus.length) {
       notice = (
         <Alert variant={saveStatus}>
           {saveMessage}

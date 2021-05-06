@@ -67,7 +67,7 @@ export default class ProofreadingService {
       req.pullRequest,
     );
 
-    if (mergeReq.changesCount === null){
+    if (mergeReq.changesCount === null) {
       await provider.closeMergeRequest(
         docu.providerId,
         req.pullRequest,
@@ -82,7 +82,6 @@ export default class ProofreadingService {
         req.pullRequest,
       );
     }
-    
 
     req.state = proofreadingStates.merged;
     req.save();
@@ -107,7 +106,7 @@ export default class ProofreadingService {
   async getDocuRequests(docuId) {
     const perm = Role.get(this.user.id, docuId);
 
-    if (perm.level === accessLevels.manager || perm.level === accessLevels.admin){
+    if (perm.level === accessLevels.manager || perm.level === accessLevels.admin) {
       return ProofreadingRequest.getDocuRequests(docuId);
     }
 

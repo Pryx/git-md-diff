@@ -98,7 +98,7 @@ class EditorDiff extends React.Component {
     let cls = '';
     if (content.newFile) {
       cls = 'newfile';
-      badges.push(<Badge variant="success" key="newfile">NEW</Badge>);
+      badges.push(<Badge variant="success" key="newfile">Added new file</Badge>);
     }
 
     return (

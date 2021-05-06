@@ -207,7 +207,8 @@ class ProofreadingPage extends React.Component {
     }
 
     return (
-      <Container className="mt-5">
+      <Container className="mt-3">
+        {breadcrumbs}
         <Row>
           <Col>
             <h1>

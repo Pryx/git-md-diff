@@ -1,7 +1,8 @@
-import { Alert } from 'bootstrap';
+import { Alert, Dropdown } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { hot } from 'react-hot-loader';
+import Dialog from 'react-bootstrap-dialog';
 import { logOut } from '../../actions';
 import { secureKy } from '../../entities/secure-ky';
 import { store } from '../../store';
@@ -23,6 +24,8 @@ class DirItem extends React.Component {
     super(props);
 
     this.state.isOpen = props.openState;
+    this.handleNewPage = this.handleNewPage.bind(this);
+    this.handleNewFolder = this.handleNewFolder.bind(this);
   }
 
   componentDidMount() {
@@ -65,6 +68,79 @@ class DirItem extends React.Component {
     }
   }
 
+  handleNewPage() {
+    const { path, docuId, version } = this.props;
+    const createPage = async (fileName) => {
+      const filePath = path.length ? `${path}/${fileName}` : fileName;
+      this.setState({
+        isLoaded: false,
+      });
+      const response = await secureKy().put(`${window.env.api.backend}/documentations/${docuId}/${version}/pages/${filePath}.mdx`,
+        {
+          json: { content: '' },
+        }).json();
+
+      if (response.success) {
+        this.componentDidUpdate();
+      } else {
+        this.setState({
+          isLoaded: true,
+          error: response.error,
+        });
+      }
+    };
+
+    this.dialog.show({
+      title: 'New page',
+      body: `Please enter the name of your new file. 
+        Please do not enter the extension, it will be automatically added.`,
+      bsSize: 'md',
+      prompt: Dialog.TextPrompt({ initialValue: 'new-page', placeholder: 'File name', required: true }),
+      actions: [
+        Dialog.CancelAction(),
+        Dialog.OKAction(() => {
+          createPage(this.dialog.value);
+        }),
+      ],
+    });
+  }
+
+  handleNewFolder() {
+    const { path, docuId, version } = this.props;
+    const createPage = async (fileName) => {
+      const filePath = path.length ? `${path}/${fileName}` : fileName;
+      this.setState({
+        isLoaded: false,
+      });
+      const response = await secureKy().put(`${window.env.api.backend}/documentations/${docuId}/${version}/pages/${filePath}/.gitkeep`,
+        {
+          json: { content: '' },
+        }).json();
+
+      if (response.success) {
+        this.componentDidUpdate();
+      } else {
+        this.setState({
+          isLoaded: true,
+          error: response.error,
+        });
+      }
+    };
+
+    this.dialog.show({
+      title: 'New folder',
+      body: 'Please enter the name of your new folder.',
+      bsSize: 'md',
+      prompt: Dialog.TextPrompt({ initialValue: 'new-folder', placeholder: 'Folder name', required: true }),
+      actions: [
+        Dialog.CancelAction(),
+        Dialog.OKAction(() => {
+          createPage(this.dialog.value);
+        }),
+      ],
+    });
+  }
+
   render() {
     const {
       error, files, isOpen, isLoaded,
@@ -73,8 +149,10 @@ class DirItem extends React.Component {
     const { name, docuId, version } = this.props;
 
     const toggle = (e) => {
-      e.preventDefault();
-      this.setState({ isOpen: !isOpen });
+      if (e.target === e.currentTarget) {
+        e.preventDefault();
+        this.setState({ isOpen: !isOpen });
+      }
     };
 
     const state = isOpen ? 'open' : 'closed';
@@ -111,14 +189,25 @@ class DirItem extends React.Component {
 
     return (
       <div className={`folder-wrap mt-2 mb-2 ${state}`}>
-        <div className="folder-label" onClick={toggle} role="button" tabIndex="0" onKeyDown={toggle}>
+        <div className="folder-label clearfix" onClick={toggle} role="button" tabIndex="0" onKeyDown={toggle}>
           {icon}
           {' '}
           <strong>{name}</strong>
+          <Dropdown className="float-right">
+            <Dropdown.Toggle size="sm" variant="secondary">
+              <i className="fas fa-ellipsis-h" />
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+              <Dropdown.Item as="button" onClick={this.handleNewPage}>New page</Dropdown.Item>
+              <Dropdown.Item as="button" onClick={this.handleNewFolder}>New Folder</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
         <div className="folder-children">
           {content}
         </div>
+        <Dialog ref={(component) => { this.dialog = component; }} />
       </div>
     );
   }

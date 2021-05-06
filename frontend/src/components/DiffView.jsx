@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'wouter';
 import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
-import { Badge, Form } from 'react-bootstrap';
+import { Badge, Form, Alert } from 'react-bootstrap';
 import Diff from '../diff/diff';
 import { store } from '../store';
 import { excludeChange, includeChange, logOut } from '../actions';
@@ -87,18 +87,20 @@ class DiffView extends React.Component {
         {
           isLoaded: true,
           content,
+          error: null,
         },
       );
     };
 
-    fetchDiff().catch((error) => {
+    fetchDiff().catch(async (error) => {
       if (error.response && error.response.status === 403) {
         store.dispatch(logOut());
       }
 
+      const errorMessage = (await error.response.json()).error;
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error: errorMessage,
       });
     });
   }
@@ -126,16 +128,12 @@ class DiffView extends React.Component {
       return (
         <Card>
           <Card.Header>
-            {filename}
+            <Link href={this.link}>{filename}</Link>
           </Card.Header>
           <Card.Body>
-            Error:
+            <Alert variant="danger">Error rendering changes:</Alert>
             {' '}
-            {error.message}
-            <br />
-            <br />
-            Content:
-            <pre>{content.content}</pre>
+            <pre>{error.message || error}</pre>
           </Card.Body>
           <Card.Footer>
             {badges}
@@ -148,7 +146,7 @@ class DiffView extends React.Component {
       return (
         <Card>
           <Card.Header>
-            {filename}
+            <Link href={this.link}>{filename}</Link>
           </Card.Header>
           <Card.Body>
             Loading...
@@ -163,7 +161,7 @@ class DiffView extends React.Component {
     let cls = 'file-card';
     if (content.newFile) {
       cls += ' newfile';
-      badges.push(<Badge variant="success" key="newfile">NEW</Badge>);
+      badges.push(<Badge variant="success" key="newfile">Added new file</Badge>);
     }
 
     let items = null;

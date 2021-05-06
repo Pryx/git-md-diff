@@ -22,7 +22,7 @@ import { store } from '../store';
 class EditPage extends React.Component {
   file = null;
 
-  state = {error: null};
+  state = { error: null };
 
   constructor(props) {
     super(props);

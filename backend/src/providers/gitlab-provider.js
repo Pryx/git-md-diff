@@ -1,7 +1,7 @@
 import { Gitlab } from '@gitbeaker/node';
 import {
   versionTransformer, revisionTransformer, changesTransformer,
-  repositoryTransformer, repositoryTreeTransformer, mergeRequestTransformer
+  repositoryTransformer, repositoryTreeTransformer, mergeRequestTransformer,
 } from '../transformers/gitlab';
 import accessLevels from '../entities/access-levels';
 
@@ -78,11 +78,12 @@ export default class GitlabProvider {
   }
 
   async getFiles(projectId, revision, path) {
-    const tree = await this.gitlab.Repositories.tree(projectId, { ref: revision, recursive: false, path, per_page: 100 });
+    const tree = await this.gitlab.Repositories.tree(projectId, {
+      ref: revision, recursive: false, path, per_page: 100,
+    });
     if (tree.length) {
       return tree.map((t) => repositoryTreeTransformer(t)).filter((diff) => diff != null);
     }
-    console.log(tree);
 
     return tree;
   }
@@ -97,7 +98,40 @@ export default class GitlabProvider {
   }
 
   async savePage(projectId, page, branch, content, commitMessage) {
-    return this.gitlab.RepositoryFiles.edit(projectId, page, branch, content, commitMessage || `Edited ${page} via Git-md-diff`);
+    let response;
+    try {
+      response = await this.gitlab.RepositoryFiles.edit(
+        projectId,
+        page,
+        branch,
+        content,
+        commitMessage || `Edited ${page} via Git-md-diff`,
+      );
+    } catch (e) {
+      // Gitbeaker doesn't really provide us with status code,
+      // so let's just try to create a new file...
+      console.log(e);
+
+      response = await this.gitlab.RepositoryFiles.create(
+        projectId,
+        page,
+        branch,
+        content,
+        commitMessage || `Created ${page} via Git-md-diff`,
+      );
+    }
+
+
+    return response;
+  }
+
+  async deleteFile(projectId, file, branch, commitMessage) {
+    return this.gitlab.RepositoryFiles.remove(
+      projectId,
+      file,
+      branch,
+      commitMessage || `Deleted file ${file} via Git-md-diff`,
+    );
   }
 
   async createPR(projectId, source, target, title) {
@@ -123,7 +157,7 @@ export default class GitlabProvider {
     return this.gitlab.MergeRequests.edit(
       projectId,
       iid,
-      {stateEvent: 'close'}
+      { stateEvent: 'close' },
     );
   }
 

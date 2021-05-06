@@ -55,7 +55,7 @@ EditorPreview.defaultProps = {
   content: '',
   previewOnly: false,
   from: null,
-  to: null
+  to: null,
 };
 
 EditorPreview.propTypes = {

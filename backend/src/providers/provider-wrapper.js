@@ -72,6 +72,10 @@ export default class ProviderWrapper {
     return this.provider.savePage(projectId, page, branch, content, commitMessage);
   }
 
+  async deleteFile(projectId, file, branch, commitMessage) {
+    return this.provider.deleteFile(projectId, file, branch, commitMessage);
+  }
+
   async finishProofreading(projectId, source, target, title) {
     return this.provider.createPR(projectId, source, target, title);
   }

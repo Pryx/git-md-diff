@@ -144,4 +144,10 @@ export default class DocumentationService {
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     await provider.savePage(projectId, page, version, content, commitMessage);
   }
+
+  async deleteFile(docuId, version, file, commitMessage) {
+    const docu = await Documentation.get(docuId);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+    return provider.deleteFile(projectId, file, version, commitMessage);
+  }
 }

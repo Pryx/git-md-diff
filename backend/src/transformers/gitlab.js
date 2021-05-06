@@ -47,7 +47,6 @@ export function repositoryTreeTransformer(treeObj) {
   };
 }
 
-
 export function mergeRequestTransformer(mergeReq) {
   return {
     id: mergeReq.id,

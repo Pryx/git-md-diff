@@ -51,11 +51,11 @@ class DiffWrapper extends React.Component {
       <div className="diff">
         <Row className="select-diff mt-4">
           <Col lg={6} xs={12}>
-            <strong>Original content:</strong>
+            <strong>From revision:</strong>
             <CommitSelect id="from" from />
           </Col>
           <Col lg={6} xs={12}>
-            <strong>Modified content:</strong>
+            <strong>To revision:</strong>
             <CommitSelect id="to" from={false} />
           </Col>
         </Row>
