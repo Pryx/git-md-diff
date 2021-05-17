@@ -15,6 +15,9 @@ const sql = postgres({
   connect_timeout: 30, // Connect timeout in seconds
 });
 
+/**
+ * Creates the tables
+ */
 async function setupDb() {
   // await sql`DROP TABLE IF EXISTS proofreading_requests;`;
 
@@ -59,6 +62,13 @@ async function setupDb() {
     docuId INTEGER REFERENCES documentations(id),
     level SMALLINT,
     PRIMARY KEY (userId, docuId)
+  );`;
+
+  await sql`CREATE TABLE IF NOT EXISTS tokens(
+    userId INTEGER REFERENCES users(id),
+    hash VARCHAR(32),
+    expire INTEGER,
+    PRIMARY KEY (userId, hash)
   );`;
 
   /*

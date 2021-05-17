@@ -1,12 +1,10 @@
-import { hot } from 'react-hot-loader';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Badge } from 'react-bootstrap';
+import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import Diff from '../diff/diff';
-import { store } from '../store';
-import { logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 
 /**
  * A slightly modified DiffView for display in the editor file.
@@ -47,7 +45,8 @@ class EditorDiff extends React.Component {
 
     fetchChanges().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

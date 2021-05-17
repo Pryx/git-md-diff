@@ -1,11 +1,9 @@
-import { Alert, Dropdown } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { hot } from 'react-hot-loader';
+import { Alert, Dropdown } from 'react-bootstrap';
 import Dialog from 'react-bootstrap-dialog';
-import { logOut } from '../../actions';
-import { secureKy } from '../../entities/secure-ky';
-import { store } from '../../store';
+import { hot } from 'react-hot-loader';
+import { logoutUser, secureKy } from '../../entities/secure-ky';
 import FileItem from './FileItem';
 
 /**
@@ -29,23 +27,36 @@ class DirItem extends React.Component {
   }
 
   componentDidMount() {
-    this.componentDidUpdate();
+    const { isOpen } = this.state;
+    if (isOpen) {
+      this.componentDidUpdate();
+    }
   }
 
   static getDerivedStateFromProps(props, state) {
     return { ...state, error: null };
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     const { version, docuId, path } = this.props;
     // You don't have to do this check first, but it can help prevent an unneeded render
     let lastVersion = null;
+
+    const { isOpen } = this.state;
+    if (!isOpen) {
+      return;
+    }
 
     if (prevProps) {
       lastVersion = prevProps.version;
     }
 
-    if (version && lastVersion !== version) {
+    let shouldRefresh = false;
+    if (prevState) {
+      shouldRefresh = !prevState.isOpen && isOpen;
+    }
+
+    if ((version && lastVersion !== version) || shouldRefresh) {
       const fetchFiles = async () => {
         const json = await secureKy().get(`${window.env.api.backend}/documentations/${docuId}/${version}/files/${path}`).json();
 
@@ -57,7 +68,8 @@ class DirItem extends React.Component {
 
       fetchFiles().catch((error) => {
         if (error.response && error.response.status === 403) {
-          store.dispatch(logOut());
+          logoutUser();
+          return;
         }
 
         this.setState({
@@ -149,9 +161,11 @@ class DirItem extends React.Component {
     const { name, docuId, version } = this.props;
 
     const toggle = (e) => {
-      if (e.target === e.currentTarget) {
+      console.log(e.target.classList);
+      if (!e.target.classList.contains('dropdown')) {
         e.preventDefault();
         this.setState({ isOpen: !isOpen });
+        this.componentDidUpdate();
       }
     };
 

@@ -17,6 +17,11 @@ export const secureKy = () => {
   return kyInst;
 };
 
+export const logoutUser = async () => {
+  await secureKy().get(`${window.env.api.backend}/auth/logout`).json();
+  store.dispatch(logOut());
+};
+
 export const refreshTokens = async () => {
   try {
     const json = await secureKy().get(`${window.env.api.backend}/auth/token`).json();

@@ -1,14 +1,14 @@
-import { hot } from 'react-hot-loader';
-import React from 'react';
-import { Link } from 'wouter';
-import Card from 'react-bootstrap/Card';
 import PropTypes from 'prop-types';
-import { Badge, Form, Alert } from 'react-bootstrap';
+import React from 'react';
+import { Alert, Badge, Form } from 'react-bootstrap';
+import Card from 'react-bootstrap/Card';
+import { hot } from 'react-hot-loader';
+import { Link } from 'wouter';
+import { excludeChange, includeChange } from '../actions';
 import Diff from '../diff/diff';
-import { store } from '../store';
-import { excludeChange, includeChange, logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
 import ProofreadingRequest from '../entities/proofreading-request';
+import { logoutUser, secureKy } from '../entities/secure-ky';
+import { store } from '../store';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -94,7 +94,8 @@ class DiffView extends React.Component {
 
     fetchDiff().catch(async (error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       const errorMessage = (await error.response.json()).error;

@@ -7,11 +7,13 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { Link } from 'wouter';
+import lodash from 'lodash';
 import User from './entities/user';
 
 const Navigation = (props) => {
   const { userData } = props;
-  if (userData) {
+
+  if (!lodash.isEmpty(userData)) {
     return (
       <Navbar bg="primary" variant="dark" expand="lg">
         <Container>

@@ -3,9 +3,7 @@ import { Alert, Row } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import { hot } from 'react-hot-loader';
 import { Link } from 'wouter';
-import { logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
-import { store } from '../store';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -29,7 +27,8 @@ class DocuOverview extends React.Component {
 
     fetchDocus().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

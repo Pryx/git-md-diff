@@ -31,7 +31,7 @@ services:
       interval: 1m30s
       timeout: 10s
       retries: 3
-
+  
   render:
     build:
       context: ./render
@@ -52,7 +52,7 @@ services:
       interval: 1m30s
       timeout: 10s
       retries: 3
-
+  
   backend:
     build:
       context: ./backend
@@ -67,16 +67,13 @@ services:
       - db
     networks: 
       - databases
-    environment:
-      - DOCUROBOT_DATABASE_URL=postgres://postgres@db:5432/postgres
-      - DOCUROBOT_PORT=8888
     command: bash -c "npm install && bash ./wait-for-it.sh db:5432 -q && npm start"
     healthcheck:
       test: ["CMD-SHELL", "curl -sS http://0.0.0.0:3000 || exit 1"]
       interval: 1m30s
       timeout: 10s
       retries: 3
-
+  
   frontend:
     build:
       context: ./frontend
@@ -93,11 +90,26 @@ services:
       - render
     networks: 
       - databases
-    environment:
-      - DOCUROBOT_PORT=8888
     command: bash -c "npm install && npm start"
     healthcheck:
       test: ["CMD-SHELL", "curl -sS http://0.0.0.0:5000 || exit 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      
+  pgadmin:
+    image: "dpage/pgadmin4:latest"
+    ports:
+      - "5050:80"
+    links:
+      - db
+    networks: 
+      - databases
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=developer@sajdl.com
+      - PGADMIN_DEFAULT_PASSWORD=LocalDeveloper123456
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS http://0.0.0.0:80 || exit 1"]
       interval: 1m30s
       timeout: 10s
       retries: 3

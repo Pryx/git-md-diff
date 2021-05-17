@@ -6,9 +6,7 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import slugify from 'slugify';
 import { Redirect } from 'wouter';
-import { logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
-import { store } from '../store';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -57,7 +55,8 @@ class NewDocumentation extends React.Component {
 
     putData().catch(async (error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
       const errorMessage = (await error.response.json()).error;
       this.setState({

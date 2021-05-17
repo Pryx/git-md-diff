@@ -1,13 +1,13 @@
-import { hot } from 'react-hot-loader';
+import PropTypes from 'prop-types';
 import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
-import SelectSearch from 'react-select';
+import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
+import SelectSearch from 'react-select';
+import { documentationEmpty, revisionSelected } from '../actions';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 import { store } from '../store';
-import { documentationEmpty, logOut, revisionSelected } from '../actions';
-import { secureKy } from '../entities/secure-ky';
 
 /**
  * This is the commit selector component. This allows us to
@@ -181,7 +181,8 @@ class CommitSelect extends React.Component {
 
     fetchData().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

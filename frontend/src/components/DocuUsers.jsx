@@ -7,13 +7,11 @@ import {
 import Dialog from 'react-bootstrap-dialog';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import UserAdd from './UserAdd';
 import accessLevels from '../constants/access-levels';
-import { store } from '../store';
 import Documentation from '../entities/documentation';
-import { logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
+import UserAdd from './UserAdd';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -38,7 +36,8 @@ class DocuUsers extends React.Component {
   componentDidMount() {
     this.fetchUsers().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
@@ -81,7 +80,8 @@ class DocuUsers extends React.Component {
 
     remove().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

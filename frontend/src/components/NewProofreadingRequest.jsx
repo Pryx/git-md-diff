@@ -7,11 +7,9 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import Select from 'react-select';
 import { Redirect } from 'wouter';
-import { logOut } from '../actions';
 import Change from '../entities/change';
-import { secureKy } from '../entities/secure-ky';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
-import { store } from '../store';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -42,7 +40,8 @@ class NewProofreadingRequest extends React.Component {
 
     this.fetchUsers().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

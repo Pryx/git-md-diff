@@ -6,11 +6,9 @@ import {
 import { hot } from 'react-hot-loader';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
-import { logOut } from '../actions';
 import accessLevels from '../constants/access-levels';
 import Documentation from '../entities/documentation';
-import { secureKy } from '../entities/secure-ky';
-import { store } from '../store';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -57,7 +55,8 @@ class UserAdd extends React.Component {
 
     addUser().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
@@ -98,12 +97,7 @@ class UserAdd extends React.Component {
           <Col>
             <AsyncSelect
               value={user}
-              loadOptions={(val) => this.getOptionsAsync(val).catch((err) => {
-                if (err.response && err.response.status === 403) {
-                  store.dispatch(logOut());
-                }
-                return [];
-              })}
+              loadOptions={(val) => this.getOptionsAsync(val).catch(() => [])}
               placeholder="Start typing..."
               onChange={(u) => {
                 this.setState({ user: u });

@@ -1,6 +1,5 @@
 import fs from 'fs';
 
-// TODO: Separate prod and dev configs
 const rawdata = fs.readFileSync('config/config.prod.json');
 const staticConfig = JSON.parse(rawdata);
 

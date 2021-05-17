@@ -4,8 +4,7 @@ import { Alert, Button, Card } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import { hot } from 'react-hot-loader';
 import { Redirect } from 'wouter';
-import { logOut } from '../actions';
-import { store } from '../store';
+import { logoutUser } from '../entities/secure-ky';
 
 class LoginPage extends React.Component {
   state = { error: null };
@@ -20,7 +19,7 @@ class LoginPage extends React.Component {
     } = this.props;
 
     if (logout) {
-      store.dispatch(logOut());
+      logoutUser();
       return <Redirect to="/" />;
     }
 

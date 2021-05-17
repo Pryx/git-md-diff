@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import {
   Alert, Badge, Col, Row,
@@ -6,12 +7,9 @@ import Card from 'react-bootstrap/Card';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { Link } from 'wouter';
-import PropTypes from 'prop-types';
-import { logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
-import User from '../entities/user';
-import { store } from '../store';
 import { proofreadingStates, proofreadingStatesString } from '../constants/proofreading-states';
+import { logoutUser, secureKy } from '../entities/secure-ky';
+import User from '../entities/user';
 
 /**
  * Diff view shows the diff file contents. Currently this
@@ -40,7 +38,8 @@ class ProofreadingOverview extends React.Component {
 
     fetchDocus().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

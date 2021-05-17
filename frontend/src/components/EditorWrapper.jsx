@@ -8,14 +8,13 @@ import { Form } from 'react-bootstrap';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
-import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import {
-  documentationSelected, logOut, pageAutosave, pageAutosaveRemove,
+  documentationSelected, pageAutosave, pageAutosaveRemove,
 } from '../actions';
-import { secureKy } from '../entities/secure-ky';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 import EditorPreview from './EditorPreview';
 
@@ -90,7 +89,8 @@ class EditPage extends React.Component {
 
     fetchPage().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
@@ -127,14 +127,15 @@ class EditPage extends React.Component {
 
     savePage().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
         isLoaded: true,
         error: error.message,
       });
-    });;
+    });
   }
 
   commitMessageChange(e) {
@@ -150,8 +151,6 @@ class EditPage extends React.Component {
     const {
       from, to, file, docuId,
     } = this.props;
-
-    
 
     if (!isLoaded) {
       return (

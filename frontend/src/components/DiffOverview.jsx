@@ -1,15 +1,15 @@
-import { hot } from 'react-hot-loader';
+import PropTypes from 'prop-types';
 import React from 'react';
+import { Alert } from 'react-bootstrap';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
+import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
-import { Alert } from 'react-bootstrap';
-import DiffView from './DiffView';
-import { logOut, updateChangesList } from '../actions';
-import { store } from '../store';
-import { secureKy } from '../entities/secure-ky';
+import { updateChangesList } from '../actions';
 import ProofreadingRequest from '../entities/proofreading-request';
+import { logoutUser, secureKy } from '../entities/secure-ky';
+import { store } from '../store';
+import DiffView from './DiffView';
 
 /**
  * The diff overview component acts as a wrapper to
@@ -56,7 +56,8 @@ class DiffOverview extends React.Component {
 
       fetchChanges().catch((error) => {
         if (error.response && error.response.status === 403) {
-          store.dispatch(logOut());
+          logoutUser();
+          return;
         }
 
         this.setState({

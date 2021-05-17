@@ -6,6 +6,7 @@ import mime from 'mime-types';
 import passport from 'passport';
 import GitLabStrategy from 'passport-gitlab2';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
+import crypto from 'crypto';
 import config from './config';
 import User from './entities/user';
 import Auth from './services/auth';
@@ -16,10 +17,13 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// Initialize Passport!  Also use passport.session() middleware, to support
 app.use(passport.initialize());
+
 // #region User auth
+
+/**
+ * JWT options setup
+ */
 const jwtOptions = {
   // Telling Passport to check authorization headers for JWT
   jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('JWT'),
@@ -28,10 +32,12 @@ const jwtOptions = {
   passReqToCallback: true,
 };
 
+// User serialization
 passport.serializeUser((user, done) => {
   done(null, user);
 });
 
+// User de-serialization
 passport.deserializeUser((u, done) => {
   User.getById(u).then((user) => {
     // Get first user matching email
@@ -39,6 +45,7 @@ passport.deserializeUser((u, done) => {
   });
 });
 
+// JWT strategy setup
 passport.use(new JwtStrategy(jwtOptions, ((req, jwtPayload, done) => {
   User.getById(jwtPayload.id).then((user) => {
     if (user) {
@@ -49,6 +56,7 @@ passport.use(new JwtStrategy(jwtOptions, ((req, jwtPayload, done) => {
   });
 })));
 
+// Gitlab strategy setup
 passport.use(new GitLabStrategy({
   clientID: config.gitlab.appid,
   clientSecret: config.gitlab.secret,
@@ -58,8 +66,10 @@ passport.use(new GitLabStrategy({
   Auth.findOrCreateUser(profile, accessToken, refreshToken, 'gitlab').then((usr) => done(null, usr.id));
 })));
 
+// Gitlab auth endpoint
 app.get('/auth/gitlab', passport.authenticate('gitlab', { scope: ['api'] }));
 
+// Rate limiter for login to keep the CodeQL from complaining
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute window
   max: 30, // start blocking after 5 requests
@@ -67,38 +77,48 @@ const limiter = rateLimit({
     'Too many login attempts in 1 minute. Please try again later.',
 });
 
+// The Gitlab OAuth callback endpoint, redirects back to frontend
 app.get('/auth/gitlab/callback', limiter,
   (req, res, next) => passport.authenticate('gitlab', (err, user, info) => {
     if (err) {
       console.error('GITLAB LOGIN ERROR:', info);
-      next(err);
+      res.redirect(`${config.gitlab.authRedirect}/login/error`);
       return;
     }
 
     if (!user) {
-      res.redirect('/login/error');
+      res.redirect(`${config.gitlab.authRedirect}/login/error`);
       return;
     }
 
     req.login(user, (loginErr) => {
       if (loginErr) {
-        res.redirect('/login/error');
+        res.redirect(`${config.gitlab.authRedirect}/login/error`);
         console.error('REQ LOGIN ERROR:', loginErr);
         return;
       }
 
       const accessToken = jwt.sign({ id: user }, config.app.jwtSecret, { expiresIn: '30m' });
-      const refreshToken = jwt.sign({ id: user }, config.app.refreshSecret, { expiresIn: '1d' });
+      const refreshToken = jwt.sign({ id: user }, config.app.refreshSecret, { expiresIn: '7d' });
+
+      const hash = crypto.createHash('md5').update(refreshToken).digest('hex');
+      const date = new Date();
+      date.setDate(date.getDate() + 7);
+      Auth.loginUser(user, hash, date.getTime());
 
       res.redirect(`${config.gitlab.authRedirect}/login/success/${encodeURIComponent(accessToken)}/${encodeURIComponent(refreshToken)}`);
     });
   })(req, res, next));
 
+// Logout
 app.get('/auth/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
-  req.logout();
-  return res.send({ success: true });
+  const oldRefresh = ExtractJwt.fromHeader('refreshtoken')(req);
+  const hash = crypto.createHash('md5').update(oldRefresh).digest('hex');
+  Auth.logoutUser(req.user.id, hash);
+  res.send({ success: true });
 });
 
+// Generate a new token if expired.
 app.get('/auth/token', limiter, (req, res) => {
   const token = ExtractJwt.fromAuthHeaderWithScheme('JWT')(req);
   jwt.verify(token, config.app.jwtSecret, (err) => {
@@ -115,11 +135,24 @@ app.get('/auth/token', limiter, (req, res) => {
       }
 
       const accessToken = jwt.sign({ id: data.id }, config.app.jwtSecret, { expiresIn: '30m' });
-      const refreshToken = jwt.sign({ id: data.id }, config.app.refreshSecret, { expiresIn: '1d' });
+      const refreshToken = jwt.sign({ id: data.id }, config.app.refreshSecret, { expiresIn: '7d' });
 
-      // const oldToken = new RefreshToken({});
+      const oldHash = crypto.createHash('md5').update(oldRefresh).digest('hex');
+      const hash = crypto.createHash('md5').update(refreshToken).digest('hex');
 
-      res.send({ success: true, data: { token: accessToken, refreshToken } });
+      Auth.refreshTokenValid(data.id, oldHash).then((valid) => {
+        if (!valid) {
+          res.status(403).send({ success: false, data: null });
+          return;
+        }
+
+        Auth.logoutUser(data.id, oldHash);
+        const date = new Date();
+        date.setDate(date.getDate() + 7);
+        Auth.loginUser(data.id, hash, date.getTime());
+
+        res.send({ success: true, data: { token: accessToken, refreshToken } });
+      });
     });
   });
 });
@@ -127,6 +160,7 @@ app.get('/auth/token', limiter, (req, res) => {
 // #endregion
 
 // #region User info
+// Gets user info by ID
 app.get('/users/:id', passport.authenticate('jwt', { session: false }), (req, res) => {
   // req.user is guaranteed to be set by verifyAuth middleware
   if (req.params.id === 'current') {
@@ -153,39 +187,7 @@ app.get('/users/:id', passport.authenticate('jwt', { session: false }), (req, re
 // #endregion
 
 // #region Documentation endpoints
-// Clones the repository to local storage
-app.put('/documentations/', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.create(req.body).then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-app.delete('/documentations/:docu', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.remove(req.params.docu, req.body.deleteRepo)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// Save file and commit to git
-app.put('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.savePage(req.params.docu, req.params.version,
-    req.params.page, req.body.content, req.body.commitMessage)
-    .then(() => res.send({ success: true }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// Delete file
-app.delete('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.deleteFile(req.params.docu, req.params.version,
-    req.params.page, req.body.commitMessage)
-    .then(() => res.send({ success: true }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// Get repos
+// Gets all available documentations for the logged in user
 app.get('/documentations', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.getList()
@@ -193,7 +195,14 @@ app.get('/documentations', passport.authenticate('jwt', { session: false }), (re
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-// Get documentation versions
+// Creates a new documentation
+app.put('/documentations/', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.create(req.body).then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// Gets a documentation by ID
 app.get('/documentations/:docu', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.get(req.params.docu)
@@ -201,18 +210,10 @@ app.get('/documentations/:docu', passport.authenticate('jwt', { session: false }
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-// Get documentation versions
-app.get('/documentations/provider/:provider', passport.authenticate('jwt', { session: false }), (req, res) => {
+// Deletes documentation by ID
+app.delete('/documentations/:docu', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
-  service.getRemoteList(req.params.provider)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// Search users in selected provider
-app.get('/documentations/provider/:provider/users/:search', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getRemoteUserList(req.params.provider, req.params.search)
+  service.remove(req.params.docu, req.body.deleteRepo)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
@@ -225,6 +226,72 @@ app.get('/documentations/:docu/versions', passport.authenticate('jwt', { session
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+// Get commits from branches
+app.get('/documentations/:docu/:version/revisions', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getRevisions(req.params.docu, req.params.version)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// Saves file and commits it to git
+app.put('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.savePage(req.params.docu, req.params.version,
+    req.params.page, req.body.content, req.body.commitMessage)
+    .then(() => res.send({ success: true }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// Deletes file
+app.delete('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.deleteFile(req.params.docu, req.params.version,
+    req.params.page, req.body.commitMessage)
+    .then(() => res.send({ success: true }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// File change list
+app.get('/documentations/:docu/changes/:from/:to', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getChanges(req.params.docu, req.params.from, req.params.to)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// Gets a text file
+app.get('/documentations/:docu/:revision/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getBlob(req.params.docu, req.params.revision, req.params.page)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// File list - root folder
+app.get('/documentations/:docu/:revision/files/', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getFiles(req.params.docu, req.params.revision, '/')
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// File list - specified folder
+app.get('/documentations/:docu/:revision/files/:path(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getFiles(req.params.docu, req.params.revision, `${req.params.path}`)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
+// Search users in selected provider
+app.get('/documentations/provider/:provider/users/:search', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getRemoteUserList(req.params.provider, req.params.search)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
 // Get documentation users
 app.get('/documentations/:docu/users', passport.authenticate('jwt', { session: false }), (req, res) => {
   DocumentationService.getUsers(req.params.docu)
@@ -232,7 +299,7 @@ app.get('/documentations/:docu/users', passport.authenticate('jwt', { session: f
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-// Remove user by uid
+// Add user to documentation
 app.put('/documentations/:docu/users/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.addUser(req.params.docu, req.body)
@@ -248,45 +315,7 @@ app.delete('/documentations/:docu/users/:uid', passport.authenticate('jwt', { se
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
-// Get commits from branches
-app.get('/documentations/:docu/:version/revisions', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getRevisions(req.params.docu, req.params.version)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// File change list
-app.get('/documentations/:docu/changes/:from/:to', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getChanges(req.params.docu, req.params.from, req.params.to)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// Text file
-app.get('/documentations/:docu/:revision/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getBlob(req.params.docu, req.params.revision, req.params.page)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// File list
-app.get('/documentations/:docu/:revision/files/', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getFiles(req.params.docu, req.params.revision, '/')
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-app.get('/documentations/:docu/:revision/files/:path(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getFiles(req.params.docu, req.params.revision, `${req.params.path}`)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
-});
-
-// Blob file
+// Blob file, mainly used for loading images
 app.get('/documentations/:docu/:revision/:token/blobs/:blob(*)', (req, res) => {
   let user = null;
   jwt.verify(req.params.token, config.app.jwtSecret, (err, data) => {
@@ -312,6 +341,7 @@ app.get('/documentations/:docu/:revision/:token/blobs/:blob(*)', (req, res) => {
 // #endregion
 
 // #region Proofreading endpoints
+// Gets all proofreading requests of a user
 app.get('/proofreading/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.getUserRequests()
@@ -319,6 +349,7 @@ app.get('/proofreading/', passport.authenticate('jwt', { session: false }), (req
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+// Creates new proofreading request
 app.put('/proofreading/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.create(req.body)
@@ -326,6 +357,7 @@ app.put('/proofreading/', passport.authenticate('jwt', { session: false }), (req
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+// Gets proofreading requests related to a documentation
 app.get('/proofreading/documentation/:docuId', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.getDocuRequests(req.params.docuId)
@@ -333,6 +365,7 @@ app.get('/proofreading/documentation/:docuId', passport.authenticate('jwt', { se
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+// Gets proofreading request by ID
 app.get('/proofreading/:reqId', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.get(req.params.reqId)
@@ -340,12 +373,14 @@ app.get('/proofreading/:reqId', passport.authenticate('jwt', { session: false })
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+// Saves a page edited from a proofreading request, adds the modified file functionality
 app.put('/proofreading/:reqId/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
   ProofreadingService.savePage(req.params.reqId, req.params.page)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+// Marks proofreading request as complete
 app.put('/proofreading/:reqId/submit', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.finished(req.params.reqId)
@@ -353,6 +388,7 @@ app.put('/proofreading/:reqId/submit', passport.authenticate('jwt', { session: f
     .catch((error) => res.status(500).send({ success: false, error: error.message }));
 });
 
+// Merges proofreading request
 app.put('/proofreading/:reqId/merge', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.merge(req.params.reqId)

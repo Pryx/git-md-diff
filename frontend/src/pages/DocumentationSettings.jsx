@@ -11,11 +11,9 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import slugify from 'slugify';
 import { Link, Redirect } from 'wouter';
-import { logOut } from '../actions';
 import DocuUsers from '../components/DocuUsers';
 import accessLevels from '../constants/access-levels';
-import { secureKy } from '../entities/secure-ky';
-import { store } from '../store';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
  * Currently it stores the info about current repository and selected commits
@@ -58,7 +56,8 @@ class DocumentationSettings extends React.Component {
 
     fetchPage().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
@@ -133,7 +132,8 @@ class DocumentationSettings extends React.Component {
 
     putData().catch(async (error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       const errorMessage = (await error.response.json()).error;
@@ -159,7 +159,8 @@ class DocumentationSettings extends React.Component {
 
     deleteDocu().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

@@ -5,11 +5,23 @@ import Role from '../entities/role';
 import User from '../entities/user';
 import ProviderWrapper from '../providers/provider-wrapper';
 
+/**
+ * This is the documentation service class.
+ */
 export default class DocumentationService {
+  /**
+   * Creates DocumentationService instance
+   * @param {User} user instance of currently logged in user
+   */
   constructor(user) {
     this.user = user;
   }
 
+  /**
+   * Creates or updates a new documentation
+   * @param {Object} params Documentation parameters, @see Documentation
+   * @returns {Documentation} The created documentation
+   */
   async create(params) {
     if (params.id) {
       let docu = await Documentation.get(params.id);
@@ -40,32 +52,51 @@ export default class DocumentationService {
     return docu;
   }
 
+  /**
+   * Gets a list of users documentation
+   * @returns {Documentation[]} List of found documentations
+   */
   async getList() {
     const docus = await Documentation.getUserDocumentations(this.user.id);
     return docus;
   }
 
-  async getRemoteList(providerId) {
-    const provider = new ProviderWrapper(providerId, this.user.tokens);
-    const ids = await Documentation.getProviderIds(this.user.id, providerId);
-    return (await provider.getUserDocumentations()).filter((d) => !ids.includes(d.id));
+  /**
+   * Searches for users matching the search string
+   * @param {string} providerSlug Provider identifier
+   * @param {string} search Search string
+   * @returns List of users
+   */
+  async getRemoteUserList(providerSlug, search) {
+    const provider = new ProviderWrapper(providerSlug, this.user.tokens);
+    return provider.searchUsers(search);
   }
 
-  async getRemoteUserList(providerId, search) {
-    const provider = new ProviderWrapper(providerId, this.user.tokens);
-    return provider.getUserList(search);
-  }
-
+  /**
+   * Gets a documentation by its ID
+   * @param {number} docuId ID of the documentation
+   * @returns {Documentation} Found documentation
+   */
   async get(docuId) {
     const docu = await Documentation.get(docuId);
     docu.accessLevel = await docu.getAccessLevel(this.user.id);
     return docu;
   }
 
+  /**
+   * Gets a list of users that have access to the documentation
+   * @param {number} docuId ID of the documentation
+   * @returns {User[]} List of users with documentation access
+   */
   static async getUsers(docuId) {
     return Documentation.getUsers(docuId);
   }
 
+  /**
+   * Removes a user from the documentation
+   * @param {number} docuId ID of the documentation
+   * @param {number} userId ID of the user
+   */
   async removeUser(docuId, userId) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
@@ -74,6 +105,11 @@ export default class DocumentationService {
     await Role.remove(userId, docuId);
   }
 
+  /**
+   * Adds a user to the documentation
+   * @param {number} docuId ID of the documentation
+   * @param {Object} userInfo Object containing the necessary info about the user
+   */
   async addUser(docuId, userInfo) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
@@ -97,6 +133,11 @@ export default class DocumentationService {
     await role.save();
   }
 
+  /**
+   * Removes the documentation, optionally along with the underlying repository
+   * @param {number} docuId ID of the documentation
+   * @param {boolean} deleteRepo Indicates whether to delete the underlying repository
+   */
   async remove(docuId, deleteRepo) {
     const docu = await Documentation.get(docuId);
     if (deleteRepo) {
@@ -106,24 +147,49 @@ export default class DocumentationService {
     await Documentation.remove(docuId);
   }
 
+  /**
+   * Gets a list of repository branches
+   * @param {number} docuId ID of the documentation
+   * @returns
+   */
   async getVersions(docuId) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     return provider.getVersions(docu.providerId);
   }
 
+  /**
+   * Gets a list of repository commits
+   * @param {number} docuId ID of the documentation
+   * @param {string} version Branch identifier
+   * @returns
+   */
   async getRevisions(docuId, version) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     return provider.getRevisions(docu.providerId, version);
   }
 
+  /**
+   * Gets a list of changes between commits
+   * @param {number} docuId ID of the documentation
+   * @param {string} from Identifier of the from commit
+   * @param {string} to Identifier of the to commit
+   * @returns
+   */
   async getChanges(docuId, from, to) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     return provider.getChanges(docu.providerId, from, to);
   }
 
+  /**
+   * Gets a blob file from the repository
+   * @param {number} docuId ID of the documentation
+   * @param {string} revision Commit identifier
+   * @param {string} blob File path
+   * @returns
+   */
   async getBlob(docuId, revision, blob) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
@@ -131,6 +197,13 @@ export default class DocumentationService {
     return p;
   }
 
+  /**
+   * Gets a list of files in a folder
+   * @param {number} docuId ID of the documentation
+   * @param {string} revision Commit identifier
+   * @param {string} path Folder path
+   * @returns
+   */
   async getFiles(docuId, revision, path) {
     const docu = await Documentation.get(docuId);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
@@ -138,6 +211,14 @@ export default class DocumentationService {
     return p;
   }
 
+  /**
+   * Saves a file to repository
+   * @param {number} docuId ID of the documentation
+   * @param {string} version Branch identifier
+   * @param {string} page Path of the file
+   * @param {string} content Content of the file
+   * @param {string} commitMessage Commit message
+   */
   async savePage(docuId, version, page, content, commitMessage) {
     const docu = await Documentation.get(docuId);
     const projectId = docu.providerId;
@@ -145,8 +226,17 @@ export default class DocumentationService {
     await provider.savePage(projectId, page, version, content, commitMessage);
   }
 
+  /**
+   * Deletes a file from repository
+   * @param {number} docuId ID of the documentation
+   * @param {string} version  Branch identifier
+   * @param {string} file Path of the file
+   * @param {string} commitMessage Commit message
+   * @returns
+   */
   async deleteFile(docuId, version, file, commitMessage) {
     const docu = await Documentation.get(docuId);
+    const projectId = docu.providerId;
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
     return provider.deleteFile(projectId, file, version, commitMessage);
   }

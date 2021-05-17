@@ -1,7 +1,15 @@
+/**
+ * This transforms branch data returned by Gitlab into a unified format
+ * @param {Object} version Branch object returned by Gitlab
+ */
 export function versionTransformer(version) {
   return { name: version.name, default: version.default };
 }
 
+/**
+ * This transforms revision data returned by Gitlab into a unified format
+ * @param {Object} revision Revision object returned by Gitlab
+ */
 export function revisionTransformer(revision) {
   return {
     id: revision.id,
@@ -16,6 +24,10 @@ export function revisionTransformer(revision) {
   };
 }
 
+/**
+ * This transforms change data returned by Gitlab into a unified format
+ * @param {Object} change Change object returned by Gitlab
+ */
 export function changesTransformer(change) {
   const ext = change.new_path.split('.').pop();
 
@@ -30,6 +42,10 @@ export function changesTransformer(change) {
   };
 }
 
+/**
+ * This transforms repository data returned by Gitlab into a unified format
+ * @param {Object} repo Repo object returned by Gitlab
+ */
 export function repositoryTransformer(repo) {
   return {
     id: repo.id,
@@ -39,6 +55,10 @@ export function repositoryTransformer(repo) {
   };
 }
 
+/**
+ * This transforms the tree object returned by Gitlab into a unified format
+ * @param {Object} treeObj Tree object returned by Gitlab
+ */
 export function repositoryTreeTransformer(treeObj) {
   if (treeObj.path.endsWith('.gitkeep')) return null; // We don't want to see .gitkeep files
   return {
@@ -47,6 +67,10 @@ export function repositoryTreeTransformer(treeObj) {
   };
 }
 
+/**
+ * This transforms merge request data returned by Gitlab into a unified format
+ * @param {Object} mergeReq Merge request object returned by Gitlab
+ */
 export function mergeRequestTransformer(mergeReq) {
   return {
     id: mergeReq.id,

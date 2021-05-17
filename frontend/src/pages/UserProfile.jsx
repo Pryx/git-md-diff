@@ -6,10 +6,8 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import { logOut } from '../actions';
-import { secureKy } from '../entities/secure-ky';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
-import { store } from '../store';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -41,7 +39,8 @@ class UserProfile extends React.Component {
 
     fetchCommits().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

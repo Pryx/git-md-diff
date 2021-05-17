@@ -8,13 +8,13 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { Link } from 'wouter';
-import { documentationSelected, logOut } from '../actions';
+import { documentationSelected } from '../actions';
 import DiffWrapper from '../components/DiffWrapper';
 import FileViewWrapper from '../components/FileViewWrapper';
 import NewProofreadingRequest from '../components/NewProofreadingRequest';
 import ProofreadingOverview from '../components/ProofreadingOverview';
 import accessLevels from '../constants/access-levels';
-import { secureKy } from '../entities/secure-ky';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 import { store } from '../store';
 
 /**
@@ -50,7 +50,8 @@ class DocumentationPage extends React.Component {
 
     fetchPage().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
@@ -73,7 +74,8 @@ class DocumentationPage extends React.Component {
 
     fetchPage().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({

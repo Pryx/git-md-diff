@@ -7,7 +7,6 @@ import { connect } from 'react-redux';
 import { Link } from 'wouter';
 import { secureKy } from '../../entities/secure-ky';
 
-
 /**
  * The diff overview component acts as a wrapper to
  * diff view components. It's basically a list of files
@@ -22,12 +21,7 @@ class FileItem extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state.isOpen = props.openState;
     this.handleDeleteFile = this.handleDeleteFile.bind(this);
-  }
-
-  componentDidMount() {
-    this.componentDidUpdate();
   }
 
   static getDerivedStateFromProps(props, state) {
@@ -41,7 +35,7 @@ class FileItem extends React.Component {
 
       if (response.success) {
         this.setState({
-          isDeleted: true
+          isDeleted: true,
         });
       } else {
         this.setState({
@@ -60,24 +54,26 @@ class FileItem extends React.Component {
         Dialog.Action(
           'Delete',
           () => deleteFile(),
-          'btn-danger'
-        )
+          'btn-danger',
+        ),
       ],
     });
   }
 
   render() {
     const {
-      error, isDeleted
+      error, isDeleted,
     } = this.state;
 
-    const { name, docuId, version, path } = this.props;
+    const {
+      name, docuId, version, path,
+    } = this.props;
 
-    if (isDeleted){
+    if (isDeleted) {
       return null;
     }
 
-    if (error){
+    if (error) {
       return (
         <div className="file">
           <Alert variant="danger">Couldn&amp;t delete file - it is probably already deleted. Please try refreshing this page.</Alert>

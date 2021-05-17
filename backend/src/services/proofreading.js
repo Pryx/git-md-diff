@@ -5,17 +5,28 @@ import proofreadingStates from '../entities/proofreading-states';
 import Role from '../entities/role';
 import ProviderWrapper from '../providers/provider-wrapper';
 
+/**
+ * This is the proofreading service class.
+ */
 export default class ProofreadingService {
+  /**
+   * Creates ProofreadingService instance
+   * @param {User} user instance of currently logged in user
+   */
   constructor(user) {
     this.user = user;
   }
 
+  /**
+   * Creates a new proofreading request
+   * @param {Object} params Proofreading request parameters, @see ProofreadingRequest
+   * @returns
+   */
   async create(params) {
     const req = new ProofreadingRequest(params);
 
     const docu = await Documentation.get(req.docuId);
 
-    // TODO: Probably create branch or something...
     const provider = new ProviderWrapper(docu.provider, this.user.tokens); //eslint-disable-line
     const savedReq = new ProofreadingRequest(...await req.save());
 
@@ -25,16 +36,29 @@ export default class ProofreadingService {
     return savedReq;
   }
 
+  /**
+   * Gets request by its ID
+   * @param {number} reqId The id of the request
+   * @returns {ProofreadingRequest} The found proofreading request
+   */
   async get(reqId) {
     const req = await ProofreadingRequest.get(reqId);
 
-    if (req.proofreader.id !== this.user.id && req.requester.id !== this.user.id) {
+    const perm = Role.get(this.user.id, req.docuId);
+
+    if (req.proofreader.id !== this.user.id && req.requester.id !== this.user.id
+      && !(perm.level === accessLevels.manager || perm.level === accessLevels.admin)) {
       throw Error('Not authorized to access this proofreading request.');
     }
 
     return req;
   }
 
+  /**
+   * Marks the request as finished
+   * @param {number} reqId The id of the request
+   * @returns {ProofreadingRequest} The modified proofreading request
+   */
   async finished(reqId) {
     const req = await ProofreadingRequest.get(reqId);
 
@@ -53,9 +77,14 @@ export default class ProofreadingService {
     req.state = proofreadingStates.submitted;
     req.save();
 
-    return response;
+    return req;
   }
 
+  /**
+   * Merges the completed request
+   * @param {number} reqId The id of the request
+   * @returns {ProofreadingRequest} The modified proofreading request
+   */
   async merge(reqId) {
     const req = await ProofreadingRequest.get(reqId);
 
@@ -67,12 +96,14 @@ export default class ProofreadingService {
       req.pullRequest,
     );
 
+    // If no changes, just close the request
     if (mergeReq.changesCount === null) {
       await provider.closeMergeRequest(
         docu.providerId,
         req.pullRequest,
       );
     } else {
+      // If has conflicts, throw error as we cannot merge automatically
       if (mergeReq.hasConflicts) {
         throw Error('This branch cannot be merged due to conflicts. Please resolve them manually.');
       }
@@ -89,6 +120,12 @@ export default class ProofreadingService {
     return req;
   }
 
+  /**
+   * Saves the edited page and adds it to the modified file list
+   * @param {number} reqId The id of the request
+   * @param {string} page The file path
+   * @returns {ProofreadingRequest} The modified proofreading request
+   */
   static async savePage(reqId, page) {
     const req = await ProofreadingRequest.get(reqId);
     if (req.modified.indexOf(page) === -1) {
@@ -99,10 +136,20 @@ export default class ProofreadingService {
     return req;
   }
 
+  /**
+   * Returns all requests related to the currently logged in user.
+   * @returns {ProofreadingRequest[]} Array of current users proofreading requests
+   */
   async getUserRequests() {
     return ProofreadingRequest.getUserRequests(this.user.id);
   }
 
+  /**
+   * Gets an array of proofrading requests related to the selected documentation.
+   * If the user is author or lower, only their assigned requests are returned.
+   * @param {number} docuId The documentation ID
+   * @returns {ProofreadingRequest[]} Array of found proofreading requests
+   */
   async getDocuRequests(docuId) {
     const perm = Role.get(this.user.id, docuId);
 

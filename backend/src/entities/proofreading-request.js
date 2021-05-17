@@ -19,7 +19,28 @@ const defaults = {
   state: proofreadingStates.new,
 };
 
+/**
+ * This class is used to represent the Proofreading request and access the database.
+ */
 export default class ProofreadingRequest {
+  /**
+   * Creates a new ProofreadingRequest instance
+   * @param {Object} params The constructor parameters
+   * @param {number} params.id The ID of the proofreading request
+   * @param {number} params.docuId The related documentation ID
+   * @param {string} params.title The proofreading request title
+   * @param {string} params.sourceBranch The branch created for the proofreading request
+   * @param {string} params.targetBranch The branch in which the request will be merged
+   * @param {string} params.description The proofreading request description
+   * @param {string} params.revFrom The starting revision identifier
+   * @param {string} params.revTo The ending revision identifier
+   * @param {User|number} params.requester Object or ID of the user which requested the proofreading
+   * @param {User|number} params.proofreader Object or ID of the user which proofreads the pages
+   * @param {string[]} params.excluded List of excluded files
+   * @param {string[]} params.modified List of modified files
+   * @param {string} params.pullRequest The providers internal ID of the merge request
+   * @param {proofreadingStates} params.state State of the proofreading request
+   */
   constructor(params) {
     this.id = params.id || defaults.id;
     this.docuId = params.docuId || params.docuid || defaults.docuId;
@@ -37,6 +58,12 @@ export default class ProofreadingRequest {
     this.state = params.state || params.state || defaults.state;
   }
 
+  /**
+   * Gets the proofreading request complete with the proofreader and requester
+   * parameters replaced by public data of the related users
+   * @param {number} id The proofreading request ID
+   * @returns {ProofreadingRequest} the found proofreading request
+   */
   static async get(id) {
     const [req] = await sql`SELECT * FROM proofreading_requests WHERE id=${id}`;
     const r = new ProofreadingRequest(req);
@@ -47,6 +74,13 @@ export default class ProofreadingRequest {
     return r;
   }
 
+  /**
+   * Returns all request related to a documentation and optionally
+   * assigned to a specific user.
+   * @param {number} docuId ID of the documentation
+   * @param {number} [userId = null] Optional ID of the user
+   * @returns {ProofreadingRequest[]} Array of found proofreading requests
+   */
   static async getDocuRequests(docuId, userId = null) {
     let results;
     if (userId) {
@@ -76,6 +110,11 @@ export default class ProofreadingRequest {
     return [];
   }
 
+  /**
+   * Gets all requests related to a user
+   * @param {number} userId The ID of the user
+   * @returns {ProofreadingRequest[]} Array of found proofreading requests
+   */
   static async getUserRequests(userId) {
     const results = await sql`SELECT * FROM proofreading_requests WHERE (requester=${userId} OR proofreader=${userId}) AND state!=${proofreadingStates.merged} ORDER BY id DESC`;
 
@@ -94,10 +133,19 @@ export default class ProofreadingRequest {
     return [];
   }
 
-  static async remove(docuId) {
-    return sql`DELETE FROM proofreading_requests WHERE id=${docuId}`;
+  /**
+   * Removes the proofreading request by ID
+   * @param {number} reqId ID of the proofreading request
+   * @returns The postgresql result
+   */
+  static async remove(reqId) {
+    return sql`DELETE FROM proofreading_requests WHERE id=${reqId}`;
   }
 
+  /**
+   * Saves the updated proofreading request
+   * @returns The postgresql result
+   */
   async save() {
     const proofreader = this.proofreader.id || this.proofreader;
     const requester = this.requester.id || this.requester;

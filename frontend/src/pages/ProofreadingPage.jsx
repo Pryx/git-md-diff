@@ -9,10 +9,10 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { Link } from 'wouter';
-import { documentationSelected, logOut, revisionSelected } from '../actions';
+import { documentationSelected, revisionSelected } from '../actions';
 import ProofreadingDiffWrapper from '../components/ProofreadingDiffWrapper';
 import { proofreadingStates } from '../constants/proofreading-states';
-import { secureKy } from '../entities/secure-ky';
+import { logoutUser, secureKy } from '../entities/secure-ky';
 import User from '../entities/user';
 import { store } from '../store';
 
@@ -62,7 +62,8 @@ class ProofreadingPage extends React.Component {
 
     fetchPage().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
@@ -86,7 +87,8 @@ class ProofreadingPage extends React.Component {
 
     resolveReq().catch((error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       this.setState({
@@ -110,7 +112,8 @@ class ProofreadingPage extends React.Component {
 
     mergeReq().catch(async (error) => {
       if (error.response && error.response.status === 403) {
-        store.dispatch(logOut());
+        logoutUser();
+        return;
       }
 
       const err = await error.response.json();
