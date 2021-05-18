@@ -1,16 +1,9 @@
-# Markdown diff tool
-Diff tool for Docusaurus flavored markdown using node and git. This repository contains code for my master's thesis.
+# Git-md-diff
+ A feature complete tool for managing documentations written in Markdown or MDX and generated via a specialized tool - e.g. Docusaurus. Written in JavaScript using NodeJS for backend and React for frontend. This repository contains code for my master's thesis.
 
 ## Quickstart
 
-Make sure your system has folowing packages installed:
-
-`bash` `nodejs` `git` `npm`
-
-If you have them installed then you just need to run `npm install` in both frontend and backend folders you should be good to go.
-
-Starting the backend and frontend parts is as easy as running `npm start`. You should be able to clone a repository from the frontend, otherwise you can put folder with the cloned repository into the `backend/repositories` folder.
-
+Make sure you have `docker` and `docker-compose` installed. Then run `docker-compose up` in the root folder of this repository and everything should start up automatically.
 
 ## Additional commands
 To lint the project manually run:  npm run lint
