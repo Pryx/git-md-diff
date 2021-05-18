@@ -9,24 +9,24 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { Link } from 'wouter';
 import { documentationSelected } from '../actions';
-import DiffWrapper from '../components/DiffWrapper';
-import FileViewWrapper from '../components/FileViewWrapper';
-import NewProofreadingRequest from '../components/NewProofreadingRequest';
-import ProofreadingOverview from '../components/ProofreadingOverview';
+import ProofreadingOverview from '../components/dashboard/ProofreadingOverview';
+import DiffWrapper from '../components/diff/DiffWrapper';
+import FileViewWrapper from '../components/file-view/FileViewWrapper';
+import NewProofreadingRequest from '../components/proofreading/NewProofreadingRequest';
 import accessLevels from '../constants/access-levels';
-import { logoutUser, secureKy } from '../entities/secure-ky';
+import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
 import { store } from '../store';
 
 /**
- * Diff page component is a wrapper to diff overview and commit selectors.
- * Currently it stores the info about current repository and selected commits
- * and passess it to wrapped components.
+ * The documentation page, which displays different views appropriate
+ * for different access levels.
  */
 class DocumentationPage extends React.Component {
   state = {
     error: '',
     isLoaded: false,
     newRequest: false,
+    docu: {},
   };
 
   constructor(props) {
@@ -38,6 +38,9 @@ class DocumentationPage extends React.Component {
     this.newRequest.bind(this);
   }
 
+  /**
+   * When mounted, fetches the documentation data
+   */
   componentDidMount() {
     const { docuId } = this.props;
     const fetchPage = async () => {
@@ -48,19 +51,30 @@ class DocumentationPage extends React.Component {
       });
     };
 
-    fetchPage().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
+    fetchPage().catch(async (error) => {
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error: errorMessage,
       });
     });
   }
 
+  /**
+   * Error boundary
+   * @param {*} error The error that occured in one of the components
+   * @returns derived state
+   */
+  static getDerivedStateFromError(error) {
+    return { isLoaded: true, error };
+  }
+
+  /**
+   * Creates a new proofreading request
+   * @param {Event} e The JS event
+   */
   newRequest(e) {
     e.preventDefault();
     const { docuId } = this.props;
@@ -72,15 +86,13 @@ class DocumentationPage extends React.Component {
       });
     };
 
-    fetchPage().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
+    fetchPage().catch(async (error) => {
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error: errorMessage,
       });
     });
   }
@@ -95,7 +107,7 @@ class DocumentationPage extends React.Component {
       <Row>
         <Col>
           <Breadcrumb>
-            <Link href="/">
+            <Link to="/">
               <Breadcrumb.Item>Home</Breadcrumb.Item>
             </Link>
             <Breadcrumb.Item active>
@@ -141,7 +153,7 @@ class DocumentationPage extends React.Component {
     if (docu.accessLevel <= accessLevels.manager) {
       if (docu.accessLevel === accessLevels.admin) {
         settings = (
-          <Link href={`/documentation/${docuId}/settings`}>
+          <Link to={`/documentation/${docuId}/settings`}>
             <Button variant="primary" className="float-right"><i className="fas fa-cog" /></Button>
           </Link>
         );
@@ -194,7 +206,7 @@ class DocumentationPage extends React.Component {
           {breadcrumbs}
           <Row>
             <Col>
-              <h1>{docu.name}</h1>
+              <h1>{docuId}</h1>
               <p className="text-muted">{docu.description}</p>
             </Col>
           </Row>
@@ -219,7 +231,7 @@ class DocumentationPage extends React.Component {
         {breadcrumbs}
         <Row>
           <Col>
-            <h1>{docu.name}</h1>
+            <h1>{docuId}</h1>
             <p className="text-muted">{docu.description}</p>
           </Col>
         </Row>

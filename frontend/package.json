@@ -41,7 +41,7 @@
     "remark-admonitions": "^1.2.1",
     "slugify": "^1.4.7",
     "smartlook-client": "^4.6.1",
-    "wouter": "^2.6.0"
+    "wouter": "^2.7.4"
   },
   "devDependencies": {
     "@neutrinojs/airbnb": "^9.4.0",

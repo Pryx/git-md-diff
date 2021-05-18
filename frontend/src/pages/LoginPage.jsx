@@ -4,13 +4,25 @@ import { Alert, Button, Card } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import { hot } from 'react-hot-loader';
 import { Redirect } from 'wouter';
-import { logoutUser } from '../entities/secure-ky';
+import { logoutUser } from '../helpers/secure-ky';
 
+/**
+ * The login page displays the login form or error, if redirected to the error page
+ */
 class LoginPage extends React.Component {
   state = { error: null };
 
   componentWillUnmount() {
     this.setState({});
+  }
+
+  /**
+   * Error boundary
+   * @param {*} error The error that occured in one of the components
+   * @returns derived state
+   */
+  static getDerivedStateFromError(error) {
+    return { isLoaded: true, error };
   }
 
   render() {

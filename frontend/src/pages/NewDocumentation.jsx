@@ -6,7 +6,7 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import slugify from 'slugify';
 import { Redirect } from 'wouter';
-import { logoutUser, secureKy } from '../entities/secure-ky';
+import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -34,10 +34,37 @@ class NewDocumentation extends React.Component {
     this.handleDescriptionUpdate = this.handleDescriptionUpdate.bind(this);
   }
 
+  /**
+   * Error boundary
+   * @param {*} error The error that occured in one of the components
+   * @returns derived state
+   */
+  static getDerivedStateFromError(error) {
+    return { isLoaded: true, error };
+  }
+
+  /**
+   * Creates a new documentation
+   * @param {Event} e The JS event
+   */
   handleSubmit(e) {
     e.preventDefault();
 
     const { slug, name, description } = this.state;
+
+    if (slug.trim().length === 0) {
+      this.setState({
+        error: 'Slug cannot be empty.',
+      });
+      return;
+    }
+
+    if (name.trim().length === 0) {
+      this.setState({
+        error: 'Name cannot be empty.',
+      });
+      return;
+    }
 
     const putData = async () => {
       const json = await secureKy().put(`${window.env.api.backend}/documentations/`, {
@@ -54,19 +81,18 @@ class NewDocumentation extends React.Component {
     };
 
     putData().catch(async (error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
-      const errorMessage = (await error.response.json()).error;
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
       this.setState({
-        error: `Error making request: ${errorMessage}`,
+        error: errorMessage,
       });
     });
-
-    return false;
   }
 
+  /**
+   * Saves the updated name to the internal state
+   * @param {Event} e The JS event
+   */
   handleNameUpdate(e) {
     this.setState({ name: e.target.value });
 
@@ -76,10 +102,18 @@ class NewDocumentation extends React.Component {
     }
   }
 
+  /**
+   * Saves the updated description to the internal state
+   * @param {Event} e The JS event
+   */
   handleDescriptionUpdate(e) {
     this.setState({ description: e.target.value });
   }
 
+  /**
+   * Saves the updated slug to the internal state
+   * @param {Event} e The JS event
+   */
   handleSlugUpdate(e) {
     const { name } = this.state;
     this.setState({ slug: e.target.value });

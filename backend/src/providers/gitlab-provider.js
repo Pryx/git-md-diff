@@ -1,4 +1,5 @@
 import { Gitlab } from '@gitbeaker/node';
+import config from '../config';
 import accessLevels from '../entities/access-levels';
 import {
   changesTransformer,
@@ -13,6 +14,7 @@ export default class GitlabProvider {
     this.gitlab = new Gitlab({
       oauthToken: token,
       requestTimeout: 3000,
+      host: config.gitlab.baseUrl
     });
   }
 
@@ -60,7 +62,7 @@ export default class GitlabProvider {
     const {
       name, slug, description, providerId,
     } = docuObj;
-    if (providerId !== -1) {
+    if (providerId !== '') {
       return this.gitlab.Projects.edit(providerId, { name, path: slug, description });
     }
 

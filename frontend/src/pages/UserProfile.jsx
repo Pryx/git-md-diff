@@ -6,13 +6,12 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import { logoutUser, secureKy } from '../entities/secure-ky';
-import User from '../entities/user';
+import User from '../shapes/user';
+import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
 
 /**
- * Diff page component is a wrapper to diff overview and commit selectors.
- * Currently it stores the info about current repository and selected commits
- * and passess it to wrapped components.
+ * User profile uses a simple reprezentation to show the profile of a user
+ * This should be further extended to allow user to edit their information
  */
 class UserProfile extends React.Component {
   state = {
@@ -20,6 +19,9 @@ class UserProfile extends React.Component {
     user: null,
   };
 
+  /**
+   * Fetches user information on mount
+   */
   componentDidMount() {
     const { id } = this.props;
 
@@ -37,16 +39,23 @@ class UserProfile extends React.Component {
       );
     };
 
-    fetchCommits().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
+    fetchCommits().catch(async (error) => {
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
-        error: error.toString(),
+        error: errorMessage,
       });
     });
+  }
+
+  /**
+   * Error boundary
+   * @param {*} error The error that occured in one of the components
+   * @returns derived state
+   */
+  static getDerivedStateFromError(error) {
+    return { isLoaded: true, error };
   }
 
   render() {
@@ -79,6 +88,7 @@ class UserProfile extends React.Component {
               <Card>
                 <Card.Header>
                   User:
+                  {' '}
                   {user.name}
                 </Card.Header>
                 <Card.Body>
@@ -103,7 +113,7 @@ UserProfile.defaultProps = {
 };
 
 UserProfile.propTypes = {
-  userData: PropTypes.shape(User.getShape()),
+  userData: PropTypes.shape(User),
   id: PropTypes.number,
 };
 

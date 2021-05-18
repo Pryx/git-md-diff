@@ -3,7 +3,7 @@
  * @param {Object} version Branch object returned by Gitlab
  */
 export function versionTransformer(version) {
-  return { name: version.name, default: version.default };
+  return { name: version.name, default: version.default, haveAccess: version.can_push };
 }
 
 /**

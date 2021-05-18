@@ -11,13 +11,12 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import slugify from 'slugify';
 import { Link, Redirect } from 'wouter';
-import DocuUsers from '../components/DocuUsers';
+import DocuUsers from '../components/docu/DocuUsers';
 import accessLevels from '../constants/access-levels';
-import { logoutUser, secureKy } from '../entities/secure-ky';
+import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
+
 /**
- * Diff page component is a wrapper to diff overview and commit selectors.
- * Currently it stores the info about current repository and selected commits
- * and passess it to wrapped components.
+ * The documentation settings, which can be accessed by the admin only
  */
 class DocumentationSettings extends React.Component {
   state = {
@@ -27,6 +26,7 @@ class DocumentationSettings extends React.Component {
     name: '',
     description: '',
     isLoaded: false,
+    docu: {},
   };
 
   constructor(props) {
@@ -41,6 +41,9 @@ class DocumentationSettings extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  /**
+   * When mounted, fetches the documentation data
+   */
   componentDidMount() {
     const { docuId } = this.props;
     const fetchPage = async () => {
@@ -54,19 +57,29 @@ class DocumentationSettings extends React.Component {
       });
     };
 
-    fetchPage().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
+    fetchPage().catch(async (error) => {
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error: errorMessage,
       });
     });
   }
 
+  /**
+   * Error boundary
+   * @param {*} error The error that occured in one of the components
+   * @returns derived state
+   */
+  static getDerivedStateFromError(error) {
+    return { isLoaded: true, error };
+  }
+
+  /**
+   * Displays the delete dialog before deleting the documentation
+   */
   handleDeleteDocu() {
     this.dialog.show({
       title: 'Documentation delete',
@@ -88,6 +101,10 @@ class DocumentationSettings extends React.Component {
     });
   }
 
+  /**
+   * Saves the updated name to the internal state
+   * @param {Event} e The JS event
+   */
   handleNameUpdate(e) {
     const { origSlug } = this.state;
     this.setState({ name: e.target.value });
@@ -101,20 +118,54 @@ class DocumentationSettings extends React.Component {
     }
   }
 
+  /**
+   * Saves the updated description to the internal state
+   * @param {Event} e The JS event
+   */
   handleDescriptionUpdate(e) {
     this.setState({ description: e.target.value });
   }
 
+  /**
+   * Saves the updated slug to the internal state
+   * @param {Event} e The JS event
+   */
   handleSlugUpdate(e) {
+    const { name } = this.state;
     this.setState({ slug: e.target.value });
-    this.slugChanged = true;
+
+    const slug = slugify(name, { lower: true });
+
+    if (e.target.value.length === 0 || e.target.value === slug) {
+      this.slugChanged = false;
+    } else {
+      this.slugChanged = true;
+    }
   }
 
+  /**
+   * Updates the documentation based on the parameters
+   * @param {Event} e The JS event
+   */
   handleSubmit(e) {
     e.preventDefault();
 
     const { slug, name, description } = this.state;
     const { docuId } = this.props;
+
+    if (slug.trim().length === 0) {
+      this.setState({
+        error: 'Slug cannot be empty.',
+      });
+      return;
+    }
+
+    if (name.trim().length === 0) {
+      this.setState({
+        error: 'Name cannot be empty.',
+      });
+      return;
+    }
 
     const putData = async () => {
       const json = await secureKy().put(`${window.env.api.backend}/documentations/`, {
@@ -131,20 +182,18 @@ class DocumentationSettings extends React.Component {
     };
 
     putData().catch(async (error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
-
-      const errorMessage = (await error.response.json()).error;
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
       this.setState({
-        error: `Error making request: ${errorMessage}`,
+        error: `Internal server error: ${errorMessage}`,
       });
     });
-
-    return false;
   }
 
+  /**
+   * Actually deletes the documentation from the server
+   * @param {boolean} deleteRepo indicates whether to delete the repository
+   */
   deleteDocu(deleteRepo) {
     const { docuId } = this.props;
     const deleteDocu = async () => {
@@ -157,14 +206,13 @@ class DocumentationSettings extends React.Component {
       );
     };
 
-    deleteDocu().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
+    deleteDocu().catch(async (error) => {
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
-        error: error.toString(),
+        error: errorMessage,
+        isLoaded: true,
       });
     });
   }
@@ -179,10 +227,10 @@ class DocumentationSettings extends React.Component {
       <Row>
         <Col>
           <Breadcrumb>
-            <Link href="/">
+            <Link to="/">
               <Breadcrumb.Item>Home</Breadcrumb.Item>
             </Link>
-            <Link href={`/documentation/${docuId}`}>
+            <Link to={`/documentation/${docuId}`}>
               <Breadcrumb.Item>
                 Documentation
                 {' '}
@@ -220,7 +268,6 @@ class DocumentationSettings extends React.Component {
     if (error) {
       alert = (
         <Alert variant="danger">
-          Error:
           {error}
         </Alert>
       );
@@ -240,7 +287,7 @@ class DocumentationSettings extends React.Component {
         <Row>
           <Col>
             <h1>
-              {docu.name}
+              {docuId}
               {' '}
               - Settings
             </h1>

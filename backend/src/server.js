@@ -12,6 +12,7 @@ import User from './entities/user';
 import Auth from './services/auth';
 import DocumentationService from './services/documentation';
 import ProofreadingService from './services/proofreading';
+import descriptiveError from './helpers';
 
 const app = express();
 
@@ -192,14 +193,14 @@ app.get('/documentations', passport.authenticate('jwt', { session: false }), (re
   const service = new DocumentationService(req.user);
   service.getList()
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Creates a new documentation
 app.put('/documentations/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.create(req.body).then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Gets a documentation by ID
@@ -207,7 +208,7 @@ app.get('/documentations/:docu', passport.authenticate('jwt', { session: false }
   const service = new DocumentationService(req.user);
   service.get(req.params.docu)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Deletes documentation by ID
@@ -215,7 +216,7 @@ app.delete('/documentations/:docu', passport.authenticate('jwt', { session: fals
   const service = new DocumentationService(req.user);
   service.remove(req.params.docu, req.body.deleteRepo)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Get documentation versions
@@ -223,7 +224,7 @@ app.get('/documentations/:docu/versions', passport.authenticate('jwt', { session
   const service = new DocumentationService(req.user);
   service.getVersions(req.params.docu)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Get commits from branches
@@ -231,7 +232,7 @@ app.get('/documentations/:docu/:version/revisions', passport.authenticate('jwt',
   const service = new DocumentationService(req.user);
   service.getRevisions(req.params.docu, req.params.version)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Saves file and commits it to git
@@ -240,7 +241,7 @@ app.put('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('
   service.savePage(req.params.docu, req.params.version,
     req.params.page, req.body.content, req.body.commitMessage)
     .then(() => res.send({ success: true }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Deletes file
@@ -249,7 +250,7 @@ app.delete('/documentations/:docu/:version/pages/:page(*)', passport.authenticat
   service.deleteFile(req.params.docu, req.params.version,
     req.params.page, req.body.commitMessage)
     .then(() => res.send({ success: true }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // File change list
@@ -257,7 +258,7 @@ app.get('/documentations/:docu/changes/:from/:to', passport.authenticate('jwt', 
   const service = new DocumentationService(req.user);
   service.getChanges(req.params.docu, req.params.from, req.params.to)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Gets a text file
@@ -265,7 +266,7 @@ app.get('/documentations/:docu/:revision/pages/:page(*)', passport.authenticate(
   const service = new DocumentationService(req.user);
   service.getBlob(req.params.docu, req.params.revision, req.params.page)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // File list - root folder
@@ -273,7 +274,7 @@ app.get('/documentations/:docu/:revision/files/', passport.authenticate('jwt', {
   const service = new DocumentationService(req.user);
   service.getFiles(req.params.docu, req.params.revision, '/')
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // File list - specified folder
@@ -281,7 +282,7 @@ app.get('/documentations/:docu/:revision/files/:path(*)', passport.authenticate(
   const service = new DocumentationService(req.user);
   service.getFiles(req.params.docu, req.params.revision, `${req.params.path}`)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Search users in selected provider
@@ -289,14 +290,14 @@ app.get('/documentations/provider/:provider/users/:search', passport.authenticat
   const service = new DocumentationService(req.user);
   service.getRemoteUserList(req.params.provider, req.params.search)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Get documentation users
 app.get('/documentations/:docu/users', passport.authenticate('jwt', { session: false }), (req, res) => {
   DocumentationService.getUsers(req.params.docu)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Add user to documentation
@@ -304,7 +305,7 @@ app.put('/documentations/:docu/users/', passport.authenticate('jwt', { session: 
   const service = new DocumentationService(req.user);
   service.addUser(req.params.docu, req.body)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Remove user by uid
@@ -312,7 +313,7 @@ app.delete('/documentations/:docu/users/:uid', passport.authenticate('jwt', { se
   const service = new DocumentationService(req.user);
   service.removeUser(req.params.docu, req.params.uid)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Blob file, mainly used for loading images
@@ -346,7 +347,7 @@ app.get('/proofreading/', passport.authenticate('jwt', { session: false }), (req
   const service = new ProofreadingService(req.user);
   service.getUserRequests()
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Creates new proofreading request
@@ -354,7 +355,7 @@ app.put('/proofreading/', passport.authenticate('jwt', { session: false }), (req
   const service = new ProofreadingService(req.user);
   service.create(req.body)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Gets proofreading requests related to a documentation
@@ -362,7 +363,7 @@ app.get('/proofreading/documentation/:docuId', passport.authenticate('jwt', { se
   const service = new ProofreadingService(req.user);
   service.getDocuRequests(req.params.docuId)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Gets proofreading request by ID
@@ -370,14 +371,14 @@ app.get('/proofreading/:reqId', passport.authenticate('jwt', { session: false })
   const service = new ProofreadingService(req.user);
   service.get(req.params.reqId)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Saves a page edited from a proofreading request, adds the modified file functionality
 app.put('/proofreading/:reqId/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
   ProofreadingService.savePage(req.params.reqId, req.params.page)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Marks proofreading request as complete
@@ -385,7 +386,7 @@ app.put('/proofreading/:reqId/submit', passport.authenticate('jwt', { session: f
   const service = new ProofreadingService(req.user);
   service.finished(req.params.reqId)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Merges proofreading request
@@ -393,7 +394,7 @@ app.put('/proofreading/:reqId/merge', passport.authenticate('jwt', { session: fa
   const service = new ProofreadingService(req.user);
   service.merge(req.params.reqId)
     .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 // #endregion
 

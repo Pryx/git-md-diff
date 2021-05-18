@@ -37,11 +37,13 @@ export default class DocumentationService {
 
       return docu;
     }
+
     const docu = new Documentation(params);
     const provider = new ProviderWrapper(docu.provider, this.user.tokens);
 
     // ? This will throw if there is any duplicity etc.
     const docuObj = await provider.createDocumentation(docu);
+
     docu.providerId = docuObj.id;
 
     await docu.save();

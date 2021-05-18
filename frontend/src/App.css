@@ -71,6 +71,15 @@ ins{
   border: none
 }
 
+.file-card .card-header{
+  line-height: 32px;
+}
+
+.file-card .card-header .form-check{
+  line-height: 32px;
+  top: 1px
+}
+
 .add-circle{
   width: 48px;
   height: 48px;
@@ -88,9 +97,10 @@ ins{
   color: #fc6d26
 }
 
-.card-footer .badge,
+.card-header .badge,
 .editor-badges .badge {
   margin-right: 8px;
+  cursor: help;
 }
 
 .card-body img{
@@ -145,7 +155,11 @@ ins{
 body #edit-submit .submit-btn-wrap{
   flex-grow: 0;
   flex-shrink: 0;
-  flex-basis: 140px;
+  flex-basis: 160px;
+}
+
+body #edit-submit .submit-btn-wrap button{
+  width: 100%;
 }
 
 *:disabled {
@@ -169,13 +183,48 @@ body .breadcrumb {
   background-color: #f5f5f5;
 }
 
+button[disabled]{
+  pointer-events: none;
+}
 
-/*
+
 .file-card .card-body{
   max-height: 150px;
   overflow: hidden;
 }
 
+.file-card .card-footer i{
+  display: block;
+  text-align: center;
+  transition: 250ms all cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.file-card.expanded .card-footer i{
+  display: block;
+  text-align: center;
+  transform: rotate(180deg);
+}
+
+
 .file-card.expanded .card-body{
   max-height: none;
-}*/
+}
+
+.pointer{
+  cursor: pointer;
+}
+
+.help{
+  cursor: help
+}
+
+
+.contact-info h2{
+  font-size: 1.1rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+.contact-info h3{
+  font-size: 1.4rem;
+}

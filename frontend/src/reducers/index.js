@@ -21,6 +21,13 @@ const initialState = {
   excludedChanges: [],
 };
 
+/**
+ * The main reducer for this app. Should be probably split in the future
+ * to ensure better readability as the app grows.
+ * @param {Object} [state = initialState] The current state
+ * @param {Object} action the Redux action
+ * @returns {Object} New state
+ */
 function rootReducer(state = initialState, action) {
   const { payload } = action;
 

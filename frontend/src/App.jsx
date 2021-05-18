@@ -14,20 +14,17 @@ import NewDocumentation from './pages/NewDocumentation';
 import DocumentationPage from './pages/DocumentationPage';
 import DocumentationSettings from './pages/DocumentationSettings';
 import UserProfile from './pages/UserProfile';
-import Login from './components/Login';
+import Login from './components/app/Login';
 import LoginPage from './pages/LoginPage';
-import { refreshTokens } from './entities/secure-ky';
-import User from './entities/user';
+import { refreshTokens } from './helpers/secure-ky';
+import User from './shapes/user';
 import ProofreadingPage from './pages/ProofreadingPage';
 import ProofreadingEditPage from './pages/ProofreadingEditPage';
 
+// Initialize smartlook
 smartlookClient.init(window.env.api.smartlook);
 
-/**
- * The root app element. Takes care of routing and right now
- * it stores the app state. This should be changed when Redux
- * is implemented.
- */
+// Token checking. Should probably be moved to a webworker
 let check = false;
 setInterval(async () => {
   if (!check) {
@@ -37,6 +34,11 @@ setInterval(async () => {
   refreshTokens();
 }, 30000);
 
+/**
+ * The APP components handles all the routing and renders the correct page
+ * @param {*} props The react props
+ * @returns the react component
+ */
 const App = (props) => {
   const { userData } = props;
   if (userData) {
@@ -153,6 +155,6 @@ App.defaultProps = {
 };
 
 App.propTypes = {
-  userData: PropTypes.shape(User.getShape()),
+  userData: PropTypes.shape(User),
 };
 export default hot(module)(connect(mapStateToProps)(App));

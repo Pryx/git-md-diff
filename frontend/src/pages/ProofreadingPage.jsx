@@ -10,16 +10,15 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { Link } from 'wouter';
 import { documentationSelected, revisionSelected } from '../actions';
-import ProofreadingDiffWrapper from '../components/ProofreadingDiffWrapper';
+import ProofreadingDiffWrapper from '../components/proofreading/ProofreadingDiffWrapper';
 import { proofreadingStates } from '../constants/proofreading-states';
-import { logoutUser, secureKy } from '../entities/secure-ky';
-import User from '../entities/user';
+import User from '../shapes/user';
+import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
 import { store } from '../store';
 
 /**
- * Diff page component is a wrapper to diff overview and commit selectors.
- * Currently it stores the info about current repository and selected commits
- * and passess it to wrapped components.
+ * This is the main proofreading request page, is similar to the
+ * documentation page with a set diff range and some minor modifications.
  */
 class ProofreadingPage extends React.Component {
   state = {
@@ -34,6 +33,9 @@ class ProofreadingPage extends React.Component {
     this.merge = this.merge.bind(this);
   }
 
+  /**
+   * Fetches the proofreading request data when mounted
+   */
   componentDidMount() {
     const { reqId, userData } = this.props;
     const fetchPage = async () => {
@@ -60,19 +62,21 @@ class ProofreadingPage extends React.Component {
       });
     };
 
-    fetchPage().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
+    fetchPage().catch(async (error) => {
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error: errorMessage,
       });
     });
   }
 
+  /**
+   * Marks the proofreading request as completed
+   * @param {Event} e The JS event
+   */
   submitProofread(e) {
     e.preventDefault();
     const { reqId } = this.props;
@@ -85,19 +89,21 @@ class ProofreadingPage extends React.Component {
       });
     };
 
-    resolveReq().catch((error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
+    resolveReq().catch(async (error) => {
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
         isLoaded: true,
-        error: error.toString(),
+        error: errorMessage,
       });
     });
   }
 
+  /**
+   * Merges the completed proofreading request
+   * @param {Event} e The JS event
+   */
   merge(e) {
     e.preventDefault();
     const { reqId } = this.props;
@@ -111,16 +117,12 @@ class ProofreadingPage extends React.Component {
     };
 
     mergeReq().catch(async (error) => {
-      if (error.response && error.response.status === 403) {
-        logoutUser();
-        return;
-      }
-
-      const err = await error.response.json();
+      const errorMessage = await getPossiblyHTTPErrorMessage(error);
+      if (errorMessage === null) return; // Expired tokens
 
       this.setState({
         isLoaded: true,
-        error: err.error ? err.error : error.toString(),
+        error: errorMessage,
       });
     });
   }
@@ -135,10 +137,10 @@ class ProofreadingPage extends React.Component {
       <Row>
         <Col>
           <Breadcrumb>
-            <Link href="/">
+            <Link to="/">
               <Breadcrumb.Item>Home</Breadcrumb.Item>
             </Link>
-            <Link href={`/documentation/${docuId}`}>
+            <Link to={`/documentation/${docuId}`}>
               <Breadcrumb.Item>
                 Documentation
                 {' '}
@@ -147,6 +149,7 @@ class ProofreadingPage extends React.Component {
             </Link>
             <Breadcrumb.Item active>
               Proofreading request
+              {' '}
               {reqId}
             </Breadcrumb.Item>
           </Breadcrumb>
@@ -187,6 +190,18 @@ class ProofreadingPage extends React.Component {
               <p className="text-muted">{req.description}</p>
             </Col>
           </Row>
+          <Row className="mt-2 mb-5">
+            <Col className="contact-info">
+              <h2>Proofreader:</h2>
+              <h3>{req.proofreader.name}</h3>
+              <a href={`mailto:${req.proofreader.email}`}>{req.proofreader.email}</a>
+            </Col>
+            <Col className="contact-info">
+              <h2>Submitter:</h2>
+              <h3>{req.requester.name}</h3>
+              <a href={`mailto:${req.requester.email}`}>{req.requester.email}</a>
+            </Col>
+          </Row>
           <Alert variant="info" key="info">You are seeing changes made by the proofreader.</Alert>
           {alert}
           <ProofreadingDiffWrapper
@@ -209,6 +224,10 @@ class ProofreadingPage extends React.Component {
       btnTitle = 'Mark as complete';
     }
 
+    if (!btnTitle.length) {
+      alert = <Alert variant="info">Submitted for approval, no additional changes possible at this time</Alert>;
+    }
+
     return (
       <Container className="mt-3">
         {breadcrumbs}
@@ -218,6 +237,18 @@ class ProofreadingPage extends React.Component {
               {req.title}
             </h1>
             <p className="text-muted">{req.description}</p>
+          </Col>
+        </Row>
+        <Row className="mt-2 mb-5">
+          <Col className="contact-info">
+            <h2>Proofreader:</h2>
+            <h3>{req.proofreader.name}</h3>
+            <a href={`mailto:${req.proofreader.email}`}>{req.proofreader.email}</a>
+          </Col>
+          <Col className="contact-info">
+            <h2>Submitter:</h2>
+            <h3>{req.requester.name}</h3>
+            <a href={`mailto:${req.requester.email}`}>{req.requester.email}</a>
           </Col>
         </Row>
         {alert}
@@ -236,7 +267,7 @@ ProofreadingPage.defaultProps = {
 };
 
 ProofreadingPage.propTypes = {
-  userData: PropTypes.shape(User.getShape()),
+  userData: PropTypes.shape(User),
   reqId: PropTypes.number.isRequired,
   docuId: PropTypes.number.isRequired,
 };

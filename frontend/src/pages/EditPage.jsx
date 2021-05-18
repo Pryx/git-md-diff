@@ -12,7 +12,7 @@ import { Link } from 'wouter';
 import {
   documentationSelected,
 } from '../actions';
-import EditorWrapper from '../components/EditorWrapper';
+import EditorWrapper from '../components/editor/EditorWrapper';
 import { store } from '../store';
 
 /**
@@ -31,6 +31,15 @@ class EditPage extends React.Component {
     store.dispatch(documentationSelected(docuId));
 
     this.file = decodeURIComponent(file);
+  }
+
+  /**
+   * Error boundary
+   * @param {*} error The error that occured in one of the components
+   * @returns derived state
+   */
+  static getDerivedStateFromError(error) {
+    return { isLoaded: true, error };
   }
 
   render() {
@@ -55,10 +64,10 @@ class EditPage extends React.Component {
         <Row className="mt-3 mr-3 ml-3">
           <Col>
             <Breadcrumb>
-              <Link href="/">
+              <Link to="/">
                 <Breadcrumb.Item>Home</Breadcrumb.Item>
               </Link>
-              <Link href={`/documentation/${docuId}`}>
+              <Link to={`/documentation/${docuId}`}>
                 <Breadcrumb.Item>
                   Documentation
                   {' '}

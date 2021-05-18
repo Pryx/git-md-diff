@@ -3,13 +3,11 @@ import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
-import DocuOverview from '../components/DocuOverview';
-import ProofreadingOverview from '../components/ProofreadingOverview';
+import DocuOverview from '../components/dashboard/DocuOverview';
+import ProofreadingOverview from '../components/dashboard/ProofreadingOverview';
 
 /**
- * Diff page component is a wrapper to diff overview and commit selectors.
- * Currently it stores the info about current repository and selected commits
- * and passess it to wrapped components.
+ * The dashboard page which displays the overviews.
  */
 const Dashboard = () => (
   <Container className="mt-5">
