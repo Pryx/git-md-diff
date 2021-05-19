@@ -13,7 +13,7 @@ import ProofreadingOverview from '../components/dashboard/ProofreadingOverview';
 import DiffWrapper from '../components/diff/DiffWrapper';
 import FileViewWrapper from '../components/file-view/FileViewWrapper';
 import NewProofreadingRequest from '../components/proofreading/NewProofreadingRequest';
-import accessLevels from '../constants/access-levels';
+import { accessLevels } from '../constants/access-levels';
 import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
 import { store } from '../store';
 
@@ -113,7 +113,7 @@ class DocumentationPage extends React.Component {
             <Breadcrumb.Item active>
               Documentation
               {' '}
-              {docuId}
+              {docu.name}
             </Breadcrumb.Item>
           </Breadcrumb>
         </Col>
@@ -141,7 +141,7 @@ class DocumentationPage extends React.Component {
             <Col>
               <Alert variant="danger">
                 Error while rendering documentation data:
-                {error}
+                {error.toString()}
               </Alert>
             </Col>
           </Row>

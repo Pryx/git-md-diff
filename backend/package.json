@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.7.2",
+  "version": "0.9.2",
   "description": "",
   "main": "build/index.js",
   "scripts": {
@@ -34,6 +34,7 @@
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
     "mime-types": "^2.1.29",
+    "nodemailer": "^6.6.0",
     "passport": "^0.4.1",
     "passport-gitlab2": "github:Pryx/passport-gitlab2",
     "passport-jwt": "^4.0.0",

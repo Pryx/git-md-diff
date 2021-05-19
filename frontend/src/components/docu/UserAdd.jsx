@@ -6,7 +6,7 @@ import {
 import { hot } from 'react-hot-loader';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
-import accessLevels from '../../constants/access-levels';
+import { accessLevels } from '../../constants/access-levels';
 import Documentation from '../../shapes/documentation';
 import { getPossiblyHTTPErrorMessage, secureKy } from '../../helpers/secure-ky';
 
@@ -90,7 +90,7 @@ class UserAdd extends React.Component {
     if (error) {
       alert = (
         <Alert variant="danger">
-          {error}
+          {error.toString()}
         </Alert>
       );
     }

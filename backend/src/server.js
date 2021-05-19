@@ -285,6 +285,14 @@ app.get('/documentations/:docu/:revision/files/:path(*)', passport.authenticate(
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
+// Get existing remote documentation
+app.get('/documentations/provider/:provider', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getRemoteList(req.params.provider)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: error.message }));
+});
+
 // Search users in selected provider
 app.get('/documentations/provider/:provider/users/:search', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
@@ -304,6 +312,14 @@ app.get('/documentations/:docu/users', passport.authenticate('jwt', { session: f
 app.put('/documentations/:docu/users/', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.addUser(req.params.docu, req.body)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
+});
+
+// Add user to documentation
+app.put('/documentations/:docu/users/:uid', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.editUser(req.params.docu, req.body, req.params.uid)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
@@ -396,11 +412,40 @@ app.put('/proofreading/:reqId/merge', passport.authenticate('jwt', { session: fa
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
+
+// Rejects proofreading request
+app.put('/proofreading/:reqId/reject', passport.authenticate('jwt', { session: false }), (req, res) => {
+  ProofreadingService.reject(req.params.reqId)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
+});
+
 // #endregion
 
 // Catchall
+
+app.get('/healthz/ready', (req, res) => {
+  res.send({ success: true, data: 'Ready' });
+});
+
+app.get('/', (req, res) => {
+  res.send({ success: true, data: 'Ready' });
+});
+
 app.get('*', (req, res) => {
-  res.send('API is running. Please use endpoints documented in the OpenAPI file');
+  res.status(404).send({ success: false, error: 'Endpoint not found. For available endpoints, look at the OpenAPI file' });
+});
+
+app.put('*', (req, res) => {
+  res.status(404).send({ success: false, error: 'Endpoint not found. For available endpoints, look at the OpenAPI file' });
+});
+
+app.post('*', (req, res) => {
+  res.status(404).send({ success: false, error: 'Endpoint not found. For available endpoints, look at the OpenAPI file' });
+});
+
+app.delete('*', (req, res) => {
+  res.status(404).send({ success: false, error: 'Endpoint not found. For available endpoints, look at the OpenAPI file' });
 });
 
 export default app;

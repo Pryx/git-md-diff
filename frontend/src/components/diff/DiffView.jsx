@@ -151,7 +151,7 @@ class DiffView extends React.Component {
     let badges = [];
     if (renamed) {
       badges.push(
-        <OverlayTrigger overlay={<Tooltip>This file has been renamed.</Tooltip>}>
+        <OverlayTrigger key="renamed" overlay={<Tooltip>This file has been renamed.</Tooltip>}>
           <Badge variant="warning">Renamed</Badge>
         </OverlayTrigger>,
       );
@@ -202,13 +202,14 @@ class DiffView extends React.Component {
     if (content.newFile) {
       cls += ' newfile';
       badges.push(
-        <OverlayTrigger overlay={(
-          <Tooltip>
-            This file was not present in the starting commit.
-          </Tooltip>
-      )}
-        >
-          <Badge variant="success" key="newfile">Added new file</Badge>
+        <OverlayTrigger
+          key="newfile"
+          overlay={(
+            <Tooltip>
+              This file was not present in the starting commit.
+            </Tooltip>
+      )}>
+          <Badge variant="success">Added new file</Badge>
         </OverlayTrigger>,
       );
     }
@@ -220,8 +221,8 @@ class DiffView extends React.Component {
     let items = null;
     if (content.badges.length) {
       items = content.badges.map((change) => (
-        <OverlayTrigger overlay={<Tooltip>{change.description}</Tooltip>}>
-          <Badge variant={change.variant} key={change.id}>{change.title}</Badge>
+        <OverlayTrigger key={change.id} overlay={<Tooltip>{change.description}</Tooltip>}>
+          <Badge variant={change.variant}>{change.title}</Badge>
         </OverlayTrigger>
       ));
       badges = badges.concat(items);
@@ -229,13 +230,15 @@ class DiffView extends React.Component {
 
     if (proofreadingReq && proofreadingReq.modified.indexOf(filename) !== -1) {
       badges.unshift(
-        <OverlayTrigger overlay={(
-          <Tooltip>
-            This file has been already modified by the proofreader.
-          </Tooltip>
+        <OverlayTrigger
+          key="modified"
+          overlay={(
+            <Tooltip>
+              This file has been already modified by the proofreader.
+            </Tooltip>
 )}
         >
-          <Badge variant="primary" key="modified">
+          <Badge variant="primary">
             <i className="fas fa-check" />
             {' '}
             Already reviewed &amp; modified

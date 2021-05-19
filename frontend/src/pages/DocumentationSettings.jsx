@@ -11,9 +11,11 @@ import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import slugify from 'slugify';
 import { Link, Redirect } from 'wouter';
+import { documentationSelected } from '../actions';
 import DocuUsers from '../components/docu/DocuUsers';
-import accessLevels from '../constants/access-levels';
+import { accessLevels } from '../constants/access-levels';
 import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
+import { store } from '../store';
 
 /**
  * The documentation settings, which can be accessed by the admin only
@@ -31,6 +33,8 @@ class DocumentationSettings extends React.Component {
 
   constructor(props) {
     super(props);
+
+    store.dispatch(documentationSelected(props.docuId));
 
     this.handleSlugUpdate = this.handleSlugUpdate.bind(this);
     this.handleNameUpdate = this.handleNameUpdate.bind(this);
@@ -234,7 +238,7 @@ class DocumentationSettings extends React.Component {
               <Breadcrumb.Item>
                 Documentation
                 {' '}
-                {docuId}
+                {docu.name}
               </Breadcrumb.Item>
             </Link>
             <Breadcrumb.Item active>Settings</Breadcrumb.Item>
@@ -268,7 +272,7 @@ class DocumentationSettings extends React.Component {
     if (error) {
       alert = (
         <Alert variant="danger">
-          {error}
+          {error.toString()}
         </Alert>
       );
     }
@@ -287,7 +291,7 @@ class DocumentationSettings extends React.Component {
         <Row>
           <Col>
             <h1>
-              {docuId}
+              {docu.name}
               {' '}
               - Settings
             </h1>

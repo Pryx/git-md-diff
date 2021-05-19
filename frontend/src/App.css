@@ -228,3 +228,12 @@ button[disabled]{
 .contact-info h3{
   font-size: 1.4rem;
 }
+
+.user-table td{
+  line-height: 32px;
+}
+
+body .main-proofreading-badge{
+  padding: 4px 8px;
+  font-size: 14px;
+}

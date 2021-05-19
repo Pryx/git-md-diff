@@ -10,9 +10,8 @@ import CommitSelect from '../diff/CommitSelect';
 import FileView from './FileView';
 
 /**
- * Diff page component is a wrapper to diff overview and commit selectors.
- * Currently it stores the info about current repository and selected commits
- * and passess it to wrapped components.
+ * The file view wrapper contains the commit select and file view
+ * and if the documentation is empty, it notifies the user
  */
 class FileViewWrapper extends React.Component {
   state = {

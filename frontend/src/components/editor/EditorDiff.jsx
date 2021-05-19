@@ -1,6 +1,9 @@
+import {
+  Tooltip, Alert, Badge, OverlayTrigger,
+} from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Badge } from 'react-bootstrap';
+
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import Diff from '../../helpers/diff';
@@ -71,10 +74,11 @@ class EditorDiff extends React.Component {
       return (
         <div>
           <div>
-            {error}
-          </div>
-          <div>
-            Invisible changes: Loading...
+            <Alert variant="danger" className="mt-3">Error rendering changes:</Alert>
+            {' '}
+            <pre>
+              {error.toString()}
+            </pre>
           </div>
         </div>
       );
@@ -83,10 +87,10 @@ class EditorDiff extends React.Component {
     if (!isLoaded) {
       return (
         <div>
-          <div>Loading...</div>
           <div>
             Invisible changes: Loading...
           </div>
+          <div>Loading...</div>
         </div>
       );
     }
@@ -94,23 +98,35 @@ class EditorDiff extends React.Component {
     let badges = null;
     if (content.badges.length) {
       badges = content.badges.map((change) => (
-        <Badge variant={change.variant} key={change.id}>{change.title}</Badge>
+        <OverlayTrigger key={change.id} overlay={<Tooltip>{change.description}</Tooltip>}>
+          <Badge variant={change.variant}>{change.title}</Badge>
+        </OverlayTrigger>
       ));
     }
 
     let cls = '';
     if (content.newFile) {
       cls = 'newfile';
-      badges.push(<Badge variant="success" key="newfile">Added new file</Badge>);
+      badges.push(
+        <OverlayTrigger
+          key="newfile"
+          overlay={(
+            <Tooltip>
+              This file was not present in the starting commit.
+            </Tooltip>
+      )}>
+          <Badge variant="success">Added new file</Badge>
+        </OverlayTrigger>,
+      );
     }
 
     return (
       <div className="mt-4" id="editor-diff">
-        <div className={`editor-diff-content ${cls}`} dangerouslySetInnerHTML={{ __html: content.content }} />
-        <hr />
         <div className="editor-badges">
           {badges}
         </div>
+        <hr />
+        <div className={`editor-diff-content ${cls}`} dangerouslySetInnerHTML={{ __html: content.content }} />
       </div>
     );
   }

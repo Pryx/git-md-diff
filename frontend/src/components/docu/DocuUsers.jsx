@@ -1,19 +1,16 @@
-import {
-  Tooltip,
-  Alert, Button, Card, OverlayTrigger, Table,
-} from 'react-bootstrap';
-import lodash from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
-
+import {
+  Alert, Button, Card,
+} from 'react-bootstrap';
 import Dialog from 'react-bootstrap-dialog';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import accessLevels from '../../constants/access-levels';
+import { getPossiblyHTTPErrorMessage, secureKy } from '../../helpers/secure-ky';
 import Documentation from '../../shapes/documentation';
 import User from '../../shapes/user';
-import { getPossiblyHTTPErrorMessage, secureKy } from '../../helpers/secure-ky';
 import UserAdd from './UserAdd';
+import UsersTable from './UsersTable';
 
 /**
  * DocuUsers is a component used in documentation settings to help
@@ -23,14 +20,11 @@ class DocuUsers extends React.Component {
   state = {
     error: '',
     users: [],
-    isLoaded: false,
   };
 
   constructor(props) {
     super(props);
 
-    this.handleRemoveUser = this.handleRemoveUser.bind(this);
-    this.removeUser = this.removeUser.bind(this);
     this.fetchUsers = this.fetchUsers.bind(this);
     this.addUserCallback = this.addUserCallback.bind(this);
     this.handleInfoDialog = this.handleInfoDialog.bind(this);
@@ -46,28 +40,7 @@ class DocuUsers extends React.Component {
 
       this.setState({
         error: errorMessage,
-        isLoaded: true,
       });
-    });
-  }
-
-  /**
-   * Shows the dialog before user removal
-   * @param {Object} user The user object
-   */
-  handleRemoveUser(user) {
-    this.dialog.show({
-      title: 'Remove user',
-      body: `Do you want to remove user ${user.name} (${user.email})?`,
-      bsSize: 'md',
-      actions: [
-        Dialog.CancelAction(),
-        Dialog.Action(
-          'Remove user',
-          () => this.removeUser(user.id),
-          'btn-danger',
-        ),
-      ],
     });
   }
 
@@ -116,33 +89,6 @@ class DocuUsers extends React.Component {
   }
 
   /**
-   * This removes the user from the documentation
-   * @param {number} userId ID of the user to remove
-   */
-  removeUser(userId) {
-    const { docu } = this.props;
-    const remove = async () => {
-      const json = await secureKy().delete(`${window.env.api.backend}/documentations/${docu.id}/users/${userId}`);
-
-      if (json.success === false) {
-        throw Error("Couldn't remove user!");
-      }
-
-      await this.fetchUsers();
-    };
-
-    remove().catch(async (error) => {
-      const errorMessage = await getPossiblyHTTPErrorMessage(error);
-      if (errorMessage === null) return; // Expired tokens
-
-      this.setState({
-        error: errorMessage,
-        isLoaded: true,
-      });
-    });
-  }
-
-  /**
    * This fetches the user data
    */
   async fetchUsers() {
@@ -150,7 +96,7 @@ class DocuUsers extends React.Component {
 
     this.setState(
       {
-        isLoaded: false,
+        users: [],
       },
     );
 
@@ -159,60 +105,19 @@ class DocuUsers extends React.Component {
     this.setState(
       {
         users: json.data,
-        isLoaded: true,
       },
     );
   }
 
   render() {
-    const { users, error, isLoaded } = this.state;
+    const { users, error } = this.state;
     const { docu, userData } = this.props;
-
-    const accessLevelsFlipped = lodash.invert(accessLevels);
-    let tableContent;
-
-    if (isLoaded) {
-      const unknownUser = (
-        <OverlayTrigger overlay={(
-          <Tooltip>
-            The user has not yet registered in this app, therefore we do not know their email.
-          </Tooltip>
-        )}
-        >
-          <span className="help">
-            unknown
-            <i className="fas fa-info-circle" />
-          </span>
-        </OverlayTrigger>
-      );
-      tableContent = users.map((u) => (
-        <tr key={u.id}>
-          <td>{u.name}</td>
-          <td>
-            {u.email || unknownUser}
-          </td>
-          <td>{accessLevelsFlipped[u.accessLevel]}</td>
-          <td>
-            { userData.id !== u.id
-            && <Button variant="danger" size="sm" onClick={() => this.handleRemoveUser(u)}><i className="fas fa-trash" /></Button>}
-          </td>
-        </tr>
-      ));
-    } else {
-      tableContent = (
-        <tr>
-          <td colSpan="999">
-            Loading...
-          </td>
-        </tr>
-      );
-    }
 
     let alert = null;
     if (error) {
       alert = (
         <Alert variant="danger">
-          {error}
+          {error.toString()}
         </Alert>
       );
     }
@@ -228,19 +133,7 @@ class DocuUsers extends React.Component {
         <Card.Body>
           {alert}
           <UserAdd docu={docu} callback={this.addUserCallback} />
-          <Table className="mt-3" striped bordered hover>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Access level</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableContent}
-            </tbody>
-          </Table>
+          <UsersTable users={users} currentUser={userData} callback={this.addUserCallback} />
         </Card.Body>
         <Dialog ref={(component) => { this.dialog = component; }} />
       </Card>

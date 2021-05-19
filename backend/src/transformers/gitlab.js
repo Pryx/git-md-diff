@@ -48,7 +48,7 @@ export function changesTransformer(change) {
  */
 export function repositoryTransformer(repo) {
   return {
-    id: repo.id,
+    providerId: repo.id,
     name: repo.name,
     slug: repo.path,
     description: repo.description,

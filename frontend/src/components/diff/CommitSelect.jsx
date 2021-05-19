@@ -269,7 +269,7 @@ class CommitSelect extends React.Component {
     if (error) {
       return (
         <div>
-          {error}
+          {error.toString()}
         </div>
       );
     }

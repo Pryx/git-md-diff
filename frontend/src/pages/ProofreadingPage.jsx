@@ -1,19 +1,17 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import {
-  Alert, Breadcrumb,
-} from 'react-bootstrap';
+import { Alert, Badge, Breadcrumb } from 'react-bootstrap';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import { Link } from 'wouter';
-import { documentationSelected, revisionSelected } from '../actions';
+import { documentationSelected } from '../actions';
 import ProofreadingDiffWrapper from '../components/proofreading/ProofreadingDiffWrapper';
-import { proofreadingStates } from '../constants/proofreading-states';
-import User from '../shapes/user';
+import { proofreadingStates, proofreadingStatesString } from '../constants/proofreading-states';
 import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
+import User from '../shapes/user';
 import { store } from '../store';
 
 /**
@@ -27,34 +25,23 @@ class ProofreadingPage extends React.Component {
     req: null,
   };
 
-  constructor(props) {
-    super(props);
-    this.submitProofread = this.submitProofread.bind(this);
-    this.merge = this.merge.bind(this);
+  /**
+   * Error boundary
+   * @param {*} error The error that occured in one of the components
+   * @returns derived state
+   */
+  static getDerivedStateFromError(error) {
+    return { isLoaded: true, error };
   }
 
   /**
    * Fetches the proofreading request data when mounted
    */
   componentDidMount() {
-    const { reqId, userData } = this.props;
-    const fetchPage = async () => {
+    const { reqId } = this.props;
+    const fetchData = async () => {
       const json = await secureKy().get(`${window.env.api.backend}/proofreading/${reqId}`).json();
       store.dispatch(documentationSelected(json.data.docuId));
-      store.dispatch(revisionSelected({
-        from: true,
-        revisionData: {
-          commit: userData.id === json.data.requester.id ? json.data.revTo : json.data.revFrom,
-        },
-      }));
-
-      store.dispatch(revisionSelected({
-        from: false,
-        revisionData: {
-          branch: json.data.sourceBranch,
-          commit: userData.id === json.data.requester.id ? json.data.sourceBranch : json.data.revTo,
-        },
-      }));
 
       this.setState({
         req: json.data,
@@ -62,61 +49,7 @@ class ProofreadingPage extends React.Component {
       });
     };
 
-    fetchPage().catch(async (error) => {
-      const errorMessage = await getPossiblyHTTPErrorMessage(error);
-      if (errorMessage === null) return; // Expired tokens
-
-      this.setState({
-        isLoaded: true,
-        error: errorMessage,
-      });
-    });
-  }
-
-  /**
-   * Marks the proofreading request as completed
-   * @param {Event} e The JS event
-   */
-  submitProofread(e) {
-    e.preventDefault();
-    const { reqId } = this.props;
-    const resolveReq = async () => {
-      await secureKy().put(`${window.env.api.backend}/proofreading/${reqId}/submit`).json();
-
-      this.setState({
-        success: 'Successfully submitted your changes',
-        isLoaded: true,
-      });
-    };
-
-    resolveReq().catch(async (error) => {
-      const errorMessage = await getPossiblyHTTPErrorMessage(error);
-      if (errorMessage === null) return; // Expired tokens
-
-      this.setState({
-        isLoaded: true,
-        error: errorMessage,
-      });
-    });
-  }
-
-  /**
-   * Merges the completed proofreading request
-   * @param {Event} e The JS event
-   */
-  merge(e) {
-    e.preventDefault();
-    const { reqId } = this.props;
-    const mergeReq = async () => {
-      await secureKy().put(`${window.env.api.backend}/proofreading/${reqId}/merge`).json();
-
-      this.setState({
-        success: 'Successfully merged proofread version!',
-        isLoaded: true,
-      });
-    };
-
-    mergeReq().catch(async (error) => {
+    fetchData().catch(async (error) => {
       const errorMessage = await getPossiblyHTTPErrorMessage(error);
       if (errorMessage === null) return; // Expired tokens
 
@@ -129,7 +62,7 @@ class ProofreadingPage extends React.Component {
 
   render() {
     const {
-      error, req, isLoaded, success,
+      req, isLoaded, error,
     } = this.state;
     const { userData, docuId, reqId } = this.props;
 
@@ -170,23 +103,58 @@ class ProofreadingPage extends React.Component {
       );
     }
 
-    let alert = null;
+    const alert = null;
+
     if (error) {
-      alert = <Alert variant="danger">{error}</Alert>;
-    } else if (success) {
-      alert = <Alert variant="success">{success}</Alert>;
+      return (
+        <Container className="mt-3">
+          <Row>
+            <Col>
+              <Alert variant="danger">{error.toString()}</Alert>
+            </Col>
+          </Row>
+        </Container>
+      );
+    }
+
+    let badgeVar;
+
+    switch (req.state) {
+      case proofreadingStates.new:
+        badgeVar = 'secondary';
+        break;
+
+      case proofreadingStates.inprogress:
+        badgeVar = 'primary';
+        break;
+
+      case proofreadingStates.merged:
+      case proofreadingStates.submitted:
+        badgeVar = 'success';
+        break;
+
+      case proofreadingStates.rejected:
+        badgeVar = 'danger';
+        break;
+
+      default:
+        badgeVar = 'light';
+        break;
     }
 
     if (userData.id === req.requester.id) {
-      const btnTitle = !success ? 'Merge' : '';
       return (
         <Container className="mt-3">
           {breadcrumbs}
+          {alert}
           <Row>
             <Col>
               <h1>
                 {req.title}
               </h1>
+              <Badge variant={badgeVar} className="mr-2 mt-2 mb-2 main-proofreading-badge">
+                {proofreadingStatesString[req.state]}
+              </Badge>
               <p className="text-muted">{req.description}</p>
             </Col>
           </Row>
@@ -202,13 +170,9 @@ class ProofreadingPage extends React.Component {
               <a href={`mailto:${req.requester.email}`}>{req.requester.email}</a>
             </Col>
           </Row>
-          <Alert variant="info" key="info">You are seeing changes made by the proofreader.</Alert>
-          {alert}
           <ProofreadingDiffWrapper
             proofreadingReq={req}
-            buttonTitle={btnTitle}
             onClick={this.merge}
-            noChangesMessage="The proofreader has made no changes."
             proofreader={false}
             disabledText="You can&apos;t merge this yet, because the proofreader has not marked the request as completed."
           />
@@ -216,26 +180,18 @@ class ProofreadingPage extends React.Component {
       );
     }
 
-    let btnTitle = '';
-
-    if ((req.state === proofreadingStates.new
-      || req.state === proofreadingStates.inprogress
-      || req.state === proofreadingStates.rejected) && !success) {
-      btnTitle = 'Mark as complete';
-    }
-
-    if (!btnTitle.length) {
-      alert = <Alert variant="info">Submitted for approval, no additional changes possible at this time</Alert>;
-    }
-
     return (
       <Container className="mt-3">
         {breadcrumbs}
+        {alert}
         <Row>
           <Col>
             <h1>
               {req.title}
             </h1>
+            <Badge variant={badgeVar} className="mr-2 mt-2 mb-2 main-proofreading-badge">
+              {proofreadingStatesString[req.state]}
+            </Badge>
             <p className="text-muted">{req.description}</p>
           </Col>
         </Row>
@@ -251,11 +207,11 @@ class ProofreadingPage extends React.Component {
             <a href={`mailto:${req.requester.email}`}>{req.requester.email}</a>
           </Col>
         </Row>
-        {alert}
         <ProofreadingDiffWrapper
           proofreadingReq={req}
-          buttonTitle={btnTitle}
           onClick={this.submitProofread}
+          noChangesMessage="You made no changes yet."
+          proofreader
         />
       </Container>
     );

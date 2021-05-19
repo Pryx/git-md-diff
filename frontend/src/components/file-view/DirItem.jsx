@@ -5,10 +5,9 @@ import Dialog from 'react-bootstrap-dialog';
 import { hot } from 'react-hot-loader';
 import { getPossiblyHTTPErrorMessage, secureKy } from '../../helpers/secure-ky';
 import FileItem from './FileItem';
+
 /**
- * The diff overview component acts as a wrapper to
- * diff view components. It's basically a list of files
- * and their changes.
+ * DirItem encapsulates the directory and handles file add and dir add.
  */
 class DirItem extends React.Component {
   state = {
@@ -25,6 +24,9 @@ class DirItem extends React.Component {
     this.handleNewFolder = this.handleNewFolder.bind(this);
   }
 
+  /**
+   * If open, get the content
+   */
   componentDidMount() {
     const { isOpen } = this.state;
     if (isOpen) {
@@ -32,6 +34,9 @@ class DirItem extends React.Component {
     }
   }
 
+  /**
+   * Get the content, if updated, open and version changed
+   */
   componentDidUpdate(prevProps, prevState) {
     const { version, docuId, path } = this.props;
     // You don't have to do this check first, but it can help prevent an unneeded render
@@ -74,6 +79,9 @@ class DirItem extends React.Component {
     }
   }
 
+  /**
+   * Create a new page on the server
+   */
   handleNewPage() {
     const { path, docuId, version } = this.props;
     const setState = (s) => this.setState(s);
@@ -114,6 +122,9 @@ class DirItem extends React.Component {
     });
   }
 
+  /**
+   * Create a new page on the server
+   */
   handleNewFolder() {
     const { path, docuId, version } = this.props;
     const setState = (s) => this.setState(s);

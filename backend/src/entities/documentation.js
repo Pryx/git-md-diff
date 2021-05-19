@@ -61,6 +61,10 @@ export default class Documentation {
     return null;
   }
 
+  static async getProviderIds(userId, provider) {
+    return (await sql`SELECT providerId FROM documentations WHERE id IN (SELECT docuId FROM roles WHERE userId=${userId}) AND provider=${provider}`).map((r) => r.providerid);
+  }
+
   /**
    * Gets all documentations the user has access to
    * @param {number} userId ID of the user

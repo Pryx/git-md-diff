@@ -69,7 +69,7 @@ class ProofreadingOverview extends React.Component {
       return (
         <Alert variant="danger">
           Error loading your proofreading requests.
-          {error}
+          {error.toString()}
         </Alert>
       );
     }

@@ -10,13 +10,15 @@ import { docusaurusBaseImages, htmlImages } from '../../helpers/diff';
 const matter = require('front-matter');
 
 /**
- * A slightly modified DiffView for display in the editor file.
+ * A wrapper for MDX renderer & editor diff
  */
 const EditorPreview = ({
   file, previewOnly, content, from, to, docuId,
 }) => {
   const contentMatter = matter(content);
 
+
+  // MDX preprocessing for renderer
   let c = content.replace(/---.*---/s, '');
 
   c = c.replace(/\s*import.*docusaurus.*;/, '');

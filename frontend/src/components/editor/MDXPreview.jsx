@@ -5,7 +5,7 @@ import { Alert } from 'react-bootstrap';
 import { hot } from 'react-hot-loader';
 
 /**
- * A slightly modified DiffView for display in the editor file.
+ * The MDX renderer
  */
 class MDXPreview extends React.Component {
   state = {
@@ -13,11 +13,17 @@ class MDXPreview extends React.Component {
     rendered: '',
   };
 
+  /**
+   * Render on mount
+   */
   componentDidMount() {
     const { content } = this.props;
     this.getRenderedContent(content);
   }
 
+  /**
+   * Re-render on update
+   */
   componentDidUpdate(prev) {
     const { content } = this.props;
     if (content !== prev.content) {
@@ -25,6 +31,10 @@ class MDXPreview extends React.Component {
     }
   }
 
+  /**
+   * Get rendered content from server
+   * @param {string} content The content
+   */
   async getRenderedContent(content) {
     const response = await ky.post(`${window.env.api.render}/render`, { json: { content } });
     const ajax = await response.json();
@@ -40,7 +50,7 @@ class MDXPreview extends React.Component {
     if (error) {
       return (
         <Alert variant="danger" className="mt-4">
-          {error}
+          {error.toString()}
         </Alert>
       );
     }

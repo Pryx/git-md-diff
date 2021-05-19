@@ -1,9 +1,12 @@
+import config from '../config';
 import accessLevels from '../entities/access-levels';
 import Documentation from '../entities/documentation';
 import ProofreadingRequest from '../entities/proofreading-request';
 import proofreadingStates from '../entities/proofreading-states';
 import Role from '../entities/role';
+import User from '../entities/user';
 import ProviderWrapper from '../providers/provider-wrapper';
+import sendEmail from './mailer';
 
 /**
  * This is the proofreading service class.
@@ -33,6 +36,16 @@ export default class ProofreadingService {
     await provider.createBranch(docu.providerId, `git-md-proofreading-${savedReq.id}`, savedReq.revTo);
     savedReq.sourceBranch = `git-md-proofreading-${savedReq.id}`;
     await savedReq.save();
+
+    sendEmail(
+      (await User.getById(req.proofreader)),
+      'You have been assigned a new proofreading request',
+      `A proofreading request titled ${req.title} was assigned to you.<br/>
+      Description: ${req.description}<br/><br/>
+      Please check the Git-md-diff app at 
+      <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
+    );
+
     return savedReq;
   }
 
@@ -62,20 +75,31 @@ export default class ProofreadingService {
   async finished(reqId) {
     const req = await ProofreadingRequest.get(reqId);
 
-    const docu = await Documentation.get(req.docuId);
+    if (!req.pullRequest.length) {
+      const docu = await Documentation.get(req.docuId);
 
-    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+      const provider = new ProviderWrapper(docu.provider, this.user.tokens);
 
-    const response = await provider.finishProofreading(
-      docu.providerId,
-      req.sourceBranch,
-      req.targetBranch,
-      `Completed proofreading nr. ${req.id}`,
-    );
+      const response = await provider.finishProofreading(
+        docu.providerId,
+        req.sourceBranch,
+        req.targetBranch,
+        `Completed proofreading nr. ${req.id}`,
+      );
 
-    req.pullRequest = response.iid;
+      req.pullRequest = response.iid;
+    }
+
     req.state = proofreadingStates.submitted;
     req.save();
+
+    sendEmail(
+      (req.requester),
+      'Proofreading request was completed',
+      `A proofreading request titled ${req.title} was just completed.<br/><br/>
+      Please check the Git-md-diff app at 
+      <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
+    );
 
     return req;
   }
@@ -117,6 +141,35 @@ export default class ProofreadingService {
     req.state = proofreadingStates.merged;
     req.save();
 
+    sendEmail(
+      (req.proofreader),
+      'Proofreading request was accepted',
+      `A proofreading request titled ${req.title} was just accepted.<br/><br/>
+      Please check the Git-md-diff app at 
+      <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
+    );
+
+    return req;
+  }
+
+  /**
+   * Rejects the completed request
+   * @param {number} reqId The id of the request
+   * @returns {ProofreadingRequest} The modified proofreading request
+   */
+  static async reject(reqId) {
+    const req = await ProofreadingRequest.get(reqId);
+
+    req.state = proofreadingStates.rejected;
+    req.save();
+
+    sendEmail(
+      (req.proofreader),
+      'Proofreading request was rejected',
+      `A proofreading request titled ${req.title} was rejected.<br/><br/>
+      Please check the Git-md-diff app at 
+      <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
+    );
     return req;
   }
 

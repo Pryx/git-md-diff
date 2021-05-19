@@ -68,6 +68,9 @@ class EditPage extends React.Component {
     }, 250);
   }
 
+  /**
+   * Load page on mount
+   */
   componentDidMount() {
     const { docuId, version, autosaved } = this.props;
 
@@ -110,6 +113,9 @@ class EditPage extends React.Component {
     return { isLoaded: true, error };
   }
 
+  /**
+   * Saves current state of page 
+   */
   handleSave() {
     const { docuId, version, onSave } = this.props;
     const { commitMessage } = this.state;
@@ -125,6 +131,7 @@ class EditPage extends React.Component {
         }).json();
 
       if (response.success) {
+        allowNav();
         if (typeof onSave === 'function') {
           onSave();
         }
@@ -146,9 +153,6 @@ class EditPage extends React.Component {
     });
   }
 
-  commitMessageChange(e) {
-    this.setState({ commitMessage: e.target.value });
-  }
 
   render() {
     const {
@@ -263,7 +267,7 @@ class EditPage extends React.Component {
                   <Form.Control
                     type="text"
                     placeholder="Write quick summary of your changes..."
-                    onChange={this.commitMessageChange}
+                    onChange={(e) => this.setState({ commitMessage: e.target.value })}
                     value={commitMessage}
                   />
                 </Form.Group>

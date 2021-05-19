@@ -78,9 +78,9 @@ function removeDocusaurusInfo(original, modified) {
   let mod = modified.replace(/---.*---/s, '');
 
   // TODO: Fix this import stuff...
-  ori = ori.replace(/\s*import.*docusaurus.*;/, '');
+  ori = ori.replace(/\s*import.*docusaurus.*[;]?/, '');
 
-  mod = mod.replace(/\s*import.*docusaurus.*;/, '');
+  mod = mod.replace(/\s*import.*docusaurus.*[;]?/, '');
   if (originalMatter.attributes.title) {
     ori = `# Title: ${originalMatter.attributes.title}\n${ori}`;
   }

@@ -1,9 +1,11 @@
 import lodash from 'lodash';
+import config from '../config';
 import accessLevels from '../entities/access-levels';
 import Documentation from '../entities/documentation';
 import Role from '../entities/role';
 import User from '../entities/user';
 import ProviderWrapper from '../providers/provider-wrapper';
+import sendEmail from './mailer';
 
 /**
  * This is the documentation service class.
@@ -74,6 +76,12 @@ export default class DocumentationService {
     return provider.searchUsers(search);
   }
 
+  async getRemoteList(providerId) {
+    const provider = new ProviderWrapper(providerId, this.user.tokens);
+    const ids = await Documentation.getProviderIds(this.user.id, providerId);
+    return (await provider.getUserDocumentations()).filter((d) => !ids.includes(d.providerId));
+  }
+
   /**
    * Gets a documentation by its ID
    * @param {number} docuId ID of the documentation
@@ -105,6 +113,13 @@ export default class DocumentationService {
     const user = await User.getById(userId);
     await provider.removeUser(docu.providerId, user.linked[docu.provider]);
     await Role.remove(userId, docuId);
+    sendEmail(
+      (user),
+      'Your access to a documentation was revoked',
+      `Your access to documentation ${docu.name} was just revoked.<br/><br/>
+      Please check the Git-md-diff app at 
+      <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
+    );
   }
 
   /**
@@ -133,6 +148,34 @@ export default class DocumentationService {
 
     const role = new Role({ level: info.level, docuId, userId: found.id });
     await role.save();
+
+    sendEmail(
+      (await User.getById(found.id)),
+      'You were given access a new documentation',
+      `You were just given access a documentation ${docu.name}.<br/><br/>
+      Please check the Git-md-diff app at 
+      <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
+    );
+  }
+
+  async editUser(docuId, userInfo, userId) {
+    const docu = await Documentation.get(docuId);
+    const provider = new ProviderWrapper(docu.provider, this.user.tokens);
+    const info = userInfo;
+    const found = await User.getById(userId);
+
+    await provider.editUser(docu.providerId, found.linked[docu.provider], parseInt(info.level, 10));
+
+    const role = new Role({ level: info.level, docuId, userId });
+    await role.save();
+
+    sendEmail(
+      (await User.getById(userId)),
+      'Your role was just updated',
+      `Your user role in documentation ${docu.name} was just updated.<br/><br/>
+      Please check the Git-md-diff app at 
+      <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
+    );
   }
 
   /**

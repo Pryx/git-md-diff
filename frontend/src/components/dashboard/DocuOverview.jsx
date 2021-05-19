@@ -55,7 +55,7 @@ class DocuOverview extends React.Component {
       return (
         <Alert variant="danger">
           Error loading your documentations.
-          {error}
+          {error.toString()}
         </Alert>
       );
     }

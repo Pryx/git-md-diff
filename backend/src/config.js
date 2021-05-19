@@ -24,6 +24,19 @@ const config = {
     authRedirect: staticConfig.gitlab.authRedirect,
     baseUrl: staticConfig.gitlab.baseUrl,
   },
+  mail: {
+    host: staticConfig.mail.host,
+    port: staticConfig.mail.port,
+    secure: staticConfig.mail.secure || false,
+    user: {
+      email: staticConfig.mail.user.email,
+      pass: staticConfig.mail.user.pass,
+      name: staticConfig.mail.user.name,
+    },
+    tls: {
+      rejectUnauthorized: staticConfig.mail.tls.rejectUnauthorized || true,
+    },
+  },
 };
 
 export default config;

@@ -81,7 +81,7 @@ class DiffOverview extends React.Component {
     if (error) {
       return (
         <div>
-          {error}
+          {error.toString()}
         </div>
       );
     }
@@ -184,12 +184,18 @@ DiffOverview.propTypes = {
   excludedChanges: PropTypes.arrayOf(PropTypes.string),
 };
 
-const mapStateToProps = (state) => ({
-  docuId: state.docuId,
-  from: state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '',
-  to: state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '',
-  version: state.endRevision ? state.endRevision.branch : '',
-  excludedChanges: state.excludedChanges,
-});
+const mapStateToProps = (state, props) => {
+  // Allow overriding
+  const newFrom = state.startRevision ? (state.startRevision.commit || state.startRevision.branch) : '';
+  const newTo = state.endRevision ? (state.endRevision.commit || state.endRevision.branch) : '';
+  const newVersion = state.endRevision ? state.endRevision.branch : '';
+  return {
+    docuId: state.docuId,
+    from: props.from || newFrom,
+    to: props.to || newTo,
+    version: props.version || newVersion,
+    excludedChanges: state.excludedChanges,
+  };
+};
 
 export default hot(module)(connect(mapStateToProps)(DiffOverview));

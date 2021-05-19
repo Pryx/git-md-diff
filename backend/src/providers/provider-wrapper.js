@@ -56,6 +56,20 @@ export default class ProviderWrapper {
   }
 
   /**
+   * Edits user in the repository
+   * @param {string} projectId The providers project identifier
+   * @param {number} userId The ID of the user
+   * @param {accessLevel} accessLevel The numeric value of the access level
+   */
+  async editUser(projectId, userId, accessLevel) {
+    return this.provider.editUser(projectId, userId, accessLevel);
+  }
+
+  async getUserDocumentations() {
+    return this.provider.getUserDocumentations();
+  }
+
+  /**
    * Creates a new repository
    * @param {Object} docuObj The object describing the documentation to create
    */

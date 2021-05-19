@@ -10,14 +10,13 @@ import { Link } from 'wouter';
 import { secureKy } from '../../helpers/secure-ky';
 
 /**
- * The diff overview component acts as a wrapper to
- * diff view components. It's basically a list of files
- * and their changes.
+ * The FileItem represents the file inside a directory.
  */
 class FileItem extends React.Component {
   state={
-    isDeleted: false
+    isDeleted: false,
   };
+
   constructor(props) {
     super(props);
 

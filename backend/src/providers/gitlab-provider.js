@@ -3,7 +3,7 @@ import config from '../config';
 import accessLevels from '../entities/access-levels';
 import {
   changesTransformer,
-  mergeRequestTransformer, repositoryTreeTransformer, revisionTransformer, versionTransformer,
+  mergeRequestTransformer, repositoryTransformer, repositoryTreeTransformer, revisionTransformer, versionTransformer,
 } from '../transformers/gitlab';
 
 /**
@@ -14,7 +14,7 @@ export default class GitlabProvider {
     this.gitlab = new Gitlab({
       oauthToken: token,
       requestTimeout: 3000,
-      host: config.gitlab.baseUrl
+      host: config.gitlab.baseUrl,
     });
   }
 
@@ -52,6 +52,18 @@ export default class GitlabProvider {
   async addUser(projectId, userId, accessLevel) {
     const gitlabAccessLevel = accessLevel === accessLevels.admin ? 40 : 30;
     return this.gitlab.ProjectMembers.add(projectId, userId, gitlabAccessLevel);
+  }
+
+  /**
+   * Edits user in the repository
+   * @param {string} projectId The providers project identifier
+   * @param {number} userId The ID of the user
+   * @param {accessLevel} accessLevel The numeric value of the access level
+   */
+  async editUser(projectId, userId, accessLevel) {
+    const gitlabAccessLevel = accessLevel === accessLevels.admin ? 40 : 30;
+    console.log(accessLevel === accessLevels.admin);
+    return this.gitlab.ProjectMembers.edit(projectId, userId, gitlabAccessLevel);
   }
 
   /**
@@ -177,8 +189,6 @@ export default class GitlabProvider {
     } catch (e) {
       // Gitbeaker doesn't really provide us with status code,
       // so let's just try to create a new file...
-      console.log(e);
-
       response = await this.gitlab.RepositoryFiles.create(
         projectId,
         page,
@@ -189,6 +199,11 @@ export default class GitlabProvider {
     }
 
     return response;
+  }
+
+
+  async getUserDocumentations() {
+    return (await this.gitlab.Projects.all({ owned: true })).map((rp) => repositoryTransformer(rp));
   }
 
   /**

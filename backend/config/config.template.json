@@ -18,5 +18,14 @@
     "callback": "http://localhost:3000/auth/gitlab/callback",
     "authRedirect": "http://localhost:5000",
     "baseUrl": "https://gitlab.com"
+  },
+  "mail": {
+    "host": "smtp.ethereal.email",
+    "port": 587,
+    "user": {
+      "email": "jasmin66@ethereal.email",
+      "pass": "G13kcrPrtyK5hxAzTf",
+      "name": "Git md diff mailer"
+    }
   }
 }

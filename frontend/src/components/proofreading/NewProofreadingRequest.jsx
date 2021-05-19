@@ -12,9 +12,7 @@ import User from '../../shapes/user';
 import { getPossiblyHTTPErrorMessage, secureKy } from '../../helpers/secure-ky';
 
 /**
- * Diff page component is a wrapper to diff overview and commit selectors.
- * Currently it stores the info about current repository and selected commits
- * and passess it to wrapped components.
+ * New proofreading request encompasses the proofreading request creation
  */
 class NewProofreadingRequest extends React.Component {
   state = {
@@ -31,6 +29,9 @@ class NewProofreadingRequest extends React.Component {
     this.createNewRequest = this.createNewRequest.bind(this);
   }
 
+  /**
+   * Init the component on mount - fetch users etc.
+   */
   componentDidMount() {
     const { from, to } = this.props;
 
@@ -48,6 +49,9 @@ class NewProofreadingRequest extends React.Component {
     });
   }
 
+  /**
+   * Fetches the users that can be proofreaders
+   */
   async fetchUsers() {
     const { docuId, userData } = this.props;
 
@@ -60,6 +64,9 @@ class NewProofreadingRequest extends React.Component {
     );
   }
 
+  /**
+   * Handles the request creation
+   */
   createNewRequest() {
     const {
       docuId, userData, excludedChanges, version, from, to,
@@ -117,7 +124,7 @@ class NewProofreadingRequest extends React.Component {
     if (error) {
       alert = (
         <Alert variant="danger" className="mt-4">
-          {error}
+          {error.toString()}
         </Alert>
       );
     }

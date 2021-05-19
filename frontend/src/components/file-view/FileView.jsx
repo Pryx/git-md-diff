@@ -6,9 +6,7 @@ import PropTypes from 'prop-types';
 import DirItem from './DirItem';
 
 /**
- * The diff overview component acts as a wrapper to
- * diff view components. It's basically a list of files
- * and their changes.
+ * The root file view
  */
 const FileView = ({ docuId, version }) => (
   <Row className="mt-3">
