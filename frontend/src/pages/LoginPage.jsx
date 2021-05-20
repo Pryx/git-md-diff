@@ -22,7 +22,7 @@ class LoginPage extends React.Component {
    * @returns derived state
    */
   static getDerivedStateFromError(error) {
-    return { isLoaded: true, error };
+    return { error };
   }
 
   render() {

@@ -65,6 +65,9 @@ export default class ProviderWrapper {
     return this.provider.editUser(projectId, userId, accessLevel);
   }
 
+  /**
+   * Gets a list of remote repositories the user owns
+   */
   async getUserDocumentations() {
     return this.provider.getUserDocumentations();
   }

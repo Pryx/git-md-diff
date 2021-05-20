@@ -2,6 +2,9 @@ import useLocation from 'wouter/use-location';
 
 let modified = false;
 
+/**
+ * Prevents nav if modified flag set
+ */
 export const useLocationWithConfirmation = () => {
   const [location, setLocation] = useLocation();
 
@@ -22,15 +25,25 @@ export const useLocationWithConfirmation = () => {
 };
 
 /* eslint-disable */
+/**
+ * Prevents nav if page has modified content
+ * @returns Unload text
+ */
 window.onbeforeunload = () => {
   if (modified) return 'Are you sure you want to leave?';
 };
 /* eslint-enable */
 
+/**
+ * Set prevent nav flag
+ */
 export const preventNav = () => {
   modified = true;
 };
 
+/**
+ * Unset prevent nav flag
+ */
 export const allowNav = () => {
   modified = false;
 };

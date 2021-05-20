@@ -1,3 +1,4 @@
+import sanitizeMail from 'sanitize-mail';
 import config from '../config';
 
 const nodemailer = require('nodemailer');
@@ -23,10 +24,11 @@ const transporter = nodemailer.createTransport(
 export default async function sendEmail(user, subject, content) {
   if (!user.email.length) return;
   // send mail with defined transport object
+
   transporter.sendMail({
     from: `"${config.mail.user.name}" <${config.mail.user.email}>`, // sender address
     to: user.email, // list of receivers
     subject, // Subject line
-    html: content, // html body
+    html: sanitizeMail(content), // html body
   });
 }

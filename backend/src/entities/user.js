@@ -21,7 +21,7 @@ export default class User {
    * @param {number} params.userId The user ID
    * @param {number} params.userId The user ID
    */
-  constructor(params) {
+  constructor(params = {}) {
     this.id = params.id || defaults.id;
     this.email = params.email || defaults.email;
     this.name = params.name || defaults.name;

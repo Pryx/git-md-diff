@@ -1,7 +1,6 @@
 import ky from 'ky';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Alert } from 'react-bootstrap';
 import { hot } from 'react-hot-loader';
 
 /**
@@ -44,16 +43,8 @@ class MDXPreview extends React.Component {
 
   render() {
     const {
-      error, isLoaded, rendered,
+      isLoaded, rendered,
     } = this.state;
-
-    if (error) {
-      return (
-        <Alert variant="danger" className="mt-4">
-          {error.toString()}
-        </Alert>
-      );
-    }
 
     if (!isLoaded) {
       return (

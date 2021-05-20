@@ -76,10 +76,15 @@ export default class DocumentationService {
     return provider.searchUsers(search);
   }
 
-  async getRemoteList(providerId) {
-    const provider = new ProviderWrapper(providerId, this.user.tokens);
-    const ids = await Documentation.getProviderIds(this.user.id, providerId);
-    return (await provider.getUserDocumentations()).filter((d) => !ids.includes(d.providerId));
+  /**
+   * Returns a list of remote repositories that were not yet imported
+   * @param {*} providerSlug The slug identifying the hosting provider
+   * @returns A list of repositories
+   */
+  async getRemoteList(providerSlug) {
+    const provider = new ProviderWrapper(providerSlug, this.user.tokens);
+    const ids = await Documentation.getProviderIds(this.user.id, providerSlug);
+    return (await provider.getUserDocumentations()).filter((d) => !ids.includes(d.providerSlug));
   }
 
   /**

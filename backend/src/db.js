@@ -66,7 +66,7 @@ async function setupDb() {
 
   await sql`CREATE TABLE IF NOT EXISTS tokens(
     userId INTEGER REFERENCES users(id),
-    hash VARCHAR(32),
+    hash VARCHAR(64),
     expire INTEGER,
     PRIMARY KEY (userId, hash)
   );`;

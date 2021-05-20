@@ -25,7 +25,7 @@ export default class Documentation {
    * @param {string} params.slug The documentation slug
    * @param {string} params.description The documentation description
    */
-  constructor(params) {
+  constructor(params = {}) {
     this.id = params.id || defaults.id;
     this.provider = params.provider || defaults.provider;
     this.providerId = params.providerId || params.providerid || defaults.providerId;
@@ -61,6 +61,14 @@ export default class Documentation {
     return null;
   }
 
+  /**
+   * Returns all the documentation provider IDs of documentation the user has access to
+   * We can limit it to the documentations the user has access to only, because
+   * we do not allow anyone other than the owner to import the documentation.
+   * @param {number} userId ID of the user
+   * @param {string} provider The provider the documentation is hosted at
+   * @returns {number[]} List of provider IDs
+   */
   static async getProviderIds(userId, provider) {
     return (await sql`SELECT providerId FROM documentations WHERE id IN (SELECT docuId FROM roles WHERE userId=${userId}) AND provider=${provider}`).map((r) => r.providerid);
   }

@@ -17,7 +17,6 @@ const EditorPreview = ({
 }) => {
   const contentMatter = matter(content);
 
-
   // MDX preprocessing for renderer
   let c = content.replace(/---.*---/s, '');
 

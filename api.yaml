@@ -2,14 +2,23 @@ openapi: "3.0.0"
 info:
   version: 1.0.0
   title: Git md diff
+  
+servers:
+  - url: localhost:5000
+    description: Local dev server
+    
+security:
+  - JWTAuth: []
+  
 paths:
-  /UserInfos/{ID}:
+  /users/{id}:
+    description: Returns the user matching the requested ID
     get:
       summary: Request info for a specific user
       tags:
         - User info
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
           description: The id of the user to retrieve
@@ -18,7 +27,47 @@ paths:
             example: 521
       responses:
         "200":
-          description: Info about requested user
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+
+  /users/current:
+    description: Returns the current user
+    get:
+      summary: Request info for the logged in user
+      tags:
+        - User info
+      responses:
+        "200":
+          description: Successfully retrieved data
           content:
             application/json:
               schema:
@@ -40,69 +89,39 @@ paths:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
-
-  /UserInfos/current:
-    get:
-      summary: Request info for the logged in user
-      tags:
-        - User info
-      responses:
-        "200":
-          description: Info about requested user
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Response<UserInfo>"
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Response<UserInfo>"
-              example:
-                success: false
-                data: ""
-        "403":
-          description: You are not authorized to perform this action
+                
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
-
-  /UserInfos/current/update:
-    get:
-      summary: Request info for the logged in user
-      tags:
-        - User info
-      responses:
-        "200":
-          description: Info about requested user
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Response<UserInfo>"
-        "403":
-          description: You are not authorized to perform this action
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Response<Bool>"
-              example:
-                success: false
+                message: Internal server error
 
   /auth/gitlab:
     get:
+      security: []   # No security
       summary: Login the user via GitLab Oauth
-      description: The user should be redirected to this page. It will then return him back to the frontend.
-      operationId: login
+      description: The user should be redirected to this page from frontend and it will redirect them to the Gitlab sign in form.
       tags:
         - Auth
       responses:
         "302":
           description: Redirect to the GitLab Oauth page
-
+          
+  /auth/gitlab/callback:
+    get:
+      security: []   # No security
+      summary: Gitlab OAuth callback
+      description: The user should be redirected to this page back from Gitlab. It will then return him back to the frontend.
+      tags:
+        - Auth
+      responses:
+        "302":
+          description: Redirect to the frontend
+          
   /auth/logout/:
     get:
       summary: Logout the user identified by token
@@ -126,9 +145,20 @@ paths:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
+                
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+
 
   /documentations:
-    post:
+    get:
       summary: Returns a list of all documentations that the user has access to
       tags:
         - Documentation management
@@ -149,10 +179,17 @@ paths:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
-
-  /documentations/create:
-    post:
-      summary: Creates a new documentation
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                error: "Could not connect to the database"
+    put:
+      summary: Creates, updates or imports a documentation
       tags:
         - Documentation management
       requestBody:
@@ -160,12 +197,10 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/DocumentationInfo"
-            example:
-              name: "Best Documentation Ever"
-              slug: "best-docu-ever"
+
       responses:
         "200":
-          description: Successfully updated user
+          description: Successfully created / updated documentation
           content:
             application/json:
               schema:
@@ -180,36 +215,33 @@ paths:
               example:
                 success: false
 
-        "409":
-          description: The slug you chose is already taken
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Response<Bool>"
+                $ref: "#/components/schemas/Response<Error>"
               example:
                 success: false
+                error: "The name is already taken"
 
-  /documentations/{ID}/update:
-    post:
-      summary: Updates a documentation
+  /documentations/{id}:
+    get:
+      summary: Returns a documentation identified by the ID specified
       tags:
         - Documentation management
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
-          description: The id of the documentation to update
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DocumentationInfo"
+
       responses:
         "200":
-          description: Successfully updated documentation
+          description: Successfully retrieved data
           content:
             application/json:
               schema:
@@ -223,25 +255,24 @@ paths:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
-        "409":
-          description: The slug is already taken
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Response<Bool>"
+                $ref: "#/components/schemas/Response<Error>"
               example:
                 success: false
-
-  /documentations/{ID}/delete:
-    get:
+                
+    delete:
       summary: Deletes a documentation
       tags:
         - Documentation management
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
-          description: The id of the documentation to delete
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
@@ -261,17 +292,26 @@ paths:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
-
-  /documentations/{ID}/versions:
+                
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                
+  /documentations/{id}/versions:
     get:
       summary: Returns a list of all versions the documentation has
       tags:
-        - Documentation querying
+        - Documentation content management
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
-          description: The id of the documentation to query
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
@@ -281,7 +321,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Response<Versions[]>"
+                $ref: "#/components/schemas/Response<VersionInfo[]>"
 
         "403":
           description: You are not authorized to perform this action
@@ -291,21 +331,300 @@ paths:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
-
-  /documentations/{ID}/{VERSION}/revisions:
+                
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+    
+  /documentations/{id}/users:
     get:
-      summary: Returns a list of all revisions in the queried documentation versiojn
+      summary: Retrieves users from documentation
       tags:
-        - Documentation querying
+        - Documentation management
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
-          description: The id of the documentation to query
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
-        - name: VERSION
+              
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                
+    put:
+      summary: Adds user to a documentation
+      tags:
+        - Documentation management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the documentation
+          schema:
+            type: integer
+            example: 521
+            
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleAdd"
+      responses:
+        "200":
+          description: Successfully added user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+
+  /documentations/{id}/users/{uid}:
+    delete:
+      summary: Delete user from documentation
+      tags:
+        - Documentation management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the documentation
+          schema:
+            type: integer
+            example: 521
+        - name: uid
+          in: path
+          required: true
+          description: The id of the user
+          schema:
+            type: integer
+            example: 521
+
+      responses:
+        "200":
+          description: Successfully deleted user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                
+    put:
+      summary: Edit user role in a documentation
+      tags:
+        - Documentation management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the documentation
+          schema:
+            type: integer
+            example: 521
+        - name: uid
+          in: path
+          required: true
+          description: The id of the user
+          schema:
+            type: integer
+            example: 521
+            
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleAdd"
+            example:
+               level: 1
+               
+      responses:
+        "200":
+          description: Successfully edited user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<UserInfo>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+    
+  /documentations/provider/{provider}:
+    get:
+      summary: Returns data about existing repositories not present in the app, useful for import
+      tags:
+        - Documentation management
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: The provider slug from which to load the documentation information
+          schema:
+            type: string
+            example: "gitlab"
+              
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<RemoteDocumentationInfo[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                
+  /documentations/provider/{provider}/users/{search}:
+    get:
+      summary: Search remote users matching a specific search string
+      tags:
+        - Documentation management
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: The provider slug from which to load the information
+          schema:
+            type: string
+            example: "gitlab"
+        - name: search
+          in: path
+          required: true
+          description: The search query
+          schema:
+            type: string
+            example: "sajdlvoj"
+            
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<RemoteUser[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+    
+    
+    
+  /documentations/{id}/{version}/revisions:
+    get:
+      summary: Returns a list of all revisions in the queried documentation versiojn
+      tags:
+        - Documentation content management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the documentation
+          schema:
+            type: integer
+            example: 521
+        - name: version
           in: path
           required: true
           description: The version of documentation you want to retrieve the revisions for
@@ -328,27 +647,37 @@ paths:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
                 success: false
-
-  /documentations/{ID}/changes/{FROM}/{TO}:
+                
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                
+  /documentations/{id}/changes/{from}/{to}:
     get:
       summary: Returns a list of changed pages between two revisions
       tags:
-        - Documentation querying
+        - Documentation content management
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
-          description: The id of the documentation to query
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
-        - name: FROM
+        - name: from
           in: path
           required: true
           description: The hash of the first revision in the comparison range
           schema:
             type: string
-        - name: TO
+            example: "5249450a"
+        - name: to
           in: path
           required: true
           description: The hash of the second revision in the comparison range
@@ -373,33 +702,44 @@ paths:
               example:
                 success: false
 
-  /documentations/{ID}/{REVISION}/pages/{PAGE}:
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+                
+  /documentations/{id}/{ref}/pages/{page}:
     get:
       summary: Returns the content of the requested page in the given documentation and revision
       tags:
-        - Documentation querying
+        - Documentation content management
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
-          description: The id of the documentation to query
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
-        - name: PAGE
+        - name: page
           in: path
           required: true
           description: The identifier of the page we want to retrieve
           schema:
             type: string
             example: "index.mdx"
-        - name: REVISION
+        - name: ref
           in: path
           required: true
           description: The hash of the revision of page we want to retrieve
           schema:
-            type: integer
-            example: 521
+            type: string
+            example: "6d5cee41"
+            
       responses:
         "200":
           description: The page was retrieved successfully
@@ -417,40 +757,168 @@ paths:
               example:
                 success: false
 
-  /documentations/{ID}/{REVISION}/blob/{BLOB}:
-    get:
-      summary: Deletes a documentation
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+                
+    delete:
+      summary: Deletes the page in the given documentation and revision
       tags:
-        - Documentation querying
+        - Documentation content management
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
-          description: The id of the documentation to query
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
-        - name: BLOB
+        - name: page
+          in: path
+          required: true
+          description: The identifier of the page we want to retrieve
+          schema:
+            type: string
+            example: "index.mdx"
+        - name: ref
+          in: path
+          required: true
+          description: The hash of the revision of page we want to retrieve
+          schema:
+            type: string
+            example: "6d5cee41"
+            
+      responses:
+        "200":
+          description: The page was deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+
+    put:
+      summary: Saves the page in the given documentation and branch
+      tags:
+        - Documentation content management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the documentation
+          schema:
+            type: integer
+            example: 521
+        - name: page
+          in: path
+          required: true
+          description: The identifier of the page we want to retrieve
+          schema:
+            type: string
+            example: "index.mdx"
+        - name: ref
+          in: path
+          required: true
+          description: The branch name
+          schema:
+            type: string
+            example: "master"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavePage"
+      responses:
+        "200":
+          description: The page was deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+               
+  /documentations/{docu}/{revision}/{token}/blobs/{blob}:
+    get:
+      summary: Retreives a blob file, authenticated by a token in the URL
+      tags:
+        - Documentation content management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the documentation
+          schema:
+            type: integer
+            example: 521
+        - name: blob
           in: path
           required: true
           description: The identifier of the blob we want to retrieve
           schema:
             type: string
             example: "index.mdx"
-        - name: REVISION
+        - name: revision
           in: path
           required: true
           description: The hash of the revision of page we want to retrieve
           schema:
-            type: integer
-            example: 521
+            type: string
+            example: "6d5cee41"
+        - name: token
+          in: path
+          required: true
+          description: The token received on login
+          schema:
+            type: string
+            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjIxNTA3MTQwLCJleHAiOjE2MjE1MDg5NDB9.iDo4mUgCVhheltJmBNZalkm-MO6aS1aMimFLRvFAL_I"
       responses:
         "200":
           description: The blob was retrieved successfully
           content:
-            text/plain:
+            application/octet-stream:
               schema:
-                type: string
                 format: binary
 
         "403":
@@ -462,28 +930,51 @@ paths:
               example:
                 success: false
 
-  /documentations/{ID}/{VERSION}/pages:
-    post:
-      summary: Returns a list of all pages in a given version of documentation
-      tags:
-        - Page management
-      parameters:
-        - name: ID
-          in: path
-          required: true
-          description: The id of the documentation to query
-          schema:
-            type: integer
-            example: 521
-      responses:
-        "200":
-          description: Successfully saved page
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Response<Bool>"
               example:
-                success: true
+                success: false
+                message: Internal server error
+
+  /documentations/{docu}/{revision}/files/{path}:
+    get:
+      summary: Retreives a blob file, authenticated by a token in the URL
+      tags:
+        - Documentation content management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the documentation
+          schema:
+            type: integer
+            example: 521
+        - name: path
+          in: path
+          required: false
+          description: The path we want to list. If not set, the root of the repository is listed
+          schema:
+            type: string
+            example: "folder/subfolder"
+        - name: revision
+          in: path
+          required: true
+          description: The hash of the revision of page we want to retrieve
+          schema:
+            type: string
+            example: "6d5cee41"
+        
+      responses:
+        "200":
+          description: The file list was retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<FileInfo[]>"
 
         "403":
           description: You are not authorized to perform this action
@@ -494,47 +985,65 @@ paths:
               example:
                 success: false
 
-  /documentations/{ID}/{VERSION}/pages/{PAGE}/save:
-    post:
-      summary: Saves a page
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error    
+
+
+  /proofreading/:
+    get:
+      summary: Returns a list of all proofreading requests that the user has access to
       tags:
-        - Page management
-      parameters:
-        - name: ID
-          in: path
-          required: true
-          description: The id of the documentation to query
-          schema:
-            type: integer
-            example: 521
-        - name: VERSION
-          in: path
-          required: true
-          description: The version of documentation you want to retrieve the revisions for
-          schema:
-            type: string
-            example: "master"
-        - name: PAGE
-          in: path
-          required: true
-          description: The identifier of the page we want to retrieve
-          schema:
-            type: string
-            example: "index.mdx"
+        - Proofreading requests
+
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<ProofreadingRequest[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                error: "Could not connect to the database"
+    put:
+      summary: Creates a new proofreading request
+      tags:
+        - Proofreading requests
+      
       requestBody:
         content:
-          text/plain:
+          application/json:
             schema:
-              type: string
+              $ref: "#/components/schemas/ProofreadingRequestCreate"
       responses:
         "200":
-          description: Successfully saved page
+          description: The page was deleted successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Response<Bool>"
-              example:
-                success: true
 
         "403":
           description: You are not authorized to perform this action
@@ -545,42 +1054,130 @@ paths:
               example:
                 success: false
 
-  /documentations/{ID}/{VERSION}/pages/{PAGE}/delete:
-    post:
-      summary: Deletes a page
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+                
+  /proofreading/documentation/{docuId}:
+    get:
+      summary: Returns a list of all proofreading requests the user has access to and are related to the specified documentation id
       tags:
-        - Page management
+        - Proofreading requests
       parameters:
-        - name: ID
+        - name: docuId
           in: path
           required: true
-          description: The id of the documentation to query
+          description: The id of the documentation
           schema:
             type: integer
             example: 521
-        - name: VERSION
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<ProofreadingRequest[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                error: "Could not connect to the database"
+                
+  
+  /proofreading/{reqId}:
+    get:
+      summary: Returns a list of all proofreading requests that the user has access to
+      tags:
+        - Proofreading requests
+        
+      parameters:
+        - name: id
           in: path
           required: true
-          description: The version of documentation you want to retrieve the revisions for
+          description: The id of the proofreading reqest
           schema:
-            type: string
-            example: "master"
-        - name: PAGE
+            type: integer
+            example: 521
+            
+      responses:
+        "200":
+          description: Successfully retrieved data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<ProofreadingRequest[]>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                error: "Could not connect to the database"
+                
+  /proofreading/{reqId}/pages/{page}:
+    put:
+      summary: Saves the page in the given proofreading request
+      tags:
+        - Proofreading requests
+      parameters:
+        - name: reqId
+          in: path
+          required: true
+          description: The id of the proofreading request
+          schema:
+            type: integer
+            example: 521
+        - name: page
           in: path
           required: true
           description: The identifier of the page we want to retrieve
           schema:
             type: string
             example: "index.mdx"
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavePage"
       responses:
         "200":
-          description: Successfully saved page
+          description: The page was saved successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Response<Bool>"
-              example:
-                success: true
 
         "403":
           description: You are not authorized to perform this action
@@ -591,7 +1188,143 @@ paths:
               example:
                 success: false
 
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+                message: Internal server error
+  
+  /proofreading/{reqId}/submit:
+    put:
+      summary: Marks the proofreading request as completed
+      tags:
+        - Proofreading requests
+      parameters:
+        - name: reqId
+          in: path
+          required: true
+          description: The id of the proofreading request
+          schema:
+            type: integer
+            example: 521
+
+      responses:
+        "200":
+          description: Successfully completed request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                error: "Could not connect to the database"
+  
+  /proofreading/{reqId}/merge:
+    put:
+      summary: Merges the proofreading request
+      tags:
+        - Proofreading requests
+      parameters:
+        - name: reqId
+          in: path
+          required: true
+          description: The id of the proofreading request
+          schema:
+            type: integer
+            example: 521
+
+      responses:
+        "200":
+          description: Successfully completed request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                error: "Could not connect to the database"
+  
+  /proofreading/{reqId}/reject:
+    put:
+      summary: Marks the proofreading request as rejected
+      tags:
+        - Proofreading requests
+      parameters:
+        - name: reqId
+          in: path
+          required: true
+          description: The id of the proofreading request
+          schema:
+            type: integer
+            example: 521
+
+      responses:
+        "200":
+          description: Successfully completed request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+
+        "403":
+          description: You are not authorized to perform this action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Bool>"
+              example:
+                success: false
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response<Error>"
+              example:
+                success: false
+                error: "Could not connect to the database"
+
+
 components:
+  securitySchemes:
+    JWTAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: JWT
+      bearerFormat: JWT
   schemas:
     UserInfo:
       type: object
@@ -608,31 +1341,229 @@ components:
           description: "User email"
           example: "john@doe.com"
           type: string
+          
+    RemoteUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "User ID"
+          example: 521
+        name:
+          type: string
+          description: "Users display name"
+          example: "Vojtech Sajdl"
+        username:
+          description: "The username"
+          example: "sajdlvoj"
+          type: string
 
     RevisionInfo:
       type: object
       properties:
+        id:
+          type: string
+          description: "The revision id"
+          example: "5249450a4f51f2678fa1c12ec28b136460b765f1"
+        shortId:
+          type: string
+          description: "The revision shortId"
+          example: "5249450a"
+        title:
+          type: string
+          description: "The revision title"
+          example: "Made some changes"
         message:
           type: string
           description: "The revision message"
-          example: "Fixed some typos"
-        hash:
-          description: "The hash of the revision"
-          example: "50902f8b771e4c62faaf9cd6239896b0b6158a97"
+          example: "Made some changes in a few files"
+        created:
           type: string
-
-    PageInfo:
+          description: "The revision created date"
+          example: "2020-10-30T07:45:19.000+00:00"
+        author:
+          type: object
+          description: "The revision author"
+          properties:
+            name:
+              description: "The author name"
+              type: string
+              example: "Example User"
+            email:
+              description: "The author email"
+              type: string
+              example: "name@example.com"
+              
+              
+    ProofreadingRequestCreate:
+      type: object
+      properties:
+        docuId:
+          type: integer
+          description: "The docuId"
+          example: 1
+        title:
+          type: string
+          description: "The title"
+          example: "New proofreading request"
+        targetBranch:
+          type: string
+          description: "The target branch (as in merge request)"
+          example: "master"
+        description:
+          type: string
+          description: "The description"
+          example: "Please proofread this"
+        revFrom:
+          type: string
+          description: "The from revision identifier"
+          example: "52494c"
+        revTo:
+          type: string
+          description: "The to revision identifier"
+          example: "a4f51f"
+        requester:
+          type: integer
+          description: "The requester ID"
+          example: 1
+        proofreader:
+          type: integer
+          description: "The proofreader ID"
+          example: 6
+        excluded:
+          type: array
+          items:
+            type: string
+          description: "The excluded files"
+          
+    ProofreadingRequest:
+      type: object
+      properties:
+        docuId:
+          type: integer
+          description: "The docuId"
+          example: 1
+        title:
+          type: string
+          description: "The title"
+          example: "New proofreading request"
+        targetBranch:
+          type: string
+          description: "The target branch (as in merge request)"
+          example: "master"
+        sourceBranch:
+          type: string
+          description: "The target branch (as in merge request)"
+          example: "master"
+        description:
+          type: string
+          description: "The description"
+          example: "Please proofread this"
+        revFrom:
+          type: string
+          description: "The from revision identifier"
+          example: "52494c"
+        revTo:
+          type: string
+          description: "The to revision identifier"
+          example: "a4f51f"
+        requester:
+          type: integer
+          description: "The requester ID"
+          example: 1
+        proofreader:
+          type: integer
+          description: "The proofreader ID"
+          example: 6
+        excluded:
+          type: array
+          items:
+            type: string
+          description: "The excluded files"
+        modified:
+          type: array
+          items:
+            type: string
+          description: "The modified files"
+        pullRequest:
+          type: string
+          description: "The to merge request identifier"
+          example: "proofreading-1"
+        state :
+          type: number
+          description: The pull request state enum value
+          example: 1
+              
+              
+    VersionInfo:
       type: object
       properties:
         name:
           type: string
-          description: "The page name"
-          example: "Homepage"
-        id:
-          description: "The page identifier"
-          example: "homepage.mdx"
-          type: string
+          description: "The bramcj name"
+          example: "master"
+        default:
+          description: "Whether this is the default branch"
+          example: true
+          type: boolean
+        haveAccess:
+          description: "Whether the user has access to the branch"
+          example: true
+          type: boolean
 
+
+    PageInfo:
+      type: object
+      properties:
+        oldFile:
+          type: string
+          description: "Name in the old commit"
+          example: "oldPage.mdx"
+        newFile:
+          type: string
+          description: "Name in the new commit"
+          example: "newPage.mdx"
+        renamed:
+          type: boolean
+          description: "Whether the page was renamed/moved"
+          example: true
+          
+    FileInfo:
+      type: object
+      properties:
+        path:
+          type: string
+          description: "The file path"
+          example: "page.mdx"
+        dir:
+          type: boolean
+          description: "Whether the object is a directory"
+          example: false
+          
+    SavePage:
+      type: object
+      properties:
+        commitMessage:
+          type: string
+          description: "The commit message"
+          example: "Modified oldPage.mdx"
+        content:
+          type: string
+          description: "The file content"
+          example: "# Best file ever"
+          
+    RoleAdd:
+      type: object
+      properties:
+        providerId:
+          type: int
+          description: "The user ID"
+          example: "555"
+        level:
+          type: int
+          description: "The user permission level"
+          example: 1
+          
     DocumentationInfo:
       type: object
       properties:
@@ -640,6 +1571,14 @@ components:
           type: integer
           description: "Documentation ID"
           example: 521
+        providerId:
+          type: string
+          description: "The provider ID"
+          example: "522"
+        provider:
+          type: string
+          description: "The providers slug"
+          example: "gitlab"
         name:
           type: string
           description: "Documentation display name"
@@ -648,7 +1587,46 @@ components:
           description: "Documentation URL slug"
           example: "best-docu-ever"
           type: string
-
+        description:
+          type: string
+          description: "Documentation description"
+          example: "This is the best documentation ever created..."
+          
+    RemoteDocumentationInfo:
+      type: object
+      properties:
+        providerId:
+          type: string
+          description: "The provider ID, used for import"
+          example: "522"
+        name:
+          type: string
+          description: "Documentation display name"
+          example: "Best Documentation Ever"
+        slug:
+          description: "Documentation URL slug"
+          example: "best-docu-ever"
+          type: string
+        description:
+          type: string
+          description: "Documentation description"
+          example: "This is the best documentation ever created..."
+          
+    Response<FileInfo[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived folder listing"
+          items:
+            $ref: "#/components/schemas/FileInfo"
+            
     Response<UserInfo>:
       type: object
       required:
@@ -661,6 +1639,52 @@ components:
         data:
           description: "Retreived user"
           $ref: "#/components/schemas/UserInfo"
+
+    Response<UserInfo[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived users"
+          items:
+            $ref: "#/components/schemas/UserInfo"
+            
+            
+    Response<RemoteUser[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived users"
+          items:
+            $ref: "#/components/schemas/RemoteUser"
+
+    Response<ProofreadingRequest[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived proofreading requests"
+          items:
+            $ref: "#/components/schemas/ProofreadingRequest"
 
     Response<String>:
       type: object
@@ -703,8 +1727,23 @@ components:
           description: "Retreived documentation info"
           items:
             $ref: "#/components/schemas/DocumentationInfo"
+            
+    Response<RemoteDocumentationInfo[]>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Indicates whether request was successfull"
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: "Retreived documentation info"
+          items:
+            $ref: "#/components/schemas/RemoteDocumentationInfo"
 
-    Response<Versions[]>:
+    Response<VersionInfo[]>:
       type: object
       required:
         - success
@@ -717,8 +1756,7 @@ components:
           type: array
           description: "Retreived version info"
           items:
-            type: string
-            example: "master"
+             $ref: "#/components/schemas/VersionInfo"
 
     Response<RevisionInfo[]>:
       type: object
@@ -760,3 +1798,17 @@ components:
           description: "Whether request was successfull"
           type: boolean
           example: true
+          
+    Response<Error>:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          description: "Whether request was successfull"
+          type: boolean
+          example: false
+        error:
+          description: "Error message"
+          type: string
+          example: false

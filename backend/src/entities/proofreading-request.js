@@ -41,7 +41,7 @@ export default class ProofreadingRequest {
    * @param {string} params.pullRequest The providers internal ID of the merge request
    * @param {proofreadingStates} params.state State of the proofreading request
    */
-  constructor(params) {
+  constructor(params = {}) {
     this.id = params.id || defaults.id;
     this.docuId = params.docuId || params.docuid || defaults.docuId;
     this.title = params.title || defaults.title;
@@ -55,7 +55,7 @@ export default class ProofreadingRequest {
     this.excluded = params.excluded || defaults.excluded;
     this.modified = params.modified || defaults.modified;
     this.pullRequest = params.pullRequest || params.pullrequest || defaults.pullRequest;
-    this.state = params.state || params.state || defaults.state;
+    this.state = params.state || defaults.state;
   }
 
   /**

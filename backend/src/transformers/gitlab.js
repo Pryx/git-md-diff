@@ -3,7 +3,21 @@
  * @param {Object} version Branch object returned by Gitlab
  */
 export function versionTransformer(version) {
-  return { name: version.name, default: version.default, haveAccess: version.can_push };
+  if (!version) return null;
+  return {
+    name: version.name || null,
+    default: version.default || null,
+    haveAccess: version.can_push || null,
+  };
+}
+
+/**
+ * This transforms user data returned by Gitlab into a unified format
+ * @param {Object} version Branch object returned by Gitlab
+ */
+export function userTransformer(user) {
+  if (!user) return null;
+  return { name: user.name || null, username: user.username || null, id: user.id || null };
 }
 
 /**
@@ -11,15 +25,16 @@ export function versionTransformer(version) {
  * @param {Object} revision Revision object returned by Gitlab
  */
 export function revisionTransformer(revision) {
+  if (!revision) return null;
   return {
-    id: revision.id,
-    shortId: revision.short_id,
-    title: revision.title,
-    message: revision.message,
-    created: revision.created_at,
+    id: revision.id || null,
+    shortId: revision.short_id || null,
+    title: revision.title || null,
+    message: revision.message || null,
+    created: revision.created_at || null,
     author: {
-      name: revision.author_name,
-      email: revision.author_email,
+      name: revision.author_name || null,
+      email: revision.author_email || null,
     },
   };
 }
@@ -29,16 +44,17 @@ export function revisionTransformer(revision) {
  * @param {Object} change Change object returned by Gitlab
  */
 export function changesTransformer(change) {
-  const ext = change.new_path.split('.').pop();
+  if (!change) return null;
+  const ext = change.new_path ? change.new_path.split('.').pop() : '';
 
   if (change.deleted_file || (ext.toLowerCase() !== 'md' && ext.toLowerCase() !== 'mdx')) {
     return null;
   }
 
   return {
-    oldFile: change.old_path,
-    newFile: change.new_path,
-    renamed: change.renamed_file,
+    oldFile: change.old_path || null,
+    newFile: change.new_path || null,
+    renamed: typeof change.renamed_file === 'boolean' ? change.renamed_file : null,
   };
 }
 
@@ -47,11 +63,12 @@ export function changesTransformer(change) {
  * @param {Object} repo Repo object returned by Gitlab
  */
 export function repositoryTransformer(repo) {
+  if (!repo) return null;
   return {
-    providerId: repo.id,
-    name: repo.name,
-    slug: repo.path,
-    description: repo.description,
+    providerId: repo.id || null,
+    name: repo.name || null,
+    slug: repo.path || null,
+    description: repo.description || null,
   };
 }
 
@@ -60,9 +77,10 @@ export function repositoryTransformer(repo) {
  * @param {Object} treeObj Tree object returned by Gitlab
  */
 export function repositoryTreeTransformer(treeObj) {
-  if (treeObj.path.endsWith('.gitkeep')) return null; // We don't want to see .gitkeep files
+  if (!treeObj) return null;
+  if (!treeObj.path || treeObj.path.endsWith('.gitkeep')) return null; // We don't want to see .gitkeep files
   return {
-    path: treeObj.path,
+    path: treeObj.path || null,
     dir: treeObj.type === 'tree',
   };
 }
@@ -72,16 +90,17 @@ export function repositoryTreeTransformer(treeObj) {
  * @param {Object} mergeReq Merge request object returned by Gitlab
  */
 export function mergeRequestTransformer(mergeReq) {
+  if (!mergeReq) return null;
   return {
-    id: mergeReq.id,
-    iid: mergeReq.iid,
-    projectId: mergeReq.project_id,
-    title: mergeReq.title,
-    description: mergeReq.description,
-    state: mergeReq.state,
-    targetBranch: mergeReq.target_branch,
-    sourceBranch: mergeReq.source_branch,
-    hasConflicts: mergeReq.has_conflicts,
-    changesCount: mergeReq.changes_count,
+    id: mergeReq.id || null,
+    iid: mergeReq.iid || null,
+    projectId: mergeReq.project_id || null,
+    title: mergeReq.title || null,
+    description: mergeReq.description || null,
+    state: mergeReq.state || null,
+    targetBranch: mergeReq.target_branch || null,
+    sourceBranch: mergeReq.source_branch || null,
+    hasConflicts: mergeReq.has_conflicts || null,
+    changesCount: mergeReq.changes_count || null,
   };
 }

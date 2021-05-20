@@ -17,10 +17,10 @@ export default class Role {
    * @param {number} params.docuId The documentation ID
    * @param {number} params.userId The user ID
    */
-  constructor(params) {
+  constructor(params = {}) {
     this.level = params.level || defaults.level;
-    this.docuId = params.docuId || defaults.docuId;
-    this.userId = params.userId || defaults.userId;
+    this.docuId = params.docuId || params.docuid || defaults.docuId;
+    this.userId = params.userId || params.userid || defaults.userId;
   }
 
   /**

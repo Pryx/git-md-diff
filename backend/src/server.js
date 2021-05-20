@@ -102,7 +102,7 @@ app.get('/auth/gitlab/callback', limiter,
       const accessToken = jwt.sign({ id: user }, config.app.jwtSecret, { expiresIn: '30m' });
       const refreshToken = jwt.sign({ id: user }, config.app.refreshSecret, { expiresIn: '7d' });
 
-      const hash = crypto.createHash('md5').update(refreshToken).digest('hex');
+      const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
       const date = new Date();
       date.setDate(date.getDate() + 7);
       Auth.loginUser(user, hash, date.getTime());
@@ -114,7 +114,7 @@ app.get('/auth/gitlab/callback', limiter,
 // Logout
 app.get('/auth/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
   const oldRefresh = ExtractJwt.fromHeader('refreshtoken')(req);
-  const hash = crypto.createHash('md5').update(oldRefresh).digest('hex');
+  const hash = crypto.createHash('sha256').update(oldRefresh).digest('hex');
   Auth.logoutUser(req.user.id, hash);
   res.send({ success: true });
 });
@@ -138,8 +138,8 @@ app.get('/auth/token', limiter, (req, res) => {
       const accessToken = jwt.sign({ id: data.id }, config.app.jwtSecret, { expiresIn: '30m' });
       const refreshToken = jwt.sign({ id: data.id }, config.app.refreshSecret, { expiresIn: '7d' });
 
-      const oldHash = crypto.createHash('md5').update(oldRefresh).digest('hex');
-      const hash = crypto.createHash('md5').update(refreshToken).digest('hex');
+      const oldHash = crypto.createHash('sha256').update(oldRefresh).digest('hex');
+      const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
       Auth.refreshTokenValid(data.id, oldHash).then((valid) => {
         if (!valid) {
@@ -244,28 +244,20 @@ app.put('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
+// Gets a text file
+app.get('/documentations/:docu/:revision/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getBlob(req.params.docu, req.params.revision, req.params.page)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
+});
+
 // Deletes file
 app.delete('/documentations/:docu/:version/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.deleteFile(req.params.docu, req.params.version,
     req.params.page, req.body.commitMessage)
     .then(() => res.send({ success: true }))
-    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
-});
-
-// File change list
-app.get('/documentations/:docu/changes/:from/:to', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getChanges(req.params.docu, req.params.from, req.params.to)
-    .then((data) => res.send({ success: true, data }))
-    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
-});
-
-// Gets a text file
-app.get('/documentations/:docu/:revision/pages/:page(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const service = new DocumentationService(req.user);
-  service.getBlob(req.params.docu, req.params.revision, req.params.page)
-    .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
@@ -281,6 +273,14 @@ app.get('/documentations/:docu/:revision/files/', passport.authenticate('jwt', {
 app.get('/documentations/:docu/:revision/files/:path(*)', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new DocumentationService(req.user);
   service.getFiles(req.params.docu, req.params.revision, `${req.params.path}`)
+    .then((data) => res.send({ success: true, data }))
+    .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
+});
+
+// File change list
+app.get('/documentations/:docu/changes/:from/:to', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const service = new DocumentationService(req.user);
+  service.getChanges(req.params.docu, req.params.from, req.params.to)
     .then((data) => res.send({ success: true, data }))
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
@@ -335,25 +335,28 @@ app.delete('/documentations/:docu/users/:uid', passport.authenticate('jwt', { se
 // Blob file, mainly used for loading images
 app.get('/documentations/:docu/:revision/:token/blobs/:blob(*)', (req, res) => {
   let user = null;
-  jwt.verify(req.params.token, config.app.jwtSecret, (err, data) => {
+  jwt.verify(req.params.token, config.app.jwtSecret, async (err, data) => {
     if (err) {
       res.status(500).send({ error: 'Unauthorized' });
     }
 
-    user = User.getById(data.id);
+    try {
+      user = await User.getById(data.id);
+    } catch (error) {
+      res.status(500).send({ error });
+      return;
+    }
 
     if (!user) {
       res.status(500).send({ error: 'Unauthorized' });
+    } else {
+      const type = mime.lookup(req.params.blob);
+      const service = new DocumentationService(user);
+      service.getBlob(req.params.docu, req.params.revision, req.params.blob)
+        .then((d) => { res.type(type).send(d); })
+        .catch((error) => res.status(500).send({ error }));
     }
   });
-
-  user.then((u) => {
-    const type = mime.lookup(req.params.blob);
-    const service = new DocumentationService(u);
-    service.getBlob(req.params.docu, req.params.revision, req.params.blob)
-      .then((data) => { res.type(type).send(data); })
-      .catch((error) => res.status(500).send({ error }));
-  }).catch((error) => res.status(500).send({ error }));
 });
 // #endregion
 
@@ -401,7 +404,7 @@ app.put('/proofreading/:reqId/pages/:page(*)', passport.authenticate('jwt', { se
 app.put('/proofreading/:reqId/submit', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.finished(req.params.reqId)
-    .then((data) => res.send({ success: true, data }))
+    .then(() => res.send({ success: true }))
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
@@ -409,14 +412,14 @@ app.put('/proofreading/:reqId/submit', passport.authenticate('jwt', { session: f
 app.put('/proofreading/:reqId/merge', passport.authenticate('jwt', { session: false }), (req, res) => {
   const service = new ProofreadingService(req.user);
   service.merge(req.params.reqId)
-    .then((data) => res.send({ success: true, data }))
+    .then(() => res.send({ success: true }))
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 
 // Rejects proofreading request
 app.put('/proofreading/:reqId/reject', passport.authenticate('jwt', { session: false }), (req, res) => {
   ProofreadingService.reject(req.params.reqId)
-    .then((data) => res.send({ success: true, data }))
+    .then(() => res.send({ success: true }))
     .catch((error) => res.status(500).send({ success: false, error: descriptiveError(error) }));
 });
 

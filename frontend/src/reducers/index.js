@@ -17,6 +17,7 @@ import {
 const initialState = {
   userData: null,
   docuList: [],
+  docuId: 0,
   autosaved: {},
   excludedChanges: [],
 };

@@ -48,7 +48,6 @@ class EditPage extends React.Component {
 
     this.file = decodeURIComponent(file);
     this.handleSave = this.handleSave.bind(this);
-    this.commitMessageChange = this.commitMessageChange.bind(this);
     allowNav();
     this.debouncedAutosave = lodash.debounce(() => {
       if (!this.editorInit) {
@@ -114,7 +113,7 @@ class EditPage extends React.Component {
   }
 
   /**
-   * Saves current state of page 
+   * Saves current state of page
    */
   handleSave() {
     const { docuId, version, onSave } = this.props;
@@ -152,7 +151,6 @@ class EditPage extends React.Component {
       });
     });
   }
-
 
   render() {
     const {

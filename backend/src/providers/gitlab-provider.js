@@ -2,8 +2,8 @@ import { Gitlab } from '@gitbeaker/node';
 import config from '../config';
 import accessLevels from '../entities/access-levels';
 import {
-  changesTransformer,
-  mergeRequestTransformer, repositoryTransformer, repositoryTreeTransformer, revisionTransformer, versionTransformer,
+  changesTransformer, mergeRequestTransformer, repositoryTransformer,
+  repositoryTreeTransformer, revisionTransformer, userTransformer, versionTransformer,
 } from '../transformers/gitlab';
 
 /**
@@ -23,7 +23,8 @@ export default class GitlabProvider {
    * @param {string} search The string to search for
    */
   async searchUsers(search) {
-    return this.gitlab.Users.search(search, { perPage: 20, maxPages: 1 });
+    return (await this.gitlab.Users.search(search, { perPage: 20, maxPages: 1 }))
+      .map((u) => userTransformer(u));
   }
 
   /**
@@ -51,7 +52,14 @@ export default class GitlabProvider {
    */
   async addUser(projectId, userId, accessLevel) {
     const gitlabAccessLevel = accessLevel === accessLevels.admin ? 40 : 30;
-    return this.gitlab.ProjectMembers.add(projectId, userId, gitlabAccessLevel);
+    let res = null;
+    try {
+      res = await this.gitlab.ProjectMembers.add(projectId, userId, gitlabAccessLevel);
+    } catch (e) {
+      console.error(e);
+      res = await this.gitlab.ProjectMembers.edit(projectId, userId, gitlabAccessLevel);
+    }
+    return res;
   }
 
   /**
@@ -201,7 +209,9 @@ export default class GitlabProvider {
     return response;
   }
 
-
+  /**
+   * Gets a list of remote repositories the user owns
+   */
   async getUserDocumentations() {
     return (await this.gitlab.Projects.all({ owned: true })).map((rp) => repositoryTransformer(rp));
   }

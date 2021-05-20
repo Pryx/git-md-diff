@@ -23,6 +23,9 @@ class FileItem extends React.Component {
     this.handleDeleteFile = this.handleDeleteFile.bind(this);
   }
 
+  /**
+   * Deletes the file
+   */
   handleDeleteFile() {
     const { path, docuId, version } = this.props;
     const deleteFile = async () => {

@@ -34,7 +34,7 @@ export default class ProofreadingService {
     const savedReq = new ProofreadingRequest(...await req.save());
 
     await provider.createBranch(docu.providerId, `git-md-proofreading-${savedReq.id}`, savedReq.revTo);
-    savedReq.sourceBranch = `git-md-proofreading-${savedReq.id}`;
+    savedReq.sourceBranch = `docu${req.docuId}-proofreading-${savedReq.id}`;
     await savedReq.save();
 
     sendEmail(
@@ -100,8 +100,6 @@ export default class ProofreadingService {
       Please check the Git-md-diff app at 
       <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
     );
-
-    return req;
   }
 
   /**
@@ -148,8 +146,6 @@ export default class ProofreadingService {
       Please check the Git-md-diff app at 
       <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
     );
-
-    return req;
   }
 
   /**
@@ -170,7 +166,6 @@ export default class ProofreadingService {
       Please check the Git-md-diff app at 
       <a href="${config.gitlab.authRedirect}">${config.gitlab.authRedirect}</a> for more information.`,
     );
-    return req;
   }
 
   /**

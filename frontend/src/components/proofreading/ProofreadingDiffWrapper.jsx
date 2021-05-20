@@ -189,11 +189,13 @@ class ProofreadingDiffWrapper extends React.Component {
               </OverlayTrigger>
             </Col>
             <Col lg="6">
-              <OverlayTrigger overlay={(
-                <Tooltip>
-                  You cannot merge these changes yet, as the proofreading
-                  request is not marked as completed yet.
-                </Tooltip>
+              <OverlayTrigger
+                trigger="click"
+                overlay={(
+                  <Tooltip>
+                    You cannot merge these changes yet, as the proofreading
+                    request is not marked as completed yet.
+                  </Tooltip>
               )}
               >
                 <div className="float-right">

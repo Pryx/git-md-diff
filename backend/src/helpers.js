@@ -4,6 +4,8 @@
  * @returns {string} Descriptive error string
  */
 export default function descriptiveError(error) {
+  if (!error) return '<no error message>';
+
   if (error.description) {
     // If the description is an object, map it to its key and value
     if (typeof error.description === 'object'

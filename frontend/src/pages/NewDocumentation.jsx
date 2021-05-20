@@ -8,8 +8,8 @@ import Row from 'react-bootstrap/Row';
 import { hot } from 'react-hot-loader';
 import slugify from 'slugify';
 import { Redirect } from 'wouter';
-import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
 import Select from 'react-select';
+import { getPossiblyHTTPErrorMessage, secureKy } from '../helpers/secure-ky';
 
 /**
  * Diff page component is a wrapper to diff overview and commit selectors.
@@ -25,7 +25,7 @@ class NewDocumentation extends React.Component {
     description: '',
     success: false,
     error: '',
-    docu: null
+    docu: null,
   };
 
   constructor(props) {
@@ -45,16 +45,15 @@ class NewDocumentation extends React.Component {
    * @returns derived state
    */
   static getDerivedStateFromError(error) {
-    return { isLoaded: true, error };
+    return { error };
   }
 
-  componentDidMount(){
+  componentDidMount() {
     const fetchDocus = async () => {
       const json = await secureKy().get(`${window.env.api.backend}/documentations/provider/gitlab`).json();
 
       this.setState({
         docuList: json.data.map((u) => ({ value: u, label: `${u.name}` })),
-        isLoaded: true,
       });
     };
 
@@ -63,7 +62,6 @@ class NewDocumentation extends React.Component {
       if (errorMessage === null) return; // Expired tokens
 
       this.setState({
-        isLoaded: true,
         error: errorMessage,
       });
     });
@@ -115,12 +113,11 @@ class NewDocumentation extends React.Component {
     });
   }
 
-
   /**
    * Imports a new documentation
    * @param {Event} e The JS event
    */
-   handleImport(e) {
+  handleImport(e) {
     e.preventDefault();
 
     const { docu } = this.state;
@@ -188,7 +185,7 @@ class NewDocumentation extends React.Component {
 
   render() {
     const {
-      slug, description, name, success, error, docuList, docu
+      slug, description, name, success, error, docuList, docu,
     } = this.state;
     if (success) {
       return (<Redirect to="/" />);
@@ -197,13 +194,11 @@ class NewDocumentation extends React.Component {
     let alert = null;
     if (error) {
       alert = (
-        <Alert variant="danger">
+        <Alert variant="danger" className="mt-3">
           {error.toString()}
         </Alert>
       );
     }
-
-    console.log(docu);
 
     return (
       <Container className="mt-5">
@@ -270,17 +265,18 @@ class NewDocumentation extends React.Component {
                   </Button>
                 </Form>
               </Tab>
-              <Tab eventKey="import" title="Import documentation" >
+              <Tab eventKey="import" title="Import documentation">
                 <Form.Group className="mt-3">
                   <Row>
                     <Col>
-                      <Select 
+                      <Select
                         onChange={(d) => {
                           this.setState({ docu: d });
                         }}
-                        options={docuList} 
+                        options={docuList}
                         placeholder="Select documentation to import"
-                        value={docu}></Select>
+                        value={docu}
+                      />
                     </Col>
                   </Row>
                   <Row className="mt-2">

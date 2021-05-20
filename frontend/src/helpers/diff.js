@@ -134,14 +134,22 @@ export default async function diff(revisionInfo, original, modified, opts) {
   }
 
   // If code should be hidden, hide it. Use regex to try and find changes inside the code block
-  if (options.hideCode) {
-    const codeblocks = [...res.matchAll(/(```[\sa-z]*?\n?[\s\S]*?\n?```)/gm)].map((m) => m[1]);
-    if (codeblocks) {
+
+  const codeblocks = [...res.matchAll(/(```[\sa-z]*?\n?[\s\S]*?\n?```)/gm)].map((m) => m[1]);
+  if (codeblocks) {
+    if (options.hideCode) {
       codeblocks.forEach((codeblock) => {
         if (codeblock.includes('<del') || codeblock.includes('<ins')) {
           res = res.replace(codeblock, '<pre><code>Code block changed</code></pre>');
         } else {
           res = res.replace(codeblock, '<pre><code>Code block</code></pre>');
+        }
+      });
+    } else {
+      codeblocks.forEach((codeblock) => {
+        if (codeblock.includes('<del') || codeblock.includes('<ins')) {
+          const clean = codeblock.replace(/<[/]?ins.*?>/g, '').replace(/<[/]?del.*?>/g, '');
+          res = res.replace(codeblock, clean);
         }
       });
     }

@@ -1,6 +1,13 @@
 import fs from 'fs';
 
-const rawdata = fs.readFileSync('config/config.prod.json');
+let rawdata = null;
+
+try {
+  rawdata = fs.readFileSync('config/config.prod.json');
+} catch (error) {
+  throw Error('Error loading config file. Please make sure it is present and can be read by the user that runs this application.');
+}
+
 const staticConfig = JSON.parse(rawdata);
 
 const config = {

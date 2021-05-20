@@ -47,7 +47,7 @@ export function documentationSelected(payload) {
  * @returns {Object} action descriptor
  */
 export function documentationEmpty() {
-  return { type: 'DOCUMENTATION_EMPTY', payload: null };
+  return { type: 'DOCUMENTATION_EMPTY' };
 }
 
 /**

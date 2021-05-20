@@ -1,7 +1,7 @@
 import sql from '../db';
 
 const defaults = {
-  userId: '',
+  userId: -1,
   hash: '',
   expire: 0,
 };
@@ -17,8 +17,8 @@ export default class RefreshToken {
    * @param {string} params.hash The token hash
    * @param {number} params.expire The token expiration time
    */
-  constructor(params) {
-    this.userId = params.userId || defaults.userId;
+  constructor(params = {}) {
+    this.userId = params.userId || params.userid || defaults.userId;
     this.hash = params.hash || defaults.hash;
     this.expire = params.expire || defaults.expire;
   }
@@ -50,6 +50,6 @@ export default class RefreshToken {
    * @returns The postgresql result
    */
   async save() {
-    return sql`INSERT INTO tokens (userId, hash, expire) VALUES (${this.userId}, ${this.hash},${this.expire}) RETURNING *`;
+    return sql`INSERT INTO tokens (userId, hash, expire) VALUES (${this.userId}, ${this.hash},${this.expire}) ON CONFLICT(userId, hash) DO NOTHING`;
   }
 }

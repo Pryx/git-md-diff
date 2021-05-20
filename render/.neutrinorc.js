@@ -1,7 +1,6 @@
 const airbnb = require('@neutrinojs/airbnb');
 const node = require('@neutrinojs/node');
 const jest = require('@neutrinojs/jest');
-const eslint = require('@neutrinojs/eslint');
 
 module.exports = {
   options: {
