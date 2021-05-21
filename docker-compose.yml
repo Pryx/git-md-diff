@@ -33,7 +33,7 @@ services:
   render:
     build:
       context: ./render
-      dockerfile: ./local-dockerfiles/render
+      dockerfile: ../local-dockerfiles/render
       args:
         buildno: 1
     ports:
@@ -54,7 +54,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ./local-dockerfiles/backend
+      dockerfile: ../local-dockerfiles/backend
       args:
         buildno: 1
     ports:
@@ -75,7 +75,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./local-dockerfiles/frontend
+      dockerfile: ../local-dockerfiles/frontend
       args:
         buildno: 1
     ports:
