@@ -22,8 +22,9 @@ There are several ports utilized by the docker-compose configuration. These port
 * **http://localhost:7000** The api documentation
 
 ## Additional commands
-To lint the project manually run:  npm run lint
-You can also fix linting problems with:  npm run lint -- --fix
+To lint the project manually run:  `npm run lint`
+
+You can also fix linting problems with:  `npm run lint -- --fix`
 
 ## Additional info
 This repository uses forked markdown-diff version [Pryx/markdown-diff](https://github.com/Pryx/markdown-diff) which tries to solve some issues with the original library. 
