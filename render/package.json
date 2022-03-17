@@ -39,6 +39,6 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "remark-admonitions": "^1.2.1",
-    "simple-git": "^2.22.0"
+    "simple-git": "^3.3.0"
   }
 }
